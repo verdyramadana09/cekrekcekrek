@@ -1,23 +1,23 @@
+// Tambahkan baris ini di paling atas agar Node.js bisa membaca file .env
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const { google } = require('googleapis');
 const stream = require('stream');
 
 const app = express();
-// PERBAIKAN 1: Port otomatis untuk lokal (3000) atau cloud hosting
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '100mb' }));
 app.use(express.static(__dirname));
 
-// =================================================================
-// Menggunakan process.env (untuk online) dengan cadangan kunci langsung Anda (untuk offline)
-const CLIENT_ID = process.env.CLIENT_ID || '237285581279-6m365ag9d2s9vkl9ekjlammbq142a0ve.apps.googleusercontent.com';
-const CLIENT_SECRET = process.env.CLIENT_SECRET || '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';
-const REFRESH_TOKEN = process.env.REFRESH_TOKEN || '1//04ve8Q6GFSFLfCgYIARAAGAQSNwF-L9IrIMl8smxjalpBR28qxuY_c7bvwD76QmK8HvR-f8w_g0vEY8QNYeygjwAVZPhev8yy_-Y';
-const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '18K5ge-B_8dgtx2a6HWk0kI1dx6_6n29v';
-// =================================================================
+// SEKARANG MENGAMBIL DATA DARI FILE .env
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
+const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
 const oauth2Client = new google.auth.OAuth2(
     CLIENT_ID,
@@ -48,13 +48,11 @@ async function uploadBufferToDrive(buffer, fileName, mimeType, parentFolderId) {
     return uploaded.data.webViewLink;
 }
 
-// Endpoint untuk Sesi Otomatis (Folder + Frame + Satuan + GIF)
 app.post('/upload-session', async (req, res) => {
     try {
         const { frameImage, individualImages, gifImage } = req.body;
         const sessionName = `Sesi_${Date.now()}`;
-        console.log(`Membuat folder sesi: ${sessionName}`);
-
+        
         const folder = await drive.files.create({
             resource: { name: sessionName, mimeType: 'application/vnd.google-apps.folder', parents: [GOOGLE_DRIVE_FOLDER_ID] },
             fields: 'id, webViewLink'
@@ -67,7 +65,7 @@ app.post('/upload-session', async (req, res) => {
             await uploadBufferToDrive(frameBuffer, 'Hasil_Frame.png', 'image/png', subFolderId);
         }
 
-        // 2. Upload Foto Satuan Terpisah
+        // 2. Upload Foto Satuan
         if (individualImages && Array.isArray(individualImages)) {
             for (let i = 0; i < individualImages.length; i++) {
                 const singleBuffer = Buffer.from(individualImages[i].replace(/^data:image\/\w+;base64,/, ""), 'base64');
@@ -81,15 +79,14 @@ app.post('/upload-session', async (req, res) => {
             await uploadBufferToDrive(gifBuffer, 'Animasi_Live.gif', 'image/gif', subFolderId);
         }
 
-        console.log('Semua file sesi berhasil diunggah!');
         res.json({ success: true, folder_link: folder.data.webViewLink });
 
     } catch (error) {
-        console.error('Error Session Upload:', error);
+        console.error('Error:', error);
         res.status(500).json({ success: false, message: 'Gagal membuat folder', error: error.message });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Server Backend berjalan di port ${PORT}`);
+    console.log(`Server berjalan di port ${PORT}`);
 });
