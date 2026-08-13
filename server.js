@@ -85,9 +85,6 @@ app.post('/upload-session', async (req, res) => {
     }
 });
 
-// Gunakan port dari Railway, atau fallback ke 3000 jika dijalankan secara lokal
-const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);
 });
