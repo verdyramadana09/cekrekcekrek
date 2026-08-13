@@ -1,4 +1,3 @@
-// Tambahkan baris ini di paling atas agar Node.js bisa membaca file .env
 require('dotenv').config();
 
 const express = require('express');
@@ -13,7 +12,6 @@ app.use(cors());
 app.use(express.json({ limit: '100mb' }));
 app.use(express.static(__dirname));
 
-// SEKARANG MENGAMBIL DATA DARI FILE .env
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
@@ -87,6 +85,7 @@ app.post('/upload-session', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// PERBAIKAN UTAMA UNTUK RAILWAY ('0.0.0.0')
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server berjalan di port ${PORT}`);
 });
