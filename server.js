@@ -4,17 +4,19 @@ const { google } = require('googleapis');
 const stream = require('stream');
 
 const app = express();
-const PORT = 3000;
+// PERBAIKAN 1: Port otomatis untuk lokal (3000) atau cloud hosting
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '100mb' }));
 app.use(express.static(__dirname));
 
 // =================================================================
-const CLIENT_ID = '237285581279-6m365ag9d2s9vkl9ekjlammbq142a0ve.apps.googleusercontent.com';
-const CLIENT_SECRET = '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';
-const REFRESH_TOKEN = '1//04ve8Q6GFSFLfCgYIARAAGAQSNwF-L9IrIMl8smxjalpBR28qxuY_c7bvwD76QmK8HvR-f8w_g0vEY8QNYeygjwAVZPhev8yy_-Y';
-const GOOGLE_DRIVE_FOLDER_ID = '18K5ge-B_8dgtx2a6HWk0kI1dx6_6n29v';
+// Menggunakan process.env (untuk online) dengan cadangan kunci langsung Anda (untuk offline)
+const CLIENT_ID = process.env.CLIENT_ID || '237285581279-6m365ag9d2s9vkl9ekjlammbq142a0ve.apps.googleusercontent.com';
+const CLIENT_SECRET = process.env.CLIENT_SECRET || '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';
+const REFRESH_TOKEN = process.env.REFRESH_TOKEN || '1//04ve8Q6GFSFLfCgYIARAAGAQSNwF-L9IrIMl8smxjalpBR28qxuY_c7bvwD76QmK8HvR-f8w_g0vEY8QNYeygjwAVZPhev8yy_-Y';
+const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '18K5ge-B_8dgtx2a6HWk0kI1dx6_6n29v';
 // =================================================================
 
 const oauth2Client = new google.auth.OAuth2(
@@ -53,7 +55,6 @@ app.post('/upload-session', async (req, res) => {
         const sessionName = `Sesi_${Date.now()}`;
         console.log(`Membuat folder sesi: ${sessionName}`);
 
-        // Menggunakan GOOGLE_DRIVE_FOLDER_ID yang konsisten
         const folder = await drive.files.create({
             resource: { name: sessionName, mimeType: 'application/vnd.google-apps.folder', parents: [GOOGLE_DRIVE_FOLDER_ID] },
             fields: 'id, webViewLink'
@@ -61,8 +62,10 @@ app.post('/upload-session', async (req, res) => {
         const subFolderId = folder.data.id;
 
         // 1. Upload Hasil Frame
-        const frameBuffer = Buffer.from(frameImage.replace(/^data:image\/\w+;base64,/, ""), 'base64');
-        await uploadBufferToDrive(frameBuffer, 'Hasil_Frame.png', 'image/png', subFolderId);
+        if (frameImage) {
+            const frameBuffer = Buffer.from(frameImage.replace(/^data:image\/\w+;base64,/, ""), 'base64');
+            await uploadBufferToDrive(frameBuffer, 'Hasil_Frame.png', 'image/png', subFolderId);
+        }
 
         // 2. Upload Foto Satuan Terpisah
         if (individualImages && Array.isArray(individualImages)) {
@@ -88,5 +91,5 @@ app.post('/upload-session', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server Backend berjalan di http://localhost:${PORT}`);
+    console.log(`Server Backend berjalan di port ${PORT}`);
 });
