@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Photobooth Web</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
+
         :root {
             --bg-color: #F5F5F7;
             --primary: #000000;
@@ -24,6 +26,7 @@
             margin: 0;
             height: 100vh;
             overflow: hidden;
+
             font-family:
                 -apple-system,
                 BlinkMacSystemFont,
@@ -31,14 +34,23 @@
                 Roboto,
                 Arial,
                 sans-serif;
+
             background-color: var(--bg-color);
             color: var(--primary);
         }
 
+
+        /* =====================================================
+           SCREEN
+        ===================================================== */
+
         .screen {
             display: none;
+
             height: 100vh;
+
             padding: 16px 24px;
+
             flex-direction: column;
         }
 
@@ -46,39 +58,59 @@
             display: flex;
         }
 
+
         h1 {
             font-size: 32px;
-            margin: 0 0 8px;
+            margin: 0 0 8px 0;
         }
 
         h2 {
-            margin: 0 0 16px;
+            margin: 0 0 16px 0;
         }
 
         p {
             color: var(--text-secondary);
-            margin: 0 0 24px;
+            margin: 0 0 24px 0;
         }
+
+
+        /* =====================================================
+           BUTTON
+        ===================================================== */
 
         .bottom-actions {
             margin-top: auto;
             padding-top: 16px;
+
             display: flex;
+
             gap: 10px;
+
             flex-wrap: wrap;
+
             justify-content: center;
         }
 
         button {
             background-color: var(--primary);
+
             color: var(--on-primary);
+
             border: none;
+
             border-radius: 30px;
+
             padding: 12px 20px;
+
             font-size: 14px;
+
             font-weight: 600;
+
             cursor: pointer;
-            transition: opacity .2s, transform .15s;
+
+            transition:
+                opacity 0.2s,
+                transform 0.15s;
         }
 
         button:hover:not(:disabled) {
@@ -86,35 +118,46 @@
         }
 
         button:disabled {
-            opacity: .5;
+            opacity: 0.5;
+
             cursor: not-allowed;
         }
 
         button.outline {
-            background: transparent;
+            background-color: transparent;
+
             color: var(--primary);
+
             border: 2px solid var(--primary);
         }
 
 
         /* =====================================================
-           PILIH FRAME
+           FRAME SELECT
         ===================================================== */
 
-        #frame-screen {
-            overflow: hidden;
-        }
-
         .frame-grid {
+
             display: flex;
+
             align-items: center;
-            gap: 20px;
+
+            justify-content: flex-start;
+
+            gap: 30px;
+
             flex: 1;
+
             width: 100%;
+
             overflow-x: auto;
+
             overflow-y: hidden;
-            padding: 30px 50px;
+
+            padding: 40px 80px;
+
             scroll-behavior: smooth;
+
             scrollbar-width: none;
         }
 
@@ -122,24 +165,32 @@
             display: none;
         }
 
+
         .frame-item {
-            flex: 0 0 180px;
-            height: 260px;
+
+            flex: 0 0 230px;
+
+            height: 330px;
 
             background-color: #ddd;
+
             background-repeat: no-repeat;
+
             background-position: center;
+
             background-size: cover;
 
-            border-radius: 12px;
+            border-radius: 14px;
+
             cursor: pointer;
 
             border: 3px solid transparent;
+
             position: relative;
 
             transition:
-                transform .2s ease,
-                border-color .2s ease;
+                transform 0.2s ease,
+                border-color 0.2s ease;
         }
 
         .frame-item:hover {
@@ -147,32 +198,46 @@
         }
 
         .frame-item.selected {
+
             border-color: #000;
+
             transform: scale(1.05);
+
             box-shadow: none;
         }
 
+
+        /* =====================================================
+           CHECK MARK
+        ===================================================== */
+
         .frame-item.selected::after {
+
             content: "✓";
 
             position: absolute;
+
             top: 50%;
             left: 50%;
 
-            transform: translate(-50%, -50%);
+            transform:
+                translate(-50%, -50%);
 
-            color: white;
-            font-size: 52px;
+            color: #fff;
+
+            font-size: 64px;
+
             font-weight: 700;
 
             line-height: 1;
 
             text-shadow:
-                0 2px 5px rgba(0, 0, 0, .6),
-                0 0 8px rgba(0, 0, 0, .4);
+                0 2px 5px rgba(0, 0, 0, 0.55),
+                0 0 10px rgba(0, 0, 0, 0.35);
 
             pointer-events: none;
-            z-index: 10;
+
+            z-index: 100;
         }
 
 
@@ -181,112 +246,90 @@
         ===================================================== */
 
         .camera-container {
+
             display: flex;
+
             gap: 16px;
+
             flex: 1;
+
             min-height: 0;
         }
 
-        /*
-         * AREA LIVE CAMERA
-        */
 
         .video-wrapper {
+
             flex: 3;
+
             background: #000;
+
             border-radius: 16px;
+
             overflow: hidden;
+
             position: relative;
 
             display: flex;
-            align-items: center;
+
             justify-content: center;
+
+            align-items: center;
+
+            min-height: 0;
         }
 
-        /*
-         * Kamera asli
-        */
 
         #camera-feed {
-            position: absolute;
+
+            display: block;
 
             width: 100%;
+
             height: 100%;
 
             object-fit: cover;
 
             transform: scaleX(-1);
 
-            z-index: 1;
+            background: #000;
         }
 
-        /*
-         * Overlay frame di atas kamera.
-         * Frame ini hanya sebagai panduan.
-        */
 
-        #camera-frame-overlay {
-            position: absolute;
-
-            inset: 0;
-
-            width: 100%;
-            height: 100%;
-
-            object-fit: contain;
-
-            z-index: 5;
-
-            pointer-events: none;
-        }
-
-        /*
-         * Area lubang kamera.
-         * Dipakai untuk memberi indikasi area
-         * yang akan masuk ke frame.
-        */
-
-        #camera-hole-guide {
-            position: absolute;
-
-            z-index: 4;
-
-            border: 2px dashed rgba(255,255,255,.9);
-
-            box-shadow:
-                0 0 0 9999px rgba(0,0,0,.18);
-
-            pointer-events: none;
-
-            display: none;
-        }
-
-        /*
-         * Kalau frame memiliki dekorasi,
-         * guide bisa dimatikan supaya frame
-         * transparannya yang menjadi panduan.
-        */
+        /* =====================================================
+           COUNTDOWN
+        ===================================================== */
 
         .countdown {
+
             position: absolute;
 
             top: 50%;
             left: 50%;
 
-            transform: translate(-50%, -50%);
+            transform:
+                translate(-50%, -50%);
 
             font-size: 80px;
+
             color: white;
+
             font-weight: bold;
 
             text-shadow:
-                2px 2px 10px rgba(0,0,0,.5);
+                2px 2px 10px rgba(0, 0, 0, 0.5);
 
-            z-index: 30;
+            z-index: 100;
         }
 
+
+        /* =====================================================
+           FLASH
+        ===================================================== */
+
         .flash {
+
             position: absolute;
+
             inset: 0;
 
             background: white;
@@ -295,20 +338,24 @@
 
             pointer-events: none;
 
-            z-index: 40;
+            z-index: 200;
         }
 
         .flash.active {
-            opacity: .8;
-            transition: opacity .1s;
+
+            opacity: 0.8;
+
+            transition:
+                opacity 0.1s;
         }
 
 
         /* =====================================================
-           PANEL FRAME + FOTO
+           RIGHT PREVIEW
         ===================================================== */
 
         .preview-wrapper {
+
             flex: 2;
 
             background: #e0e0e0;
@@ -320,6 +367,7 @@
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
             min-height: 0;
@@ -327,129 +375,141 @@
             overflow: hidden;
         }
 
-        /*
-         * Frame lengkap
-        */
 
         .frame-preview-container {
+
             position: relative;
 
             width: 100%;
+
             height: 100%;
 
             display: flex;
 
-            align-items: center;
             justify-content: center;
+
+            align-items: center;
 
             overflow: hidden;
         }
 
+
+        /* FRAME UTAMA */
+
         #camera-side-frame {
+
             position: absolute;
-
-            max-width: 100%;
-            max-height: 100%;
-
-            width: auto;
-            height: auto;
 
             object-fit: contain;
 
-            z-index: 20;
-
             pointer-events: none;
+
+            z-index: 20;
         }
 
-        /*
-         * Container foto-foto.
-         *
-         * Setiap slot mempunyai frame kecil.
-        */
+
+        /* FOTO-FOTO */
 
         #photo-slots {
-            position: relative;
 
-            width: 100%;
-            height: 100%;
-
-            display: flex;
-
-            align-items: center;
-            justify-content: center;
-
-            overflow: hidden;
-        }
-
-        .photo-slot {
             position: absolute;
 
-            cursor: pointer;
+            inset: 0;
 
-            border-radius: 5px;
+            width: 100%;
+
+            height: 100%;
 
             overflow: hidden;
-
-            transition:
-                transform .15s ease,
-                outline .15s ease;
 
             z-index: 10;
         }
 
-        .photo-slot:hover {
+
+        .photo-slot {
+
+            position: absolute;
+
+            overflow: hidden;
+
+            border-radius: 3px;
+
+            cursor: pointer;
+
+            z-index: 10;
+
+            transition:
+                transform 0.15s ease,
+                outline 0.15s ease;
+        }
+
+
+        /*
+         * FOTO YANG SUDAH DIAMBIL
+         */
+
+        .photo-slot.has-photo:hover {
+
             transform: scale(1.015);
 
             outline:
                 2px solid white;
 
-            z-index: 25;
+            z-index: 50;
         }
 
+
         .photo-slot canvas {
+
             width: 100%;
+
             height: 100%;
 
             display: block;
         }
 
-        /*
-         * Nomor foto
-        */
+
+        /* NOMOR FOTO */
 
         .slot-number {
+
             position: absolute;
 
             top: 5px;
+
             left: 5px;
 
             width: 25px;
+
             height: 25px;
 
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
             border-radius: 50%;
 
-            background: rgba(0,0,0,.65);
+            background:
+                rgba(0, 0, 0, 0.65);
 
             color: white;
 
             font-size: 11px;
+
             font-weight: bold;
 
-            z-index: 50;
+            z-index: 70;
 
             pointer-events: none;
         }
 
-        /*
-         * Teks sebelum foto diambil
-        */
+
+        /* BELUM ADA FOTO */
 
         .slot-empty {
+
             position: absolute;
 
             inset: 0;
@@ -457,6 +517,7 @@
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
             text-align: center;
@@ -464,20 +525,22 @@
             color: white;
 
             font-size: 11px;
+
             font-weight: bold;
 
-            background: rgba(0,0,0,.3);
+            background:
+                rgba(0, 0, 0, 0.35);
 
-            z-index: 40;
+            z-index: 30;
 
             pointer-events: none;
         }
 
-        /*
-         * Retake
-        */
+
+        /* RETAKE */
 
         .retake-label {
+
             position: absolute;
 
             inset: 0;
@@ -485,25 +548,33 @@
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
-            background: rgba(0,0,0,.45);
+            text-align: center;
+
+            background:
+                rgba(0, 0, 0, 0.55);
 
             color: white;
 
             font-size: 12px;
+
             font-weight: bold;
 
             opacity: 0;
 
-            transition: opacity .15s;
+            transition:
+                opacity 0.15s;
 
             z-index: 60;
 
             pointer-events: none;
         }
 
-        .photo-slot:hover .retake-label {
+
+        .photo-slot.has-photo:hover .retake-label {
+
             opacity: 1;
         }
 
@@ -513,17 +584,25 @@
         ===================================================== */
 
         .editor-container {
+
             display: flex;
+
             gap: 16px;
+
             flex: 1;
+
             min-height: 0;
         }
 
+
         .canvas-area {
+
             flex: 3;
 
             display: flex;
+
             justify-content: center;
+
             align-items: center;
 
             background: #e0e0e0;
@@ -537,8 +616,11 @@
             position: relative;
         }
 
+
         canvas {
+
             max-width: 100%;
+
             max-height: 100%;
 
             object-fit: contain;
@@ -546,10 +628,12 @@
             border-radius: 10px;
 
             box-shadow:
-                0 10px 30px rgba(0,0,0,.1);
+                0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
+
         .tools-area {
+
             flex: 2;
 
             background: white;
@@ -567,6 +651,7 @@
         ===================================================== */
 
         .result-container {
+
             display: flex;
 
             gap: 20px;
@@ -578,7 +663,9 @@
             align-items: center;
         }
 
+
         .result-left {
+
             flex: 1;
 
             height: 100%;
@@ -586,6 +673,7 @@
             display: flex;
 
             justify-content: center;
+
             align-items: center;
 
             background: #e0e0e0;
@@ -593,7 +681,9 @@
             border-radius: 12px;
         }
 
+
         .result-right {
+
             flex: 1;
 
             display: flex;
@@ -601,6 +691,7 @@
             flex-direction: column;
 
             align-items: center;
+
             justify-content: center;
 
             background: white;
@@ -620,6 +711,7 @@
         ===================================================== */
 
         #loading-overlay {
+
             display: none;
 
             position: absolute;
@@ -627,11 +719,12 @@
             inset: 0;
 
             background:
-                rgba(255,255,255,.8);
+                rgba(255, 255, 255, 0.8);
 
             z-index: 10;
 
             justify-content: center;
+
             align-items: center;
 
             flex-direction: column;
@@ -639,19 +732,25 @@
             border-radius: 10px;
         }
 
-        .spinner {
-            border: 4px solid #f3f3f3;
 
-            border-top: 4px solid #000;
+        .spinner {
+
+            border:
+                4px solid #f3f3f3;
+
+            border-top:
+                4px solid #000;
 
             border-radius: 50%;
 
             width: 40px;
+
             height: 40px;
 
             animation:
                 spin 1s linear infinite;
         }
+
 
         @keyframes spin {
 
@@ -672,42 +771,70 @@
 
         @media (max-width: 800px) {
 
+            .frame-item {
+
+                flex-basis: 190px;
+
+                height: 280px;
+            }
+
+
+            .frame-grid {
+
+                padding:
+                    30px 40px;
+            }
+
+
             .camera-container {
+
                 flex-direction: column;
             }
 
+
             .video-wrapper {
+
                 min-height: 50vh;
             }
 
+
             .preview-wrapper {
+
                 min-height: 30vh;
             }
 
+
             .editor-container,
             .result-container {
+
                 flex-direction: column;
             }
 
+
             .canvas-area,
             .result-left {
+
                 min-height: 50vh;
             }
 
+
             .tools-area,
             .result-right {
+
                 width: 100%;
             }
+
         }
 
     </style>
 </head>
 
+
 <body>
 
 
     <!-- =====================================================
-         START
+         START SCREEN
     ===================================================== -->
 
     <div
@@ -735,6 +862,7 @@
 
         </div>
 
+
         <div class="bottom-actions">
 
             <button
@@ -748,8 +876,9 @@
     </div>
 
 
+
     <!-- =====================================================
-         PILIH FRAME
+         FRAME SCREEN
     ===================================================== -->
 
     <div
@@ -769,13 +898,16 @@
 
             <div
                 class="frame-item"
+
                 style="
                     background-image:
                     url('frame/default.png');
 
-                    background-size:cover;
-                    background-position:center;
+                    background-size: cover;
+
+                    background-position: center;
                 "
+
                 onclick="
                     selectFrame(
                         this,
@@ -791,7 +923,9 @@
 
             <button
                 id="btn-continue-camera"
+
                 disabled
+
                 onclick="
                     nav('camera-screen');
                     initCamera();
@@ -805,8 +939,9 @@
     </div>
 
 
+
     <!-- =====================================================
-         CAMERA
+         CAMERA SCREEN
     ===================================================== -->
 
     <div
@@ -827,14 +962,17 @@
                 Kamera
             </h2>
 
+
             <button
                 class="outline"
+
                 style="
                     width:auto;
                     padding:6px 12px;
                     font-size:12px;
                     margin:0;
                 "
+
                 onclick="toggleMirror()"
             >
                 Balik Kamera
@@ -846,33 +984,18 @@
         <div class="camera-container">
 
 
-            <!-- =================================================
-                 LIVE CAMERA
-            ================================================= -->
+            <!-- LIVE CAMERA -->
 
-            <div class="video-wrapper">
+            <div
+                class="video-wrapper"
+                id="video-wrapper"
+            >
 
                 <video
                     id="camera-feed"
                     autoplay
                     playsinline
                 ></video>
-
-
-                <!-- Frame transparan sebagai overlay -->
-
-                <img
-                    id="camera-frame-overlay"
-                    src=""
-                    alt=""
-                >
-
-
-                <!-- Guide lubang -->
-
-                <div
-                    id="camera-hole-guide"
-                ></div>
 
 
                 <div
@@ -889,24 +1012,20 @@
             </div>
 
 
-            <!-- =================================================
-                 FRAME + HASIL FOTO
-            ================================================= -->
+
+            <!-- FRAME + HASIL FOTO -->
 
             <div class="preview-wrapper">
 
                 <div
                     class="frame-preview-container"
+                    id="frame-preview-container"
                 >
-
-                    <!-- Foto ditempatkan di sini -->
 
                     <div
                         id="photo-slots"
                     ></div>
 
-
-                    <!-- Frame lengkap -->
 
                     <img
                         id="camera-side-frame"
@@ -933,7 +1052,9 @@
 
             <button
                 id="btn-next-preview"
+
                 disabled
+
                 onclick="
                     nav('preview-screen');
                     loadPreview();
@@ -947,8 +1068,9 @@
     </div>
 
 
+
     <!-- =====================================================
-         PREVIEW
+         PREVIEW SCREEN
     ===================================================== -->
 
     <div
@@ -1008,6 +1130,7 @@
 
                     <button
                         class="outline"
+
                         onclick="
                             applyFilter('none')
                         "
@@ -1018,6 +1141,7 @@
 
                     <button
                         class="outline"
+
                         onclick="
                             applyFilter(
                                 'grayscale(100%)'
@@ -1030,6 +1154,7 @@
 
                     <button
                         class="outline"
+
                         onclick="
                             applyFilter(
                                 'sepia(100%)'
@@ -1061,8 +1186,9 @@
     </div>
 
 
+
     <!-- =====================================================
-         RESULT
+         RESULT SCREEN
     ===================================================== -->
 
     <div
@@ -1077,11 +1203,11 @@
 
         <div class="result-container">
 
-
             <div class="result-left">
 
                 <canvas
                     id="final-preview-canvas"
+
                     style="
                         max-height:100%;
                         border-radius:8px;
@@ -1100,12 +1226,18 @@
 
                 <div
                     id="qrcode-container"
-                    style="margin:10px 0;"
+
+                    style="
+                        margin:10px 0;
+                    "
                 >
 
                     <div
                         class="spinner"
-                        style="margin:20px auto;"
+
+                        style="
+                            margin:20px auto;
+                        "
                     ></div>
 
                 </div>
@@ -1113,6 +1245,7 @@
 
                 <p
                     id="qr-status-text"
+
                     style="
                         font-size:11px;
                         color:#666;
@@ -1141,6 +1274,7 @@
 
                     <button
                         class="outline"
+
                         onclick="downloadTanpaFrame()"
                     >
                         🖼️ Unduh Foto Satuan
@@ -1149,7 +1283,9 @@
 
                     <button
                         class="outline"
+
                         onclick="location.reload()"
+
                         style="
                             background-color:#ffebeb;
                             color:red;
@@ -1168,11 +1304,13 @@
     </div>
 
 
+
     <!-- =====================================================
          JAVASCRIPT
     ===================================================== -->
 
     <script>
+
 
         /* =====================================================
            NAVIGATION
@@ -1183,19 +1321,25 @@
             document
                 .querySelectorAll('.screen')
                 .forEach(
-                    s =>
-                        s.classList.remove('active')
+                    screen =>
+                        screen.classList.remove(
+                            'active'
+                        )
                 );
+
 
             document
                 .getElementById(screenId)
-                .classList.add('active');
+                .classList.add(
+                    'active'
+                );
 
         }
 
 
+
         /* =====================================================
-           VARIABLE
+           GLOBAL VARIABLES
         ===================================================== */
 
         let requiredPhotos = 0;
@@ -1214,46 +1358,12 @@
 
         let currentCanvasFilter = 'none';
 
+        let isTakingPhoto = false;
 
-        /* =====================================================
-           LOAD FRAME
-        ===================================================== */
-
-        async function loadFrameImage(src) {
-
-            return new Promise(
-                (resolve, reject) => {
-
-                    const img =
-                        new Image();
-
-                    img.onload = () => {
-
-                        finalFrameImageObj =
-                            img;
-
-                        resolve(img);
-
-                    };
-
-                    img.onerror = () => {
-
-                        reject(
-                            'Frame tidak dapat dimuat.'
-                        );
-
-                    };
-
-                    img.src = src;
-
-                }
-            );
-
-        }
 
 
         /* =====================================================
-           DETECT HOLES
+           DETECT TRANSPARENT HOLES
         ===================================================== */
 
         async function detectFrameHoles(
@@ -1265,9 +1375,6 @@
 
                     const img =
                         new Image();
-
-                    img.src =
-                        imgSrc;
 
 
                     img.onload = () => {
@@ -1295,12 +1402,14 @@
                         const width =
                             img.width;
 
+
                         const height =
                             img.height;
 
 
                         canvas.width =
                             width;
+
 
                         canvas.height =
                             height;
@@ -1360,7 +1469,6 @@
 
                                     let minX = x;
                                     let maxX = x;
-
                                     let minY = y;
                                     let maxY = y;
 
@@ -1379,17 +1487,18 @@
 
                                         if (
                                             visited[idx]
-                                        ) {
+                                        )
                                             continue;
-                                        }
 
 
                                         const px =
                                             idx % width;
 
+
                                         const py =
                                             Math.floor(
-                                                idx / width
+                                                idx /
+                                                width
                                             );
 
 
@@ -1397,9 +1506,8 @@
                                             data[
                                                 idx * 4 + 3
                                             ] >= 10
-                                        ) {
+                                        )
                                             continue;
-                                        }
 
 
                                         visited[idx] =
@@ -1440,7 +1548,8 @@
 
 
                                         if (
-                                            px - 1 >= 0
+                                            px - 1 >=
+                                            0
                                         )
                                             stack.push(
                                                 idx - 1
@@ -1457,7 +1566,8 @@
 
 
                                         if (
-                                            py - 1 >= 0
+                                            py - 1 >=
+                                            0
                                         )
                                             stack.push(
                                                 idx - width
@@ -1467,8 +1577,8 @@
 
 
                                     if (
-                                        (maxX - minX) > 80 &&
-                                        (maxY - minY) > 80
+                                        maxX - minX > 80 &&
+                                        maxY - minY > 80
                                     ) {
 
                                         holes.push({
@@ -1497,22 +1607,25 @@
 
 
                         holes.sort(
-                            (a,b) => {
+                            (a, b) => {
 
                                 if (
                                     Math.abs(
-                                        a.y - b.y
+                                        a.y -
+                                        b.y
                                     ) < 20
                                 ) {
 
                                     return (
-                                        a.x - b.x
+                                        a.x -
+                                        b.x
                                     );
 
                                 }
 
                                 return (
-                                    a.y - b.y
+                                    a.y -
+                                    b.y
                                 );
 
                             }
@@ -1526,11 +1639,17 @@
                     };
 
 
-                    img.onerror =
-                        () =>
-                            reject(
-                                'Gambar tidak ditemukan.'
-                            );
+                    img.onerror = () => {
+
+                        reject(
+                            'Gambar frame tidak ditemukan.'
+                        );
+
+                    };
+
+
+                    img.src =
+                        imgSrc;
 
                 }
             );
@@ -1538,12 +1657,13 @@
         }
 
 
+
         /* =====================================================
            SELECT FRAME
         ===================================================== */
 
         async function selectFrame(
-            el,
+            element,
             framePath
         ) {
 
@@ -1552,14 +1672,14 @@
                     '.frame-item'
                 )
                 .forEach(
-                    f =>
-                        f.classList.remove(
+                    item =>
+                        item.classList.remove(
                             'selected'
                         )
                 );
 
 
-            el.classList.add(
+            element.classList.add(
                 'selected'
             );
 
@@ -1568,17 +1688,17 @@
                 framePath;
 
 
-            const btn =
+            const button =
                 document.getElementById(
                     'btn-continue-camera'
                 );
 
 
-            btn.disabled =
+            button.disabled =
                 true;
 
 
-            btn.innerText =
+            button.innerText =
                 'Memindai Frame...';
 
 
@@ -1598,28 +1718,25 @@
                     requiredPhotos === 0
                 ) {
 
+                    button.innerText =
+                        'Pilih Frame Dulu';
+
+
                     alert(
                         'Frame tidak memiliki lubang transparan!'
                     );
 
-                    btn.innerText =
-                        'Pilih Frame Dulu';
 
                     return;
 
                 }
 
 
-                await loadFrameImage(
-                    framePath
-                );
-
-
-                btn.disabled =
+                button.disabled =
                     false;
 
 
-                btn.innerText =
+                button.innerText =
                     `Lanjut (${requiredPhotos} Foto)`;
 
 
@@ -1629,6 +1746,7 @@
                     error
                 );
 
+
                 alert(
                     error
                 );
@@ -1636,6 +1754,7 @@
             }
 
         }
+
 
 
         /* =====================================================
@@ -1693,40 +1812,15 @@
                     stream;
 
 
-                /*
-                 * Pasang frame overlay
-                 */
-
-                const overlay =
-                    document.getElementById(
-                        'camera-frame-overlay'
-                    );
-
-
-                overlay.src =
-                    selectedFramePath;
-
-
-                /*
-                 * Reset foto
-                 */
-
                 capturedImages =
                     new Array(
                         requiredPhotos
                     );
 
 
-                /*
-                 * Buat preview frame
-                 */
+                isTakingPhoto =
+                    false;
 
-                buildFramePreview();
-
-
-                /*
-                 * Reset tombol
-                 */
 
                 document
                     .getElementById(
@@ -1744,11 +1838,24 @@
                     true;
 
 
+                setTimeout(
+                    () => {
+
+                        buildFramePreview();
+
+                        adjustCameraRatio();
+
+                    },
+                    500
+                );
+
+
             } catch (error) {
 
                 console.error(
                     error
                 );
+
 
                 alert(
                     'Izin Kamera diperlukan.'
@@ -1759,6 +1866,41 @@
         }
 
 
+
+        /* =====================================================
+           CAMERA RATIO
+        ===================================================== */
+
+        function adjustCameraRatio() {
+
+            const videoWrapper =
+                document.getElementById(
+                    'video-wrapper'
+                );
+
+
+            if (
+                !frameHoles.length
+            )
+                return;
+
+
+            const firstHole =
+                frameHoles[0];
+
+
+            const ratio =
+                firstHole.w /
+                firstHole.h;
+
+
+            videoWrapper.style.aspectRatio =
+                `${ratio}`;
+
+        }
+
+
+
         /* =====================================================
            BUILD FRAME PREVIEW
         ===================================================== */
@@ -1767,48 +1909,37 @@
 
             const container =
                 document.getElementById(
+                    'frame-preview-container'
+                );
+
+
+            const slots =
+                document.getElementById(
                     'photo-slots'
                 );
 
 
-            container.innerHTML =
+            slots.innerHTML =
                 '';
 
 
-            /*
-             * Frame preview menggunakan
-             * rasio asli frame.
-             */
-
-            const frame =
-                finalFrameImageObj;
-
-
-            if (!frame)
+            if (
+                !finalFrameImageObj
+            )
                 return;
 
 
-            /*
-             * Hitung ukuran frame
-             */
-
-            const parent =
-                document.querySelector(
-                    '.frame-preview-container'
-                );
-
-
             const parentWidth =
-                parent.clientWidth;
+                container.clientWidth;
 
 
             const parentHeight =
-                parent.clientHeight;
+                container.clientHeight;
 
 
             const frameRatio =
-                frame.width /
-                frame.height;
+                finalFrameImageObj.width /
+                finalFrameImageObj.height;
 
 
             let frameWidth =
@@ -1828,16 +1959,13 @@
                 frameHeight =
                     parentHeight;
 
+
                 frameWidth =
                     frameHeight *
                     frameRatio;
 
             }
 
-
-            /*
-             * Ukuran frame relatif
-             */
 
             const left =
                 (
@@ -1853,13 +1981,11 @@
                 ) / 2;
 
 
-            /*
-             * Buat slot berdasarkan
-             * koordinat lubang.
-             */
-
             frameHoles.forEach(
-                (hole, index) => {
+                (
+                    hole,
+                    index
+                ) => {
 
                     const slot =
                         document.createElement(
@@ -1871,67 +1997,51 @@
                         'photo-slot';
 
 
-                    /*
-                     * Posisi hole pada layar
-                     */
-
-                    const leftPx =
-                        left +
-                        (
-                            hole.x /
-                            frame.width
-                        ) *
-                        frameWidth;
-
-
-                    const topPx =
-                        top +
-                        (
-                            hole.y /
-                            frame.height
-                        ) *
-                        frameHeight;
-
-
-                    const widthPx =
-                        (
-                            hole.w /
-                            frame.width
-                        ) *
-                        frameWidth;
-
-
-                    const heightPx =
-                        (
-                            hole.h /
-                            frame.height
-                        ) *
-                        frameHeight;
-
-
                     slot.style.left =
-                        `${leftPx}px`;
+                        `${
+                            left +
+                            (
+                                hole.x /
+                                finalFrameImageObj.width
+                            ) *
+                            frameWidth
+                        }px`;
 
 
                     slot.style.top =
-                        `${topPx}px`;
+                        `${
+                            top +
+                            (
+                                hole.y /
+                                finalFrameImageObj.height
+                            ) *
+                            frameHeight
+                        }px`;
 
 
                     slot.style.width =
-                        `${widthPx}px`;
+                        `${
+                            (
+                                hole.w /
+                                finalFrameImageObj.width
+                            ) *
+                            frameWidth
+                        }px`;
 
 
                     slot.style.height =
-                        `${heightPx}px`;
+                        `${
+                            (
+                                hole.h /
+                                finalFrameImageObj.height
+                            ) *
+                            frameHeight
+                        }px`;
 
 
                     slot.dataset.index =
                         index;
 
-
-                    /*
-                     * Canvas
-                     */
 
                     const canvas =
                         document.createElement(
@@ -1942,6 +2052,7 @@
                     canvas.width =
                         hole.w;
 
+
                     canvas.height =
                         hole.h;
 
@@ -1950,10 +2061,6 @@
                         canvas
                     );
 
-
-                    /*
-                     * Nomor
-                     */
 
                     const number =
                         document.createElement(
@@ -1974,10 +2081,6 @@
                     );
 
 
-                    /*
-                     * Empty
-                     */
-
                     const empty =
                         document.createElement(
                             'div'
@@ -1997,10 +2100,6 @@
                     );
 
 
-                    /*
-                     * Retake
-                     */
-
                     const retake =
                         document.createElement(
                             'div'
@@ -2011,7 +2110,7 @@
                         'retake-label';
 
 
-                    retake.innerText =
+                    retake.innerHTML =
                         '↻ Ambil Ulang';
 
 
@@ -2021,27 +2120,42 @@
 
 
                     /*
-                     * Klik slot
+                     * PENTING:
+                     * Klik langsung pada slot
                      */
 
-                    slot.onclick =
-                        () => {
+                    slot.addEventListener(
+                        'click',
+                        function(event) {
 
-                            retakePhoto(
-                                index
-                            );
+                            event.preventDefault();
 
-                        };
+                            event.stopPropagation();
 
 
-                    container.appendChild(
-                        slot
+                            /*
+                             * Hanya bisa retake
+                             * jika foto sudah ada
+                             */
+
+                            if (
+                                capturedImages[index]
+                            ) {
+
+                                retakePhoto(
+                                    index
+                                );
+
+                            }
+
+                        }
                     );
 
 
-                    /*
-                     * Render slot
-                     */
+                    slots.appendChild(
+                        slot
+                    );
+
 
                     renderSlot(
                         index
@@ -2052,31 +2166,32 @@
 
 
             /*
-             * Frame di atas
+             * Frame berada paling atas
              */
 
-            const frameImage =
+            const frame =
                 document.getElementById(
                     'camera-side-frame'
                 );
 
 
-            frameImage.src =
+            frame.src =
                 selectedFramePath;
 
 
-            frameImage.style.width =
+            frame.style.width =
                 `${frameWidth}px`;
 
 
-            frameImage.style.height =
+            frame.style.height =
                 `${frameHeight}px`;
 
         }
 
 
+
         /* =====================================================
-           RENDER SLOT
+           RENDER PHOTO SLOT
         ===================================================== */
 
         function renderSlot(
@@ -2109,14 +2224,6 @@
                 );
 
 
-            const hole =
-                frameHoles[index];
-
-
-            /*
-             * Bersihkan
-             */
-
             ctx.clearRect(
                 0,
                 0,
@@ -2126,32 +2233,38 @@
 
 
             /*
-             * Background
-             */
-
-            ctx.fillStyle =
-                '#222';
-
-
-            ctx.fillRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-
-
-            /*
-             * Jika belum ada foto
+             * FOTO BELUM ADA
              */
 
             if (
                 !capturedImages[index]
             ) {
 
+                ctx.fillStyle =
+                    '#222';
+
+
+                ctx.fillRect(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+
+
+                slot.classList.remove(
+                    'has-photo'
+                );
+
+
                 return;
 
             }
+
+
+            slot.classList.add(
+                'has-photo'
+            );
 
 
             const img =
@@ -2162,14 +2275,21 @@
                 () => {
 
                     drawImageIntoHole(
+
                         ctx,
+
                         img,
+
                         {
                             x: 0,
+
                             y: 0,
-                            w: hole.w,
-                            h: hole.h
+
+                            w: canvas.width,
+
+                            h: canvas.height
                         }
+
                     );
 
                 };
@@ -2178,11 +2298,26 @@
             img.src =
                 capturedImages[index];
 
+
+            const empty =
+                slot.querySelector(
+                    '.slot-empty'
+                );
+
+
+            if (empty) {
+
+                empty.style.display =
+                    'none';
+
+            }
+
         }
 
 
+
         /* =====================================================
-           DRAW IMAGE INTO HOLE
+           DRAW IMAGE TO SLOT
         ===================================================== */
 
         function drawImageIntoHole(
@@ -2191,7 +2326,7 @@
             target
         ) {
 
-            const imgRatio =
+            const imageRatio =
                 img.width /
                 img.height;
 
@@ -2201,50 +2336,49 @@
                 target.h;
 
 
-            let sW =
+            let sourceWidth =
                 img.width;
 
 
-            let sH =
+            let sourceHeight =
                 img.height;
 
 
-            let sX = 0;
+            let sourceX =
+                0;
 
-            let sY = 0;
 
+            let sourceY =
+                0;
 
-            /*
-             * Crop tengah
-             */
 
             if (
-                imgRatio >
+                imageRatio >
                 targetRatio
             ) {
 
-                sW =
+                sourceWidth =
                     img.height *
                     targetRatio;
 
 
-                sX =
+                sourceX =
                     (
                         img.width -
-                        sW
+                        sourceWidth
                     ) / 2;
 
             } else {
 
-                sH =
+                sourceHeight =
                     img.width /
                     targetRatio;
 
 
-                sY =
+                sourceY =
                     (
                         img.height -
-                        sH
+                        sourceHeight
                     ) / 2;
 
             }
@@ -2254,14 +2388,20 @@
 
                 img,
 
-                sX,
-                sY,
-                sW,
-                sH,
+                sourceX,
+
+                sourceY,
+
+                sourceWidth,
+
+                sourceHeight,
 
                 target.x,
+
                 target.y,
+
                 target.w,
+
                 target.h
 
             );
@@ -2269,8 +2409,9 @@
         }
 
 
+
         /* =====================================================
-           TOGGLE MIRROR
+           MIRROR
         ===================================================== */
 
         function toggleMirror() {
@@ -2291,21 +2432,42 @@
         }
 
 
+
         /* =====================================================
            TAKE ALL PHOTOS
         ===================================================== */
 
         async function takePhotos() {
 
-            const button =
+            if (
+                isTakingPhoto
+            )
+                return;
+
+
+            if (
+                !stream
+            )
+                return;
+
+
+            isTakingPhoto =
+                true;
+
+
+            const takeButton =
                 document.getElementById(
                     'btn-take'
                 );
 
 
-            button.disabled =
+            takeButton.disabled =
                 true;
 
+
+            /*
+             * Ambil semua lubang
+             */
 
             for (
                 let i = 0;
@@ -2315,12 +2477,21 @@
 
                 await runCountdown();
 
+
                 captureFrame(
                     i
                 );
 
             }
 
+
+            isTakingPhoto =
+                false;
+
+
+            /*
+             * Lanjutkan aktif
+             */
 
             document
                 .getElementById(
@@ -2329,40 +2500,63 @@
                 .disabled =
                 false;
 
+
+            /*
+             * Tombol Ambil Foto
+             * bisa digunakan lagi
+             */
+
+            takeButton.disabled =
+                false;
+
         }
 
 
+
         /* =====================================================
-           RETAKE
+           RETAKE FOTO TERTENTU
         ===================================================== */
 
         async function retakePhoto(
             index
         ) {
 
-            if (!stream)
+            /*
+             * Jangan izinkan jika
+             * kamera sedang mengambil foto
+             */
+
+            if (
+                isTakingPhoto
+            )
+                return;
+
+
+            if (
+                !stream
+            )
                 return;
 
 
             /*
-             * Jangan retake saat countdown
+             * Pastikan index valid
              */
 
-            const countdown =
-                document
-                    .getElementById(
-                        'countdown'
-                    );
-
-
             if (
-                countdown.innerText
-            ) {
-
+                index < 0 ||
+                index >= requiredPhotos
+            )
                 return;
 
-            }
 
+            isTakingPhoto =
+                true;
+
+
+            /*
+             * Nonaktifkan klik slot
+             * selama countdown
+             */
 
             const slots =
                 document.querySelectorAll(
@@ -2380,13 +2574,25 @@
             );
 
 
+            /*
+             * Countdown khusus foto
+             */
+
             await runCountdown();
 
+
+            /*
+             * Ambil ulang foto
+             */
 
             captureFrame(
                 index
             );
 
+
+            /*
+             * Aktifkan kembali slot
+             */
 
             slots.forEach(
                 slot => {
@@ -2398,6 +2604,14 @@
             );
 
 
+            isTakingPhoto =
+                false;
+
+
+            /*
+             * Lanjutkan tetap aktif
+             */
+
             document
                 .getElementById(
                     'btn-next-preview'
@@ -2406,6 +2620,7 @@
                 false;
 
         }
+
 
 
         /* =====================================================
@@ -2421,14 +2636,13 @@
                         3;
 
 
-                    const el =
-                        document
-                            .getElementById(
-                                'countdown'
-                            );
+                    const countdown =
+                        document.getElementById(
+                            'countdown'
+                        );
 
 
-                    el.innerText =
+                    countdown.innerText =
                         count;
 
 
@@ -2443,7 +2657,7 @@
                                     count > 0
                                 ) {
 
-                                    el.innerText =
+                                    countdown.innerText =
                                         count;
 
                                 } else {
@@ -2453,30 +2667,27 @@
                                     );
 
 
-                                    el.innerText =
+                                    countdown.innerText =
                                         '';
 
 
                                     const flash =
-                                        document
-                                            .getElementById(
-                                                'flash'
-                                            );
-
-
-                                    flash.classList
-                                        .add(
-                                            'active'
+                                        document.getElementById(
+                                            'flash'
                                         );
+
+
+                                    flash.classList.add(
+                                        'active'
+                                    );
 
 
                                     setTimeout(
                                         () => {
 
-                                            flash.classList
-                                                .remove(
-                                                    'active'
-                                                );
+                                            flash.classList.remove(
+                                                'active'
+                                            );
 
                                         },
                                         120
@@ -2497,8 +2708,9 @@
         }
 
 
+
         /* =====================================================
-           CAPTURE
+           CAPTURE FRAME
         ===================================================== */
 
         function captureFrame(
@@ -2506,20 +2718,16 @@
         ) {
 
             const video =
-                document
-                    .getElementById(
-                        'camera-feed'
-                    );
+                document.getElementById(
+                    'camera-feed'
+                );
 
 
             if (
                 !video.videoWidth ||
                 !video.videoHeight
-            ) {
-
+            )
                 return;
-
-            }
 
 
             const canvas =
@@ -2543,7 +2751,8 @@
 
 
             /*
-             * Mirror sama seperti preview
+             * Mirror mengikuti
+             * tampilan kamera
              */
 
             if (
@@ -2554,6 +2763,7 @@
                     canvas.width,
                     0
                 );
+
 
                 ctx.scale(
                     -1,
@@ -2571,53 +2781,26 @@
 
 
             /*
-             * Simpan
+             * Simpan hasil foto
              */
 
             capturedImages[index] =
                 canvas.toDataURL(
                     'image/jpeg',
-                    .92
+                    0.92
                 );
 
 
             /*
-             * Render preview
+             * Update tampilan slot
              */
 
             renderSlot(
                 index
             );
 
-
-            /*
-             * Hilangkan tulisan kosong
-             */
-
-            const slot =
-                document.querySelectorAll(
-                    '.photo-slot'
-                )[index];
-
-
-            if (slot) {
-
-                const empty =
-                    slot.querySelector(
-                        '.slot-empty'
-                    );
-
-
-                if (empty) {
-
-                    empty.style.display =
-                        'none';
-
-                }
-
-            }
-
         }
+
 
 
         /* =====================================================
@@ -2626,7 +2809,9 @@
 
         function loadPreview() {
 
-            if (stream) {
+            if (
+                stream
+            ) {
 
                 stream
                     .getTracks()
@@ -2650,6 +2835,7 @@
         }
 
 
+
         /* =====================================================
            FILTER
         ===================================================== */
@@ -2670,14 +2856,14 @@
         }
 
 
+
         /* =====================================================
            DRAW FINAL CANVAS
         ===================================================== */
 
         async function drawCanvas(
             withFrame = true,
-            canvasId =
-                'result-canvas'
+            canvasId = 'result-canvas'
         ) {
 
             const canvas =
@@ -2718,12 +2904,17 @@
 
             const promises =
                 capturedImages.map(
-                    (src, index) => {
+                    (
+                        source,
+                        index
+                    ) => {
 
                         return new Promise(
                             resolve => {
 
-                                if (!src) {
+                                if (
+                                    !source
+                                ) {
 
                                     resolve();
 
@@ -2739,19 +2930,15 @@
                                 img.onload =
                                     () => {
 
-                                        const hole =
-                                            frameHoles[
-                                                index
-                                            ];
-
-
                                         drawImageIntoHole(
 
                                             ctx,
 
                                             img,
 
-                                            hole
+                                            frameHoles[
+                                                index
+                                            ]
 
                                         );
 
@@ -2762,12 +2949,15 @@
 
 
                                 img.onerror =
-                                    () =>
+                                    () => {
+
                                         resolve();
+
+                                    };
 
 
                                 img.src =
-                                    src;
+                                    source;
 
                             }
                         );
@@ -2782,7 +2972,7 @@
 
 
             /*
-             * Frame di paling atas
+             * Frame paling atas
              */
 
             if (
@@ -2810,8 +3000,9 @@
         }
 
 
+
         /* =====================================================
-           DOWNLOAD FRAME
+           DOWNLOAD FINAL
         ===================================================== */
 
         function downloadImage() {
@@ -2841,16 +3032,22 @@
         }
 
 
+
         /* =====================================================
-           DOWNLOAD INDIVIDUAL
+           DOWNLOAD FOTO SATUAN
         ===================================================== */
 
         function downloadTanpaFrame() {
 
             capturedImages.forEach(
-                (imgData, index) => {
+                (
+                    image,
+                    index
+                ) => {
 
-                    if (!imgData)
+                    if (
+                        !image
+                    )
                         return;
 
 
@@ -2865,7 +3062,7 @@
 
 
                     link.href =
-                        imgData;
+                        image;
 
 
                     link.click();
@@ -2876,8 +3073,9 @@
         }
 
 
+
         /* =====================================================
-           UPLOAD
+           UPLOAD SESSION
         ===================================================== */
 
         async function processAndUploadSession() {
@@ -2892,11 +3090,6 @@
                 'final-preview-canvas'
             );
 
-
-            /*
-             * Pastikan result canvas
-             * juga sudah dibuat.
-             */
 
             await drawCanvas(
                 true,
@@ -2913,10 +3106,6 @@
                         'image/png'
                     );
 
-
-            /*
-             * GIF
-             */
 
             gifshot.createGIF(
 
@@ -2943,14 +3132,15 @@
                         ),
 
                     numFrames:
-                        capturedImages.length + 1
+                        capturedImages.length +
+                        1
 
                 },
 
                 async function(obj) {
 
                     let gifData =
-                        "";
+                        '';
 
 
                     if (
@@ -2974,10 +3164,8 @@
                                         'POST',
 
                                     headers: {
-
                                         'Content-Type':
                                             'application/json'
-
                                     },
 
                                     body:
@@ -3083,18 +3271,14 @@
         }
 
 
+
         /* =====================================================
-           WINDOW RESIZE
-           ===================================================== */
+           RESIZE
+        ===================================================== */
 
         window.addEventListener(
             'resize',
             () => {
-
-                /*
-                 * Kalau sedang di kamera,
-                 * hitung ulang posisi lubang.
-                 */
 
                 const cameraScreen =
                     document.getElementById(
@@ -3103,12 +3287,14 @@
 
 
                 if (
-                    cameraScreen.classList
-                        .contains('active') &&
-                    finalFrameImageObj
+                    cameraScreen.classList.contains(
+                        'active'
+                    )
                 ) {
 
                     buildFramePreview();
+
+                    adjustCameraRatio();
 
                 }
 
