@@ -1390,6 +1390,91 @@
 .preview-custom-left{overflow:visible !important;}
 #result-canvas.dragging{cursor:grabbing !important;}
 </style>
+
+<style>
+/* =====================================================
+   FINAL RESULT PAGE — SAME THEME AS START PAGE
+===================================================== */
+#result-screen{
+    padding:0;
+    overflow:auto;
+    position:relative;
+    background:transparent !important;
+    min-height:100vh;
+}
+#result-screen::before{display:none !important;}
+.result-background{
+    position:fixed;
+    inset:12px;
+    border-radius:35px;
+    overflow:hidden;
+    background:
+        radial-gradient(circle at center, rgba(66,165,245,.45), transparent 38%),
+        linear-gradient(135deg,#dceeff,#ffffff 48%,#d8edff);
+    z-index:0;
+    pointer-events:none;
+}
+.result-page-header{
+    position:relative;
+    z-index:2;
+    text-align:center;
+    padding:28px 20px 4px;
+}
+.result-page-header .start-small{
+    margin-bottom:6px;
+}
+.result-page-header h2{
+    margin:0;
+    font-size:clamp(28px,4vw,42px);
+    font-weight:500;
+    letter-spacing:-1px;
+    color:var(--black);
+}
+.result-page-header p{
+    margin:8px 0 0;
+    color:#6b7d91;
+    font-size:14px;
+}
+#result-screen .custom-result-wrapper{
+    position:relative;
+    z-index:2;
+    padding:14px 30px 25px;
+    max-width:1350px;
+}
+#result-screen .custom-result-left,
+#result-screen .result-card-social,
+#result-screen .result-card-actions{
+    background:rgba(255,255,255,.96);
+    border-color:var(--blue);
+    box-shadow:0 20px 60px rgba(13,71,161,.10);
+}
+#result-screen .custom-result-left{
+    border-width:3px;
+}
+#result-screen .social-card-title,
+#result-screen .barcode-section-title,
+#result-screen .actions-header-title,
+#result-screen .actions-main-heading{
+    color:var(--blue-dark);
+}
+#result-screen .barcode-section-box{
+    background:var(--blue-soft);
+    border-color:#c7def5;
+}
+#result-screen .bottom-actions{
+    position:relative;
+    z-index:3;
+    padding:0 20px 25px;
+}
+@media(max-width:1024px){
+    #result-screen .custom-result-wrapper{padding-left:20px;padding-right:20px;}
+}
+@media(max-width:600px){
+    .result-background{inset:6px;border-radius:22px;}
+    .result-page-header{padding-top:20px;}
+    #result-screen .custom-result-wrapper{padding:10px 12px 20px;}
+}
+</style>
 </head>
 
 
@@ -1706,10 +1791,8 @@
         <!-- Sisi Kanan: Panel Edit Foto & Stiker -->
         <div class="preview-custom-right">
             <div class="sticker-category-title">Edit Foto</div>
-            <div class="photo-editor-panel"><div id="photo-editor-selector" class="photo-selector"></div><p class="sticker-editor-help">Pilih foto, lalu <b>tarik langsung</b> pada preview untuk menggeser. Gunakan <b>scroll mouse</b> atau <b>pinch dua jari</b> untuk zoom. Tidak perlu slider.</p><button class="outline" style="width:100%;margin-top:6px" onclick="resetSelectedPhotoTransform()">Reset Posisi Foto</button></div>
             <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
             <div class="sticker-category-title">Stiker & Posisi</div><div class="sticker-grid"><button class="sticker-item-btn" onclick="addSticker('❤️')">❤️</button><button class="sticker-item-btn" onclick="addSticker('⭐')">⭐</button><button class="sticker-item-btn" onclick="addSticker('🔥')">🔥</button><button class="sticker-item-btn" onclick="addSticker('👑')">👑</button><button class="sticker-item-btn" onclick="addSticker('✨')">✨</button><button class="sticker-item-btn" onclick="addSticker('🎉')">🎉</button><button class="sticker-item-btn" onclick="addSticker('😎')">😎</button><button class="sticker-item-btn" onclick="addSticker('🌸')">🌸</button></div><div id="custom-sticker-admin" style="display:none;margin-bottom:12px"><input type="file" id="custom-sticker-input" accept="image/png" style="display:none" onchange="handleCustomStickerUpload(this)"><button class="outline" style="width:100%" onclick="document.getElementById('custom-sticker-input').click()">+ Tambah Stiker PNG</button></div><div class="sticker-category-title" style="margin-top:10px">Stiker Tersimpan</div><div id="google-drive-stickers" class="sticker-grid"></div>
-            <div id="sticker-editor-panel" class="sticker-editor-panel" style="display:none;"><p class="sticker-editor-help">Pilih stiker pada preview, lalu tarik langsung pada bounding box untuk menggeser. Gunakan handle ↘ untuk memperbesar atau memperkecil, ↻ untuk memutar, dan 🗑 untuk menghapus. Tidak perlu tombol tambahan di bawah.</p></div>
             <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
             <div class="sticker-category-title">Filter Warna</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('none')">Original</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('grayscale(100%)')">Hitam Putih</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('sepia(100%)')">Retro</button></div>
         </div>
@@ -1743,6 +1826,12 @@
     id="result-screen"
     class="screen"
 >
+    <div class="result-background"></div>
+    <div class="result-page-header">
+        <div class="start-small">EST. 2026</div>
+        <h2>Hasil Foto</h2>
+        <p>Foto Anda sudah siap. Simpan atau unduh hasilnya.</p>
+    </div>
     <div class="custom-result-wrapper">
         
         <!-- Left Box: Photo Frame Preview -->
@@ -1786,18 +1875,6 @@
                     </div>
                     <p id="qr-status-text" style="font-size:11px; color:#666; margin:0;">Memproses...</p>
                 </div>
-            </div>
-
-            <!-- Card 2: Quick Edit / Edit Photo -->
-            <div class="result-card-edit">
-                <div>
-                    <div class="quick-edit-label">Quick Edit</div>
-                    <div class="quick-edit-heading">Edit Foto & Stiker</div>
-                    <p class="quick-edit-sub">Sesuaikan posisi, ukuran, rotasi, dan tampilan sebelum menyimpan hasil.</p>
-                </div>
-                <button class="btn-edit-custom" onclick="nav('preview-screen')">
-                    ✏️ Edit Photo
-                </button>
             </div>
 
             <!-- Card 3: Final Actions (Save & Print / Download Now) -->
@@ -4195,9 +4272,8 @@ function refreshStickerPanels(){
 
 /* Result page wording and consistent visual hierarchy. */
 function applyProfessionalCopy(){
-    const title=document.querySelector('#result-screen .actions-main-heading');if(title)title.textContent='Hasil Foto Siap';
-    const edit=document.querySelector('#result-screen .quick-edit-heading');if(edit)edit.textContent='Edit Foto & Stiker';
-    const sub=document.querySelector('#result-screen .quick-edit-sub');if(sub)sub.textContent='Sesuaikan posisi, ukuran, rotasi, dan tampilan sebelum menyimpan hasil.';
+    const title=document.querySelector('#result-screen .actions-main-heading');
+    if(title)title.textContent='Hasil Foto Siap';
 }
 
 window.addEventListener('load',()=>{
