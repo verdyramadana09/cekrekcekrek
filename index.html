@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Photobooth</title>
+    <title>CekrekCekrek</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -2807,7 +2807,7 @@ async function initCamera(fromRetry = false, preferredDeviceId = '') {
         }
 
         // Setelah izin kamera diberikan, label perangkat biasanya tersedia.
-        await loadCameraDevices();
+        await window.loadCameraDevices();
 
         // Tunggu metadata agar videoWidth/videoHeight sudah tersedia.
         await new Promise((resolve, reject) => {
@@ -4630,7 +4630,7 @@ window.addEventListener('load',()=>{
     }
 
 
-    async function loadCameraDevices() {
+    window.loadCameraDevices = async function loadCameraDevices() {
         const select = document.getElementById('camera-select');
         if (!navigator.mediaDevices?.enumerateDevices) return [];
 
@@ -4685,7 +4685,7 @@ window.addEventListener('load',()=>{
         }
     }
 
-    async function selectCamera(deviceId) {
+    window.selectCamera = async function selectCamera(deviceId) {
         if (!deviceId || cameraSwitchBusy) return;
 
         cameraSwitchBusy = true;
@@ -4702,7 +4702,7 @@ window.addEventListener('load',()=>{
         try {
             selectedCameraId = deviceId;
             await initCamera(false, deviceId);
-            await loadCameraDevices();
+            await window.loadCameraDevices();
 
             if (select) select.value = selectedCameraId;
         } catch (error) {
@@ -4717,9 +4717,9 @@ window.addEventListener('load',()=>{
         }
     }
 
-    function switchCamera() {
+    window.switchCamera = function switchCamera() {
         if (!availableCameras.length) {
-            loadCameraDevices().then(() => switchCamera());
+            window.loadCameraDevices().then(() => window.switchCamera());
             return;
         }
 
@@ -4738,7 +4738,7 @@ window.addEventListener('load',()=>{
         }
     }
 
-    function initCameraSelector() {
+    window.initCameraSelector = function initCameraSelector() {
         const select = document.getElementById('camera-select');
         if (!select || select.dataset.ready === '1') return;
 
@@ -4748,16 +4748,21 @@ window.addEventListener('load',()=>{
             selectCamera(select.value);
         });
 
-        loadCameraDevices();
+        window.loadCameraDevices();
     }
 
     if (navigator.mediaDevices?.addEventListener) {
-        navigator.mediaDevices.addEventListener('devicechange', loadCameraDevices);
+        navigator.mediaDevices.addEventListener('devicechange', window.loadCameraDevices);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        initCameraSelector();
+        window.initCameraSelector();
     });
+
+    // If this script is inserted/loaded after DOMContentLoaded, initialize immediately.
+    if (document.readyState !== 'loading') {
+        setTimeout(() => window.initCameraSelector(), 0);
+    }
 
     function ensureCameraPreview() {
         const video = document.getElementById('camera-feed');
