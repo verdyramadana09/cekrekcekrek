@@ -62,7 +62,7 @@
 
 
         /* =====================================================
-           SCREEN
+            SCREEN
         ===================================================== */
 
         .screen {
@@ -84,7 +84,7 @@
 
 
         /* =====================================================
-           GLOBAL
+            GLOBAL
         ===================================================== */
 
         h1,
@@ -112,7 +112,7 @@
 
 
         /* =====================================================
-           BUTTON
+            BUTTON
         ===================================================== */
 
         button {
@@ -165,7 +165,7 @@
 
 
         /* =====================================================
-           BOTTOM ACTIONS
+            BOTTOM ACTIONS
         ===================================================== */
 
         .bottom-actions {
@@ -184,7 +184,7 @@
 
 
         /* =====================================================
-           START
+            START
         ===================================================== */
 
         #start-screen {
@@ -273,7 +273,7 @@
 
 
         /* =====================================================
-           INPUT NAMA
+            INPUT NAMA
         ===================================================== */
 
         .name-screen-content {
@@ -351,7 +351,7 @@
 
 
         /* =====================================================
-           FRAME SELECT
+            FRAME SELECT
         ===================================================== */
 
         .frame-screen-header {
@@ -451,265 +451,307 @@
 
 
         /* =====================================================
-           CAMERA
+            CAMERA SCREEN (NEW LAYOUT)
         ===================================================== */
 
-        .camera-container {
-            display: flex;
-
+        .camera-screen-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr 280px;
             gap: 20px;
-
             flex: 1;
+            min-height: 0;
+            align-items: stretch;
+        }
 
+        @media (max-width: 1100px) {
+            .camera-screen-layout {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+        }
+
+        /* Settings Left Panel */
+        .camera-settings-panel {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--black);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .setting-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .setting-buttons button {
+            padding: 8px 0;
+            font-size: 12px;
+            border-radius: 8px;
+            background: #f0f4f8;
+            color: var(--black);
+            border: 1px solid transparent;
+        }
+
+        .setting-buttons button.active, 
+        .setting-buttons button:hover {
+            background: var(--blue);
+            color: white;
+        }
+
+        .setting-toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fbff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        /* Center Video Area */
+        .camera-center-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             min-height: 0;
         }
 
         .video-wrapper {
-            flex: 3;
-
+            flex: 1;
             background: #000;
-
             border-radius: 18px;
-
             overflow: hidden;
-
             position: relative;
-
             display: flex;
-
             justify-content: center;
-
             align-items: center;
-
-            min-height: 0;
-
-            box-shadow:
-                0 10px 35px rgba(0,0,0,.10);
+            min-height: 350px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.10);
         }
 
         #camera-feed {
             display: block;
-
             width: 100%;
             height: 100%;
-
             object-fit: cover;
-
             transform: scaleX(-1);
-
             background: #000;
+        }
+
+        /* Floating Shutter Button inside Video */
+        .shutter-btn-absolute {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 50;
+            transition: transform 0.1s;
+        }
+        .shutter-btn-absolute:hover {
+            transform: translateX(-50%) scale(1.05);
+        }
+        .shutter-inner {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        /* Filters Carousel at bottom of center */
+        .filters-carousel {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            overflow-x: auto;
+        }
+
+        .filter-thumb-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px;
+        }
+
+        .filter-thumb-item img, .filter-thumb-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--blue-soft);
+            border: 2px solid var(--border);
+            object-fit: cover;
+        }
+
+        .filter-thumb-item span {
+            font-size: 11px;
+            color: var(--black);
+        }
+
+
+        /* Right Panel: Photos & Preview Container */
+        .camera-right-panel {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            overflow-y: auto;
+        }
+
+        .right-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Hidden or small helper container for hidden frame preview calculations */
+        .preview-wrapper {
+            display: none; 
         }
 
 
         /* =====================================================
-           COUNTDOWN
+            COUNTDOWN
         ===================================================== */
 
         .countdown {
             position: absolute;
-
             top: 50%;
             left: 50%;
-
-            transform:
-                translate(-50%, -50%);
-
+            transform: translate(-50%, -50%);
             font-size: 90px;
-
             color: white;
-
             font-weight: 700;
-
-            text-shadow:
-                0 3px 15px rgba(0,0,0,.5);
-
+            text-shadow: 0 3px 15px rgba(0,0,0,.5);
             z-index: 100;
         }
 
         .flash {
             position: absolute;
-
             inset: 0;
-
             background: white;
-
             opacity: 0;
-
             pointer-events: none;
-
             z-index: 200;
         }
 
         .flash.active {
             opacity: .85;
-
-            transition:
-                opacity .1s;
+            transition: opacity .1s;
         }
 
 
         /* =====================================================
-           CAMERA FRAME PREVIEW
+            PHOTO SLOT (GRID DALAM PANEL KANAN)
         ===================================================== */
 
-        .preview-wrapper {
-            flex: 2;
-
-            background:
-                #dfefff;
-
-            border:
-                1px solid var(--border);
-
-            border-radius: 18px;
-
-            padding: 12px;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            min-height: 0;
-
-            overflow: hidden;
+        .slots-grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            flex: 1;
         }
-
-        .frame-preview-container {
-            position: relative;
-
-            width: 100%;
-            height: 100%;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            overflow: hidden;
-        }
-
-        #camera-side-frame {
-            position: absolute;
-
-            display: block;
-
-            object-fit: fill;
-
-            pointer-events: none;
-
-            z-index: 30;
-        }
-
-        #photo-slots {
-            position: absolute;
-
-            z-index: 10;
-
-            pointer-events: none;
-        }
-
-
-        /* =====================================================
-           PHOTO SLOT
-        ===================================================== */
 
         .photo-slot {
-            position: absolute;
-
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #f0f4f8;
+            border-radius: 8px;
             overflow: hidden;
-
             cursor: pointer;
-
-            pointer-events: auto;
-
-            border-radius: 0;
-
-            transition:
-                transform .15s,
-                outline .15s;
-
-            z-index: 20;
-
-            background: white;
+            border: 1px solid var(--border);
+            transition: transform .15s, outline .15s;
         }
 
         .photo-slot:hover {
-            transform: scale(1.01);
-
-            outline:
-                2px solid var(--blue);
-
-            z-index: 60;
+            transform: scale(1.02);
+            outline: 2px solid var(--blue);
         }
 
         .photo-slot canvas {
             width: 100%;
             height: 100%;
-
             display: block;
-
             background: white;
         }
 
         .slot-empty {
             position: absolute;
-
             inset: 0;
-
             display: flex;
-
             align-items: center;
-
             justify-content: center;
-
             text-align: center;
-
             color: #9aa9b8;
-
-            font-size: 12px;
-
+            font-size: 10px;
             font-weight: 500;
-
-            background: white;
-
+            background: #f8fbff;
             z-index: 30;
-
             pointer-events: none;
         }
 
         .retake-label {
             position: absolute;
-
             inset: 0;
-
             display: flex;
-
             align-items: center;
-
             justify-content: center;
-
             text-align: center;
-
-            background:
-                rgba(13,71,161,.65);
-
+            background: rgba(13,71,161,.75);
             color: white;
-
-            font-size: 12px;
-
+            font-size: 11px;
             font-weight: 600;
-
             opacity: 0;
-
-            transition:
-                opacity .15s;
-
+            transition: opacity .15s;
             z-index: 80;
-
-            pointer-events: none;
         }
 
         .photo-slot:hover .retake-label {
@@ -718,40 +760,26 @@
 
 
         /* =====================================================
-           PREVIEW EDIT
+            PREVIEW EDIT
         ===================================================== */
 
         .editor-container {
             display: flex;
-
             gap: 18px;
-
             flex: 1;
-
             min-height: 0;
         }
 
         .canvas-area {
             flex: 3;
-
             display: flex;
-
             justify-content: center;
-
             align-items: center;
-
-            background:
-                #e8f3ff;
-
-            border:
-                1px solid var(--border);
-
+            background: #e8f3ff;
+            border: 1px solid var(--border);
             border-radius: 16px;
-
             min-height: 0;
-
             padding: 15px;
-
             position: relative;
         }
 
@@ -759,209 +787,101 @@
         #final-preview-canvas {
             max-width: 100%;
             max-height: 100%;
-
             object-fit: contain;
-
             border-radius: 8px;
-
-            box-shadow:
-                0 12px 35px rgba(0,0,0,.12);
+            box-shadow: 0 12px 35px rgba(0,0,0,.12);
         }
 
         .tools-area {
             flex: 2;
-
             background: white;
-
-            border:
-                1px solid var(--border);
-
+            border: 1px solid var(--border);
             border-radius: 16px;
-
             padding: 20px;
-
             overflow-y: auto;
         }
 
         .filter-buttons {
             display: flex;
-
             flex-direction: column;
-
             gap: 10px;
         }
 
 
         /* =====================================================
-           RESULT
+            RESULT
         ===================================================== */
 
         .result-container {
             display: flex;
-
             gap: 20px;
-
             flex: 1;
-
             min-height: 0;
-
             align-items: center;
         }
 
         .result-left {
             flex: 1;
-
             height: 100%;
-
             display: flex;
-
             justify-content: center;
-
             align-items: center;
-
-            background:
-                #e8f3ff;
-
-            border:
-                1px solid var(--border);
-
+            background: #e8f3ff;
+            border: 1px solid var(--border);
             border-radius: 16px;
-
             padding: 15px;
-
             min-height: 0;
         }
 
         .result-right {
             flex: 1;
-
             display: flex;
-
             flex-direction: column;
-
             align-items: center;
-
             justify-content: center;
-
             background: white;
-
             padding: 25px;
-
-            border:
-                1px solid var(--border);
-
+            border: 1px solid var(--border);
             border-radius: 16px;
-
             height: 100%;
-
             text-align: center;
         }
 
         #qrcode-container {
             padding: 10px;
-
             background: white;
-
             border-radius: 10px;
         }
 
 
         /* =====================================================
-           LOADING
+            LOADING
         ===================================================== */
 
         #loading-overlay {
             display: none;
-
             position: absolute;
-
             inset: 0;
-
-            background:
-                rgba(255,255,255,.85);
-
+            background: rgba(255,255,255,.85);
             z-index: 10;
-
             justify-content: center;
-
             align-items: center;
-
             flex-direction: column;
-
             border-radius: 10px;
         }
 
         .spinner {
-            border:
-                4px solid #dceeff;
-
-            border-top:
-                4px solid var(--blue);
-
+            border: 4px solid #dceeff;
+            border-top: 4px solid var(--blue);
             border-radius: 50%;
-
             width: 40px;
             height: 40px;
-
-            animation:
-                spin 1s linear infinite;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-
-        /* =====================================================
-           RESPONSIVE
-        ===================================================== */
-
-        @media (max-width: 900px) {
-
-            .frame-item {
-                width: 280px;
-                height: 430px;
-            }
-
-            .frame-grid {
-                padding:
-                    25px 40px;
-
-                gap: 25px;
-            }
-
-            .camera-container {
-                flex-direction: column;
-            }
-
-            .video-wrapper {
-                min-height: 50vh;
-            }
-
-            .preview-wrapper {
-                min-height: 30vh;
-            }
-
-            .editor-container,
-            .result-container {
-                flex-direction: column;
-            }
-
-            .canvas-area,
-            .result-left {
-                min-height: 45vh;
-            }
-
-            .tools-area,
-            .result-right {
-                min-height: 30vh;
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
     </style>
@@ -972,64 +892,51 @@
 
 
 <!-- =====================================================
-     START SCREEN
+    START SCREEN
 ===================================================== -->
 
 <div
     id="start-screen"
     class="screen active"
 >
-
     <div class="start-background"></div>
-
     <div class="start-content">
-
         <div class="start-small">
             EST. 2026
         </div>
-
         <h1 class="start-title">
             photobooth
         </h1>
-
         <p class="start-subtitle">
             Capture the moment, cherish the memory.<br>
             Make every moment memorable.
         </p>
-
         <button
             class="start-button"
             onclick="nav('name-screen')"
         >
             START
         </button>
-
     </div>
-
 </div>
 
 
 <!-- =====================================================
-     NAME SCREEN
+    NAME SCREEN
 ===================================================== -->
 
 <div
     id="name-screen"
     class="screen"
 >
-
     <div class="name-screen-content">
-
         <div class="name-card">
-
             <h1>
                 Nama Anda
             </h1>
-
             <p>
                 Masukkan nama sebelum memulai sesi foto.
             </p>
-
             <input
                 type="text"
                 id="session-name"
@@ -1038,76 +945,58 @@
                 maxlength="60"
                 autocomplete="off"
             >
-
             <div
                 id="name-error"
                 class="name-error"
             >
                 Silakan masukkan nama terlebih dahulu.
             </div>
-
         </div>
-
     </div>
-
     <div class="bottom-actions">
-
         <button
             class="outline"
             onclick="nav('start-screen')"
         >
             Kembali
         </button>
-
         <button
             onclick="continueFromName()"
         >
             Lanjutkan
         </button>
-
     </div>
-
 </div>
 
 
 <!-- =====================================================
-     FRAME SCREEN
+    FRAME SCREEN
 ===================================================== -->
 
 <div
     id="frame-screen"
     class="screen"
 >
-
     <div class="frame-screen-header">
-
         <h2>
             Pilih Frame
         </h2>
-
         <p>
             Pilih desain frame yang ingin digunakan.
         </p>
-
     </div>
-
-
     <div
         class="frame-grid"
         id="frame-list"
     >
-
         <div
             class="frame-item"
-
             style="
                 background-image:
                 url('frame/default.png');
-
                 background-size: cover;
                 background-position: center;
             "
-
             onclick="
                 selectFrame(
                     this,
@@ -1115,23 +1004,17 @@
                 )
             "
         ></div>
-
     </div>
-
-
     <div class="bottom-actions">
-
         <button
             class="outline"
             onclick="nav('name-screen')"
         >
             Kembali
         </button>
-
         <button
             id="btn-continue-camera"
             disabled
-
             onclick="
                 nav('camera-screen');
                 initCamera();
@@ -1139,167 +1022,149 @@
         >
             Pilih Frame Dulu
         </button>
-
     </div>
-
 </div>
 
 
 <!-- =====================================================
-     CAMERA SCREEN
+    CAMERA SCREEN
 ===================================================== -->
 
 <div
     id="camera-screen"
     class="screen"
 >
-
-    <div
-        style="
-            display:flex;
-            justify-content:space-between;
-            margin-bottom:12px;
-            align-items:center;
-        "
-    >
-
-        <h2 style="margin:0;">
-            Kamera
-        </h2>
-
+    <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
+        <h2 style="margin:0;">Kamera Sesi</h2>
         <button
             class="outline"
-
-            style="
-                width:auto;
-                padding:7px 16px;
-                font-size:12px;
-                margin:0;
-            "
-
-            onclick="toggleMirror()"
-        >
-            Balik Kamera
-        </button>
-
-    </div>
-
-
-    <div class="camera-container">
-
-
-        <!-- CAMERA -->
-
-        <div
-            class="video-wrapper"
-            id="video-wrapper"
-        >
-
-            <video
-                id="camera-feed"
-                autoplay
-                playsinline
-            ></video>
-
-            <div
-                id="countdown"
-                class="countdown"
-            ></div>
-
-            <div
-                id="flash"
-                class="flash"
-            ></div>
-
-        </div>
-
-
-        <!-- FRAME PREVIEW -->
-
-        <div class="preview-wrapper">
-
-            <div
-                class="frame-preview-container"
-                id="frame-preview-container"
-            >
-
-                <div
-                    id="photo-slots"
-                ></div>
-
-                <img
-                    id="camera-side-frame"
-                    src=""
-                    alt="Frame"
-                >
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="bottom-actions">
-
-        <button
-            class="outline"
+            style="width:auto; padding:7px 16px; font-size:12px; margin:0;"
             onclick="nav('frame-screen')"
         >
-            Kembali
+            Ganti Frame
         </button>
+    </div>
 
-        <button
-            id="btn-take"
-            onclick="takePhotos()"
-        >
-            Ambil Foto
-        </button>
+    <div class="camera-screen-layout">
+        
+        <!-- LEFT: SETTINGS PANEL -->
+        <div class="camera-settings-panel">
+            <div style="font-weight: 600; font-size: 15px; margin-bottom: 2px;">Settings</div>
+            
+            <div class="setting-group">
+                <div class="setting-label">⏱️ Delay</div>
+                <div class="setting-buttons">
+                    <button onclick="setDelay(1)">1s</button>
+                    <button class="active" onclick="setDelay(3)">3s</button>
+                    <button onclick="setDelay(5)">5s</button>
+                </div>
+            </div>
 
-        <button
-            id="btn-next-preview"
-            disabled
+            <div class="setting-group">
+                <div class="setting-label">📷 Camera</div>
+                <div style="background:#f8fbff; padding:10px; border-radius:10px; text-align:center; font-size:13px; font-weight:600; border:1px solid var(--border);">
+                    Front Camera
+                </div>
+            </div>
 
-            onclick="
-                nav('preview-screen');
-                loadPreview();
-            "
-        >
-            Lanjutkan
-        </button>
+            <div class="setting-toggle-row">
+                <span class="setting-label" style="margin:0;">🪞 Mirror</span>
+                <input type="checkbox" id="mirror-toggle" checked onchange="toggleMirrorCheckbox(this)" style="width: 18px; height: 18px; accent-color: var(--blue); cursor: pointer;">
+            </div>
+        </div>
+
+        <!-- CENTER: LIVE VIDEO & SHUTTER & FILTERS -->
+        <div class="camera-center-area">
+            <div class="video-wrapper" id="video-wrapper">
+                <video
+                    id="camera-feed"
+                    autoplay
+                    playsinline
+                ></video>
+
+                <!-- Tombol Shutter di dalam tengah bawah video -->
+                <div class="shutter-btn-absolute" onclick="takePhotos()" id="btn-take">
+                    <div class="shutter-inner">
+                        📷
+                    </div>
+                </div>
+
+                <div id="countdown" class="countdown"></div>
+                <div id="flash" class="flash"></div>
+            </div>
+
+            <!-- Quick Filter Bar di bawah video -->
+            <div class="filters-carousel">
+                <button class="filter-thumb-item" onclick="applyFilter('none')">
+                    <div class="filter-thumb-placeholder" style="background:#ddd;"></div>
+                    <span>Original</span>
+                </button>
+                <button class="filter-thumb-item" onclick="applyFilter('grayscale(100%)')">
+                    <div class="filter-thumb-placeholder" style="background:#666;"></div>
+                    <span>B & W</span>
+                </button>
+                <button class="filter-thumb-item" onclick="applyFilter('sepia(100%)')">
+                    <div class="filter-thumb-placeholder" style="background:#b5651d;"></div>
+                    <span>Retro</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT: PHOTOS THUMBNAILS & NEXT BUTTON -->
+        <div class="camera-right-panel">
+            <div class="right-panel-header">
+                <span>Photos</span>
+                <span id="photo-counter-text" style="font-size:12px; color:var(--gray);">0/0</span>
+            </div>
+
+            <div class="slots-grid-container" id="photo-slots">
+                <!-- Slot foto akan di-generate secara dinamis oleh skrip Anda -->
+            </div>
+
+            <button 
+                id="btn-next-preview"
+                disabled
+                onclick="
+                    nav('preview-screen');
+                    loadPreview();
+                "
+                style="width: 100%; margin-top: auto;"
+            >
+                Lanjutkan Sesi
+            </button>
+        </div>
 
     </div>
 
+    <!-- Hidden frame container to keep original script logic working without visual conflict -->
+    <div class="preview-wrapper">
+        <div class="frame-preview-container" id="frame-preview-container">
+            <img id="camera-side-frame" src="" alt="Frame">
+        </div>
+    </div>
 </div>
 
 
 <!-- =====================================================
-     PREVIEW SCREEN
+    PREVIEW SCREEN
 ===================================================== -->
 
 <div
     id="preview-screen"
     class="screen"
 >
-
     <h2>
         Preview
     </h2>
 
-
     <div class="editor-container">
-
         <div class="canvas-area">
-
             <canvas
                 id="result-canvas"
             ></canvas>
 
-
             <div id="loading-overlay">
-
                 <div class="spinner"></div>
-
                 <p
                     style="
                         margin-top:10px;
@@ -1308,20 +1173,15 @@
                 >
                     Memproses...
                 </p>
-
             </div>
-
         </div>
 
-
         <div class="tools-area">
-
             <h3>
                 Filter Warna
             </h3>
 
             <div class="filter-buttons">
-
                 <button
                     class="outline"
                     onclick="applyFilter('none')"
@@ -1350,16 +1210,11 @@
                 >
                     Retro
                 </button>
-
             </div>
-
         </div>
-
     </div>
 
-
     <div class="bottom-actions">
-
         <button
             class="outline"
             onclick="nav('camera-screen')"
@@ -1374,39 +1229,30 @@
         >
             Selesai
         </button>
-
     </div>
-
 </div>
 
 
 <!-- =====================================================
-     RESULT SCREEN
+    RESULT SCREEN
 ===================================================== -->
 
 <div
     id="result-screen"
     class="screen"
 >
-
     <h2>
         Sesi Selesai
     </h2>
 
-
     <div class="result-container">
-
         <div class="result-left">
-
             <canvas
                 id="final-preview-canvas"
             ></canvas>
-
         </div>
 
-
         <div class="result-right">
-
             <h3>
                 Foto Anda Sudah Siap
             </h3>
@@ -1415,18 +1261,14 @@
                 Scan QR Code untuk membuka hasil foto.
             </p>
 
-
             <div
                 id="qrcode-container"
             >
-
                 <div
                     class="spinner"
                     style="margin:20px auto;"
                 ></div>
-
             </div>
-
 
             <p
                 id="qr-status-text"
@@ -1439,7 +1281,6 @@
                 Memproses...
             </p>
 
-
             <div
                 style="
                     display:flex;
@@ -1448,13 +1289,11 @@
                     width:100%;
                 "
             >
-
                 <button
                     onclick="downloadImage()"
                 >
                     Unduh Foto Frame
                 </button>
-
 
                 <button
                     class="outline"
@@ -1463,12 +1302,9 @@
                     Unduh Foto Satuan
                 </button>
 
-
                 <button
                     class="outline"
-
                     onclick="location.reload()"
-
                     style="
                         color:var(--danger);
                         border-color:var(--danger);
@@ -1476,13 +1312,9 @@
                 >
                     Sesi Baru
                 </button>
-
             </div>
-
         </div>
-
     </div>
-
 </div>
 
 
@@ -2148,7 +1980,7 @@ async function initCamera() {
             .getElementById(
                 'btn-take'
             )
-            .disabled = false;
+            .style.pointerEvents = 'auto';
 
 
         document
@@ -2233,11 +2065,11 @@ function buildFramePreview() {
 
 
     const containerWidth =
-        container.clientWidth;
+        container.clientWidth || 300;
 
 
     const containerHeight =
-        container.clientHeight;
+        container.clientHeight || 400;
 
 
     const frameWidth =
@@ -2296,38 +2128,6 @@ function buildFramePreview() {
         selectedFramePath;
 
 
-    frame.style.width =
-        displayWidth + 'px';
-
-
-    frame.style.height =
-        displayHeight + 'px';
-
-
-    frame.style.left =
-        offsetX + 'px';
-
-
-    frame.style.top =
-        offsetY + 'px';
-
-
-    slots.style.left =
-        offsetX + 'px';
-
-
-    slots.style.top =
-        offsetY + 'px';
-
-
-    slots.style.width =
-        displayWidth + 'px';
-
-
-    slots.style.height =
-        displayHeight + 'px';
-
-
     slots.innerHTML =
         '';
 
@@ -2346,38 +2146,6 @@ function buildFramePreview() {
 
             slot.className =
                 'photo-slot';
-
-
-            slot.style.left =
-                (
-                    hole.x /
-                    frameWidth *
-                    displayWidth
-                ) + 'px';
-
-
-            slot.style.top =
-                (
-                    hole.y /
-                    frameHeight *
-                    displayHeight
-                ) + 'px';
-
-
-            slot.style.width =
-                (
-                    hole.w /
-                    frameWidth *
-                    displayWidth
-                ) + 'px';
-
-
-            slot.style.height =
-                (
-                    hole.h /
-                    frameHeight *
-                    displayHeight
-                ) + 'px';
 
 
             slot.dataset.index =
@@ -2414,7 +2182,7 @@ function buildFramePreview() {
 
 
             empty.innerText =
-                'Foto belum diambil';
+                `${index + 1}`;
 
 
             slot.appendChild(
@@ -2471,6 +2239,21 @@ function buildFramePreview() {
         }
     );
 
+    updatePhotoCounter();
+
+}
+
+
+/* =====================================================
+   UPDATE PHOTO COUNTER
+===================================================== */
+
+function updatePhotoCounter() {
+    const count = capturedImages.filter(img => img !== undefined && img !== null).length;
+    const counterText = document.getElementById('photo-counter-text');
+    if (counterText) {
+        counterText.innerText = `${count}/${requiredPhotos}`;
+    }
 }
 
 
@@ -2527,10 +2310,6 @@ function renderSlot(index) {
         !capturedImages[index]
     ) {
 
-        /*
-         * Lubang kosong sekarang putih.
-         */
-
         ctx.fillStyle =
             '#ffffff';
 
@@ -2550,7 +2329,7 @@ function renderSlot(index) {
 
         }
 
-
+        updatePhotoCounter();
         return;
 
     }
@@ -2598,6 +2377,8 @@ function renderSlot(index) {
 
     image.src =
         capturedImages[index];
+
+    updatePhotoCounter();
 
 }
 
@@ -2711,6 +2492,19 @@ function toggleMirror() {
 
 }
 
+function toggleMirrorCheckbox(checkbox) {
+    isMirrored = checkbox.checked;
+    document.getElementById('camera-feed').style.transform = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+}
+
+function setDelay(seconds) {
+    // Optional delay selector handler if needed
+    document.querySelectorAll('.camera-settings-panel .setting-buttons button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
 
 /* =====================================================
    TAKE PHOTOS
@@ -2731,11 +2525,8 @@ async function takePhotos() {
         true;
 
 
-    document
-        .getElementById(
-            'btn-take'
-        )
-        .disabled = true;
+    const btnTake = document.getElementById('btn-take');
+    if(btnTake) btnTake.style.pointerEvents = 'none';
 
 
     for (
@@ -2758,11 +2549,7 @@ async function takePhotos() {
         false;
 
 
-    document
-        .getElementById(
-            'btn-take'
-        )
-        .disabled = false;
+    if(btnTake) btnTake.style.pointerEvents = 'auto';
 
 
     document
@@ -3335,11 +3122,6 @@ async function processAndUploadSession() {
                 'image/png'
             );
 
-
-    /*
-     * GIF menggunakan ukuran dan rasio
-     * FRAME ASLI supaya tidak gepeng.
-     */
 
     const gifWidth =
         600;
