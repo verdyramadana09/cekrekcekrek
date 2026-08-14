@@ -451,22 +451,27 @@
 
 
         /* =====================================================
-            CAMERA SCREEN (NEW LAYOUT)
+            CAMERA SCREEN (COMPACT BALANCED LAYOUT)
         ===================================================== */
 
         .camera-screen-layout {
             display: grid;
-            grid-template-columns: 260px 1fr 280px;
-            gap: 20px;
+            grid-template-columns: 240px minmax(320px, 680px) 240px;
+            justify-content: center;
+            gap: 16px;
             flex: 1;
             min-height: 0;
             align-items: stretch;
+            max-width: 1350px;
+            margin: 0 auto;
+            width: 100%;
         }
 
         @media (max-width: 1100px) {
             .camera-screen-layout {
                 grid-template-columns: 1fr;
                 overflow-y: auto;
+                max-width: 100%;
             }
         }
 
@@ -475,17 +480,19 @@
             background: white;
             border: 1px solid var(--border);
             border-radius: 18px;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 14px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            height: fit-content;
+            max-height: 100%;
         }
 
         .setting-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .setting-label {
@@ -500,11 +507,11 @@
         .setting-buttons {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
+            gap: 4px;
         }
 
         .setting-buttons button {
-            padding: 8px 0;
+            padding: 7px 0;
             font-size: 12px;
             border-radius: 8px;
             background: #f0f4f8;
@@ -523,7 +530,7 @@
             justify-content: space-between;
             align-items: center;
             background: #f8fbff;
-            padding: 10px 14px;
+            padding: 8px 12px;
             border-radius: 10px;
             border: 1px solid var(--border);
         }
@@ -532,8 +539,9 @@
         .camera-center-area {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             min-height: 0;
+            height: 100%;
         }
 
         .video-wrapper {
@@ -545,7 +553,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 350px;
+            min-height: 280px;
             box-shadow: 0 10px 35px rgba(0,0,0,0.10);
         }
 
@@ -561,11 +569,11 @@
         /* Floating Shutter Button inside Video */
         .shutter-btn-absolute {
             position: absolute;
-            bottom: 20px;
+            bottom: 16px;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 60px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             background: white;
             border: 3px solid rgba(255,255,255,0.8);
@@ -581,14 +589,15 @@
             transform: translateX(-50%) scale(1.05);
         }
         .shutter-inner {
-            width: 46px;
-            height: 46px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--blue), var(--blue-dark));
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
+            font-size: 16px;
         }
 
         /* Filters Carousel at bottom of center */
@@ -596,11 +605,11 @@
             background: white;
             border: 1px solid var(--border);
             border-radius: 14px;
-            padding: 10px 15px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
             overflow-x: auto;
         }
 
@@ -608,16 +617,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
             cursor: pointer;
             background: none;
             border: none;
-            padding: 4px;
+            padding: 2px;
         }
 
-        .filter-thumb-item img, .filter-thumb-placeholder {
-            width: 40px;
-            height: 40px;
+        .filter-thumb-placeholder {
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             background: var(--blue-soft);
             border: 2px solid var(--border);
@@ -625,7 +634,7 @@
         }
 
         .filter-thumb-item span {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--black);
         }
 
@@ -635,11 +644,12 @@
             background: white;
             border: 1px solid var(--border);
             border-radius: 18px;
-            padding: 18px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            height: 100%;
             overflow-y: auto;
         }
 
@@ -651,7 +661,6 @@
             font-weight: 600;
         }
 
-        /* Hidden or small helper container for hidden frame preview calculations */
         .preview-wrapper {
             display: none; 
         }
@@ -695,8 +704,9 @@
         .slots-grid-container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            gap: 8px;
             flex: 1;
+            align-content: start;
         }
 
         .photo-slot {
@@ -731,7 +741,7 @@
             justify-content: center;
             text-align: center;
             color: #9aa9b8;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 500;
             background: #f8fbff;
             z-index: 30;
@@ -1034,17 +1044,6 @@
     id="camera-screen"
     class="screen"
 >
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
-        <h2 style="margin:0;">Kamera Sesi</h2>
-        <button
-            class="outline"
-            style="width:auto; padding:7px 16px; font-size:12px; margin:0;"
-            onclick="nav('frame-screen')"
-        >
-            Ganti Frame
-        </button>
-    </div>
-
     <div class="camera-screen-layout">
         
         <!-- LEFT: SETTINGS PANEL -->
@@ -1062,15 +1061,24 @@
 
             <div class="setting-group">
                 <div class="setting-label">📷 Camera</div>
-                <div style="background:#f8fbff; padding:10px; border-radius:10px; text-align:center; font-size:13px; font-weight:600; border:1px solid var(--border);">
+                <div style="background:#f8fbff; padding:8px 12px; border-radius:10px; text-align:center; font-size:12px; font-weight:600; border:1px solid var(--border);">
                     Front Camera
                 </div>
             </div>
 
             <div class="setting-toggle-row">
                 <span class="setting-label" style="margin:0;">🪞 Mirror</span>
-                <input type="checkbox" id="mirror-toggle" checked onchange="toggleMirrorCheckbox(this)" style="width: 18px; height: 18px; accent-color: var(--blue); cursor: pointer;">
+                <input type="checkbox" id="mirror-toggle" checked onchange="toggleMirrorCheckbox(this)" style="width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer;">
             </div>
+
+            <!-- Tombol Ganti Frame di bagian paling bawah box Settings -->
+            <button
+                class="outline"
+                style="width:100%; padding:9px 14px; font-size:12px; margin-top:auto;"
+                onclick="nav('frame-screen')"
+            >
+                Ganti Frame
+            </button>
         </div>
 
         <!-- CENTER: LIVE VIDEO & SHUTTER & FILTERS -->
@@ -2498,7 +2506,6 @@ function toggleMirrorCheckbox(checkbox) {
 }
 
 function setDelay(seconds) {
-    // Optional delay selector handler if needed
     document.querySelectorAll('.camera-settings-panel .setting-buttons button').forEach(btn => {
         btn.classList.remove('active');
     });
