@@ -5,9 +5,12 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>Photobooth Web</title>
+    <title>Photobooth</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
 
@@ -16,12 +19,37 @@
 
     <style>
 
+        /* =====================================================
+           BLUE THEME
+        ===================================================== */
+
         :root {
 
-            --bg-color: #F5F5F7;
-            --primary: #000000;
-            --on-primary: #FFFFFF;
-            --text-secondary: #777777;
+            --bg-main: #eef6ff;
+
+            --bg-soft: #e0efff;
+
+            --primary: #2563eb;
+
+            --primary-dark: #1d4ed8;
+
+            --primary-light: #60a5fa;
+
+            --primary-soft: #dbeafe;
+
+            --text: #172554;
+
+            --text-secondary: #64748b;
+
+            --white: #ffffff;
+
+            --border: #bfdbfe;
+
+            --shadow:
+                0 20px 50px rgba(37, 99, 235, 0.12);
+
+            --shadow-soft:
+                0 10px 30px rgba(37, 99, 235, 0.10);
 
         }
 
@@ -31,13 +59,21 @@
         }
 
 
+        html,
         body {
 
             margin: 0;
 
-            height: 100vh;
+            width: 100%;
+
+            height: 100%;
 
             overflow: hidden;
+
+        }
+
+
+        body {
 
             font-family:
                 -apple-system,
@@ -47,22 +83,41 @@
                 Arial,
                 sans-serif;
 
-            background-color: var(--bg-color);
+            color: var(--text);
 
-            color: var(--primary);
+            background:
+
+                radial-gradient(
+                    circle at 50% 35%,
+                    #ffffff 0%,
+                    #edf6ff 42%,
+                    #dceeff 100%
+                );
 
         }
 
+
+        /* =====================================================
+           SCREEN
+        ===================================================== */
 
         .screen {
 
             display: none;
 
+            width: 100%;
+
             height: 100vh;
 
-            padding: 16px 24px;
+            min-height: 600px;
+
+            padding: 24px 32px;
 
             flex-direction: column;
+
+            position: relative;
+
+            overflow: hidden;
 
         }
 
@@ -74,18 +129,95 @@
         }
 
 
+        /* =====================================================
+           DECORATION
+        ===================================================== */
+
+        .screen::before {
+
+            content: "";
+
+            position: absolute;
+
+            width: 450px;
+
+            height: 450px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(96, 165, 250, 0.12);
+
+            top: -180px;
+
+            left: -150px;
+
+            pointer-events: none;
+
+        }
+
+
+        .screen::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 400px;
+
+            height: 400px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(37, 99, 235, 0.08);
+
+            bottom: -220px;
+
+            right: -150px;
+
+            pointer-events: none;
+
+        }
+
+
+        /* =====================================================
+           TYPOGRAPHY
+        ===================================================== */
+
         h1 {
 
-            font-size: 32px;
+            font-size: clamp(38px, 5vw, 68px);
 
-            margin: 0 0 8px 0;
+            line-height: 1;
+
+            margin: 0;
+
+            font-weight: 500;
+
+            letter-spacing: -2px;
+
+            color: #0f172a;
 
         }
 
 
         h2 {
 
-            margin: 0 0 16px 0;
+            font-size: 28px;
+
+            margin: 0 0 18px;
+
+            font-weight: 700;
+
+            color: var(--text);
+
+        }
+
+
+        h3 {
+
+            color: var(--text);
 
         }
 
@@ -94,168 +226,370 @@
 
             color: var(--text-secondary);
 
-            margin: 0 0 24px 0;
-
         }
 
 
-        .bottom-actions {
-
-            margin-top: auto;
-
-            padding-top: 16px;
-
-            display: flex;
-
-            gap: 10px;
-
-            flex-wrap: wrap;
-
-            justify-content: center;
-
-        }
-
+        /* =====================================================
+           BUTTON
+        ===================================================== */
 
         button {
 
-            background-color: var(--primary);
-
-            color: var(--on-primary);
-
             border: none;
 
-            border-radius: 30px;
+            border-radius: 999px;
 
-            padding: 12px 20px;
+            padding: 13px 24px;
 
             font-size: 14px;
 
-            font-weight: 600;
+            font-weight: 700;
+
+            color: white;
+
+            background:
+
+                linear-gradient(
+                    135deg,
+                    var(--primary),
+                    var(--primary-light)
+                );
 
             cursor: pointer;
 
             transition:
-                opacity 0.2s,
-                transform 0.15s;
+                transform .18s ease,
+                box-shadow .18s ease,
+                opacity .18s ease;
+
+            box-shadow:
+                0 8px 20px rgba(37, 99, 235, .20);
 
         }
 
 
         button:hover:not(:disabled) {
 
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 12px 28px rgba(37, 99, 235, .28);
+
+        }
+
+
+        button:active:not(:disabled) {
+
+            transform: translateY(0);
 
         }
 
 
         button:disabled {
 
-            opacity: 0.5;
+            opacity: .45;
 
             cursor: not-allowed;
+
+            box-shadow: none;
 
         }
 
 
         button.outline {
 
-            background-color: transparent;
+            background: white;
 
             color: var(--primary);
 
-            border: 2px solid var(--primary);
+            border:
+                2px solid var(--border);
+
+            box-shadow: none;
 
         }
 
 
-        /* =====================================================
-           INPUT NAMA
-        ===================================================== */
+        button.outline:hover:not(:disabled) {
 
-        .name-container {
+            background: var(--primary-soft);
 
-            flex: 1;
+            border-color: var(--primary-light);
+
+        }
+
+
+        .bottom-actions {
+
+            position: relative;
+
+            z-index: 10;
+
+            margin-top: auto;
+
+            padding-top: 18px;
 
             display: flex;
-
-            flex-direction: column;
 
             justify-content: center;
 
             align-items: center;
 
-        }
+            gap: 12px;
 
-
-        .name-box {
-
-            width: min(500px, 90vw);
-
-            background: white;
-
-            padding: 35px;
-
-            border-radius: 20px;
-
-            box-shadow:
-                0 10px 40px rgba(0,0,0,0.08);
-
-            text-align: center;
-
-        }
-
-
-        .name-box h1 {
-
-            margin-bottom: 10px;
-
-        }
-
-
-        .name-box p {
-
-            margin-bottom: 25px;
-
-        }
-
-
-        #visitor-name {
-
-            width: 100%;
-
-            padding: 15px 18px;
-
-            border: 2px solid #ddd;
-
-            border-radius: 12px;
-
-            outline: none;
-
-            font-size: 17px;
-
-            text-align: center;
-
-        }
-
-
-        #visitor-name:focus {
-
-            border-color: #000;
+            flex-wrap: wrap;
 
         }
 
 
         /* =====================================================
-           PILIH FRAME
+           START SCREEN
         ===================================================== */
 
+        #start-screen {
+
+            padding:
+                20px
+                clamp(25px, 6vw, 100px);
+
+        }
+
+
+        .start-content {
+
+            flex: 1;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            position: relative;
+
+            z-index: 2;
+
+        }
+
+
+        .start-center {
+
+            width: min(700px, 65vw);
+
+            text-align: center;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+        }
+
+
+        .brand-small {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 8px;
+
+            padding: 8px 16px;
+
+            margin-bottom: 22px;
+
+            border-radius: 999px;
+
+            background: rgba(255,255,255,.8);
+
+            border: 1px solid var(--border);
+
+            color: var(--primary);
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
+
+            box-shadow: var(--shadow-soft);
+
+        }
+
+
+        .start-center h1 {
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .start-subtitle {
+
+            max-width: 550px;
+
+            font-size: 16px;
+
+            line-height: 1.6;
+
+            margin: 0 auto 30px;
+
+        }
+
+
+        .start-button {
+
+            min-width: 150px;
+
+            height: 50px;
+
+            padding: 0 28px;
+
+            font-size: 15px;
+
+        }
+
+
+        .start-button span {
+
+            margin-left: 6px;
+
+        }
+
+
+        /* =====================================================
+           DECORATIVE PHOTO STRIPS
+        ===================================================== */
+
+        .decor-strip {
+
+            position: absolute;
+
+            top: 50%;
+
+            width: 150px;
+
+            height: 380px;
+
+            transform:
+                translateY(-50%)
+                rotate(-4deg);
+
+            background: white;
+
+            border-radius: 14px;
+
+            padding: 7px;
+
+            box-shadow:
+                0 20px 45px rgba(37,99,235,.15);
+
+            z-index: 1;
+
+        }
+
+
+        .decor-strip.left {
+
+            left: 5%;
+
+        }
+
+
+        .decor-strip.right {
+
+            right: 5%;
+
+            transform:
+                translateY(-50%)
+                rotate(4deg);
+
+        }
+
+
+        .decor-photo {
+
+            width: 100%;
+
+            height: 25%;
+
+            object-fit: cover;
+
+            display: block;
+
+            border-bottom:
+                3px solid white;
+
+            filter: grayscale(100%);
+
+        }
+
+
+        .decor-photo:last-child {
+
+            border-bottom: none;
+
+        }
+
+
+        /* =====================================================
+           FRAME SCREEN
+        ===================================================== */
+
+        #frame-screen {
+
+            padding-top: 30px;
+
+        }
+
+
+        .page-header {
+
+            position: relative;
+
+            z-index: 10;
+
+            text-align: center;
+
+            margin-bottom: 5px;
+
+        }
+
+
+        .page-header h2 {
+
+            margin-bottom: 6px;
+
+        }
+
+
+        .page-header p {
+
+            margin: 0;
+
+            font-size: 13px;
+
+        }
+
+
         .frame-grid {
+
+            position: relative;
+
+            z-index: 5;
 
             display: flex;
 
             align-items: center;
 
-            gap: 40px;
+            gap: 38px;
 
             flex: 1;
 
@@ -265,7 +599,9 @@
 
             overflow-y: hidden;
 
-            padding: 30px 12vw;
+            padding:
+                30px
+                10vw;
 
             scroll-behavior: smooth;
 
@@ -285,47 +621,56 @@
 
             flex: 0 0 auto;
 
-            width: min(500px, 45vw);
+            width: min(390px, 30vw);
 
-            height: min(700px, 75vh);
+            height: min(560px, 68vh);
 
-            background-color: #ddd;
+            background-color: #dbeafe;
 
             background-repeat: no-repeat;
 
             background-position: center;
 
-            background-size: contain;
+            background-size: cover;
 
-            border-radius: 16px;
+            border-radius: 18px;
 
             cursor: pointer;
 
-            border: 3px solid transparent;
+            border:
+                4px solid transparent;
 
             position: relative;
 
             transition:
-                transform 0.2s ease,
-                border-color 0.2s ease;
+                transform .2s ease,
+                border-color .2s ease,
+                box-shadow .2s ease;
+
+            box-shadow:
+                0 15px 35px rgba(37,99,235,.12);
 
         }
 
 
         .frame-item:hover {
 
-            transform: scale(1.02);
+            transform: scale(1.025);
+
+            box-shadow:
+                0 20px 45px rgba(37,99,235,.20);
 
         }
 
 
         .frame-item.selected {
 
-            border-color: #000;
+            border-color: var(--primary);
 
-            transform: scale(1.05);
+            transform: scale(1.04);
 
-            box-shadow: none;
+            box-shadow:
+                0 20px 45px rgba(37,99,235,.28);
 
         }
 
@@ -340,18 +685,32 @@
 
             left: 50%;
 
-            transform: translate(-50%, -50%);
+            transform:
+                translate(-50%, -50%);
+
+            width: 75px;
+
+            height: 75px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
 
             color: white;
 
-            font-size: 70px;
+            font-size: 42px;
 
-            font-weight: 700;
+            font-weight: 800;
 
-            line-height: 1;
+            background:
+                rgba(37,99,235,.85);
 
-            text-shadow:
-                0 2px 6px rgba(0,0,0,0.35);
+            box-shadow:
+                0 10px 30px rgba(37,99,235,.35);
 
             pointer-events: none;
 
@@ -365,6 +724,10 @@
         ===================================================== */
 
         .camera-container {
+
+            position: relative;
+
+            z-index: 5;
 
             display: flex;
 
@@ -381,9 +744,9 @@
 
             flex: 3;
 
-            background: #000;
+            background: #0f172a;
 
-            border-radius: 16px;
+            border-radius: 20px;
 
             overflow: hidden;
 
@@ -396,6 +759,11 @@
             align-items: center;
 
             min-height: 0;
+
+            border:
+                4px solid white;
+
+            box-shadow: var(--shadow);
 
         }
 
@@ -417,73 +785,16 @@
         }
 
 
-        /* =====================================================
-           COUNTDOWN
-        ===================================================== */
-
-        .countdown {
-
-            position: absolute;
-
-            top: 50%;
-
-            left: 50%;
-
-            transform: translate(-50%, -50%);
-
-            font-size: 80px;
-
-            color: white;
-
-            font-weight: bold;
-
-            text-shadow:
-                2px 2px 10px rgba(0,0,0,0.5);
-
-            z-index: 100;
-
-        }
-
-
-        .flash {
-
-            position: absolute;
-
-            inset: 0;
-
-            background: white;
-
-            opacity: 0;
-
-            pointer-events: none;
-
-            z-index: 200;
-
-        }
-
-
-        .flash.active {
-
-            opacity: 0.8;
-
-            transition: opacity 0.1s;
-
-        }
-
-
-        /* =====================================================
-           PREVIEW FRAME DI SAMPING KAMERA
-        ===================================================== */
-
         .preview-wrapper {
 
             flex: 2;
 
-            background: #dcdcdc;
+            background:
+                rgba(255,255,255,.7);
 
-            border-radius: 16px;
+            border-radius: 20px;
 
-            padding: 12px;
+            padding: 15px;
 
             display: flex;
 
@@ -494,6 +805,13 @@
             min-height: 0;
 
             overflow: hidden;
+
+            border:
+                1px solid var(--border);
+
+            box-shadow: var(--shadow-soft);
+
+            backdrop-filter: blur(10px);
 
         }
 
@@ -543,10 +861,6 @@
         }
 
 
-        /* =====================================================
-           SLOT FOTO
-        ===================================================== */
-
         .photo-slot {
 
             position: absolute;
@@ -560,8 +874,8 @@
             border-radius: 2px;
 
             transition:
-                transform 0.15s,
-                outline 0.15s;
+                transform .15s,
+                outline .15s;
 
             z-index: 20;
 
@@ -572,7 +886,8 @@
 
             transform: scale(1.015);
 
-            outline: 2px solid white;
+            outline:
+                3px solid white;
 
             z-index: 60;
 
@@ -610,7 +925,8 @@
 
             border-radius: 50%;
 
-            background: rgba(0,0,0,0.65);
+            background:
+                rgba(37,99,235,.85);
 
             color: white;
 
@@ -645,7 +961,8 @@
 
             font-weight: bold;
 
-            background: rgba(0,0,0,0.35);
+            background:
+                rgba(15,23,42,.45);
 
             z-index: 30;
 
@@ -668,7 +985,8 @@
 
             text-align: center;
 
-            background: rgba(0,0,0,0.55);
+            background:
+                rgba(37,99,235,.75);
 
             color: white;
 
@@ -678,7 +996,7 @@
 
             opacity: 0;
 
-            transition: opacity 0.15s;
+            transition: opacity .15s;
 
             z-index: 80;
 
@@ -695,14 +1013,74 @@
 
 
         /* =====================================================
-           PREVIEW EDIT
+           COUNTDOWN
+        ===================================================== */
+
+        .countdown {
+
+            position: absolute;
+
+            top: 50%;
+
+            left: 50%;
+
+            transform:
+                translate(-50%, -50%);
+
+            font-size: 100px;
+
+            color: white;
+
+            font-weight: 800;
+
+            text-shadow:
+                0 8px 30px rgba(0,0,0,.5);
+
+            z-index: 100;
+
+        }
+
+
+        .flash {
+
+            position: absolute;
+
+            inset: 0;
+
+            background: white;
+
+            opacity: 0;
+
+            pointer-events: none;
+
+            z-index: 200;
+
+        }
+
+
+        .flash.active {
+
+            opacity: .85;
+
+            transition:
+                opacity .1s;
+
+        }
+
+
+        /* =====================================================
+           EDITOR
         ===================================================== */
 
         .editor-container {
 
+            position: relative;
+
+            z-index: 5;
+
             display: flex;
 
-            gap: 16px;
+            gap: 20px;
 
             flex: 1;
 
@@ -721,15 +1099,21 @@
 
             align-items: center;
 
-            background: #e0e0e0;
+            background:
+                rgba(255,255,255,.7);
 
-            border-radius: 10px;
+            border:
+                1px solid var(--border);
+
+            border-radius: 20px;
 
             min-height: 0;
 
-            padding: 10px;
+            padding: 18px;
 
             position: relative;
+
+            box-shadow: var(--shadow-soft);
 
         }
 
@@ -745,7 +1129,7 @@
             border-radius: 10px;
 
             box-shadow:
-                0 10px 30px rgba(0,0,0,0.1);
+                0 10px 30px rgba(15,23,42,.12);
 
         }
 
@@ -756,11 +1140,23 @@
 
             background: white;
 
-            border-radius: 10px;
+            border:
+                1px solid var(--border);
 
-            padding: 15px;
+            border-radius: 20px;
+
+            padding: 22px;
 
             overflow-y: auto;
+
+            box-shadow: var(--shadow-soft);
+
+        }
+
+
+        .tools-area h3 {
+
+            margin-top: 0;
 
         }
 
@@ -770,6 +1166,10 @@
         ===================================================== */
 
         .result-container {
+
+            position: relative;
+
+            z-index: 5;
 
             display: flex;
 
@@ -796,9 +1196,19 @@
 
             align-items: center;
 
-            background: #e0e0e0;
+            background:
+                rgba(255,255,255,.7);
 
-            border-radius: 12px;
+            border:
+                1px solid var(--border);
+
+            border-radius: 20px;
+
+            box-shadow: var(--shadow-soft);
+
+            overflow: hidden;
+
+            padding: 15px;
 
         }
 
@@ -817,13 +1227,32 @@
 
             background: white;
 
-            padding: 20px;
+            padding: 30px;
 
-            border-radius: 12px;
+            border:
+                1px solid var(--border);
+
+            border-radius: 20px;
 
             height: 100%;
 
             text-align: center;
+
+            box-shadow: var(--shadow-soft);
+
+        }
+
+
+        #qrcode-container {
+
+            padding: 12px;
+
+            background: white;
+
+            border-radius: 14px;
+
+            border:
+                1px solid var(--border);
 
         }
 
@@ -840,7 +1269,8 @@
 
             inset: 0;
 
-            background: rgba(255,255,255,0.8);
+            background:
+                rgba(255,255,255,.88);
 
             z-index: 10;
 
@@ -850,24 +1280,27 @@
 
             flex-direction: column;
 
-            border-radius: 10px;
+            border-radius: 20px;
 
         }
 
 
         .spinner {
 
-            border: 4px solid #f3f3f3;
+            border:
+                4px solid #dbeafe;
 
-            border-top: 4px solid #000;
+            border-top:
+                4px solid var(--primary);
 
             border-radius: 50%;
 
-            width: 40px;
+            width: 42px;
 
-            height: 40px;
+            height: 42px;
 
-            animation: spin 1s linear infinite;
+            animation:
+                spin 1s linear infinite;
 
         }
 
@@ -889,22 +1322,73 @@
            RESPONSIVE
         ===================================================== */
 
-        @media (max-width: 800px) {
+        @media (max-width: 1100px) {
+
+            .decor-strip {
+
+                width: 115px;
+
+                height: 300px;
+
+            }
+
+            .decor-strip.left {
+                left: 2%;
+            }
+
+            .decor-strip.right {
+                right: 2%;
+            }
+
+            .start-center {
+
+                width: 65vw;
+
+            }
 
             .frame-item {
 
-                width: 280px;
+                width: 300px;
 
-                height: 430px;
+                height: 460px;
+
+            }
+
+        }
+
+
+        @media (max-width: 800px) {
+
+            body {
+
+                overflow: auto;
 
             }
 
 
-            .frame-grid {
+            .screen {
 
-                padding: 25px 40px;
+                height: auto;
 
-                gap: 25px;
+                min-height: 100vh;
+
+                overflow-y: auto;
+
+                padding: 20px;
+
+            }
+
+
+            .decor-strip {
+
+                display: none;
+
+            }
+
+
+            .start-center {
+
+                width: 100%;
 
             }
 
@@ -925,7 +1409,7 @@
 
             .preview-wrapper {
 
-                min-height: 30vh;
+                min-height: 35vh;
 
             }
 
@@ -935,6 +1419,38 @@
             .result-container {
 
                 flex-direction: column;
+
+            }
+
+
+            .canvas-area,
+
+            .tools-area,
+
+            .result-left,
+
+            .result-right {
+
+                min-height: 350px;
+
+            }
+
+
+            .frame-item {
+
+                width: 260px;
+
+                height: 390px;
+
+            }
+
+
+            .frame-grid {
+
+                padding:
+                    25px 30px;
+
+                gap: 25px;
 
             }
 
@@ -957,86 +1473,87 @@
     class="screen active"
 >
 
-    <div
-        style="
-            flex:1;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:center;
-        "
-    >
+    <div class="start-content">
 
-        <h1>
-            Photobooth
-        </h1>
+        <div class="start-center">
 
-        <p>
-            Capture your moments beautifully
-        </p>
-
-    </div>
-
-
-    <div class="bottom-actions">
-
-        <button onclick="nav('name-screen')">
-            Mulai Sesi
-        </button>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     NAME SCREEN
-===================================================== -->
-
-<div
-    id="name-screen"
-    class="screen"
->
-
-    <div class="name-container">
-
-        <div class="name-box">
+            <div class="brand-small">
+                ✦ &nbsp; PHOTOBOOTH
+            </div>
 
             <h1>
-                Siapa Nama Anda?
+                Capture the moment
             </h1>
 
-            <p>
-                Masukkan nama sebelum memulai sesi foto.
+            <p class="start-subtitle">
+                Abadikan momen spesialmu dengan
+                gaya yang lebih seru, sederhana,
+                dan memorable.
             </p>
 
-            <input
-                type="text"
-                id="visitor-name"
-                placeholder="Masukkan nama"
-                maxlength="50"
-                autocomplete="off"
+            <button
+                class="start-button"
+                onclick="nav('frame-screen')"
             >
+                START
+                <span>📷</span>
+            </button>
 
         </div>
 
     </div>
 
 
-    <div class="bottom-actions">
+    <!-- FOTO DEKORASI KIRI -->
 
-        <button
-            class="outline"
-            onclick="nav('start-screen')"
-        >
-            Kembali
-        </button>
+    <div class="decor-strip left">
 
-        <button
-            onclick="continueToFrame()"
+        <img
+            class="decor-photo"
+            src="frame/default.png"
         >
-            Lanjutkan
-        </button>
+
+        <img
+            class="decor-photo"
+            src="frame/default.png"
+        >
+
+        <img
+            class="decor-photo"
+            src="frame/default.png"
+        >
+
+        <img
+            class="decor-photo"
+            src="frame/default.png"
+        >
+
+    </div>
+
+
+    <!-- FOTO DEKORASI KANAN -->
+
+    <div class="decor-strip right">
+
+        <img
+            class="decor-photo"
+            src="frame/default.png"
+        >
+
+        <img
+            class="decor-photo"
+            src="frame/default.png"
+        >
+
+        <img
+            class="decor-photo"
+            src="frame/default.png"
+        >
+
+        <img
+            class="decor-photo"
+            src="frame/default.png"
+        >
 
     </div>
 
@@ -1052,9 +1569,17 @@
     class="screen"
 >
 
-    <h2>
-        Pilih Frame
-    </h2>
+    <div class="page-header">
+
+        <h2>
+            Pilih Frame
+        </h2>
+
+        <p>
+            Pilih desain frame favoritmu
+        </p>
+
+    </div>
 
 
     <div
@@ -1069,8 +1594,7 @@
                 background-image:
                 url('frame/default.png');
 
-                background-size:contain;
-
+                background-size:cover;
                 background-position:center;
             "
 
@@ -1086,14 +1610,6 @@
 
 
     <div class="bottom-actions">
-
-        <button
-            class="outline"
-            onclick="nav('name-screen')"
-        >
-            Kembali
-        </button>
-
 
         <button
             id="btn-continue-camera"
@@ -1123,16 +1639,31 @@
 
     <div
         style="
+            position:relative;
+            z-index:10;
             display:flex;
             justify-content:space-between;
-            margin-bottom:12px;
+            margin-bottom:14px;
             align-items:center;
         "
     >
 
-        <h2 style="margin:0;">
-            Kamera
-        </h2>
+        <div>
+
+            <h2 style="margin:0;">
+                Kamera
+            </h2>
+
+            <p
+                style="
+                    margin:5px 0 0;
+                    font-size:12px;
+                "
+            >
+                Ambil foto sesuai posisi frame
+            </p>
+
+        </div>
 
 
         <button
@@ -1140,14 +1671,13 @@
 
             style="
                 width:auto;
-                padding:6px 12px;
+                padding:8px 15px;
                 font-size:12px;
-                margin:0;
             "
 
             onclick="toggleMirror()"
         >
-            Balik Kamera
+            ↔ Balik Kamera
         </button>
 
     </div>
@@ -1155,6 +1685,8 @@
 
     <div class="camera-container">
 
+
+        <!-- KAMERA -->
 
         <div
             class="video-wrapper"
@@ -1181,6 +1713,8 @@
 
         </div>
 
+
+        <!-- FRAME PREVIEW -->
 
         <div class="preview-wrapper">
 
@@ -1213,7 +1747,7 @@
             id="btn-take"
             onclick="takePhotos()"
         >
-            Ambil Foto
+            📷 Ambil Foto
         </button>
 
 
@@ -1226,7 +1760,7 @@
                 loadPreview();
             "
         >
-            Lanjutkan
+            Lanjutkan →
         </button>
 
     </div>
@@ -1243,12 +1777,21 @@
     class="screen"
 >
 
-    <h2>
-        Preview & Edit
-    </h2>
+    <div class="page-header">
+
+        <h2>
+            Preview & Edit
+        </h2>
+
+        <p>
+            Periksa hasil foto sebelum menyelesaikan sesi
+        </p>
+
+    </div>
 
 
     <div class="editor-container">
+
 
         <div class="canvas-area">
 
@@ -1277,7 +1820,7 @@
 
         <div class="tools-area">
 
-            <h3 style="margin-top:0;">
+            <h3>
                 Filter Warna
             </h3>
 
@@ -1286,14 +1829,16 @@
                 style="
                     display:flex;
                     flex-direction:column;
-                    gap:8px;
+                    gap:10px;
                     margin-bottom:20px;
                 "
             >
 
                 <button
                     class="outline"
-                    onclick="applyFilter('none')"
+                    onclick="
+                        applyFilter('none')
+                    "
                 >
                     Original
                 </button>
@@ -1336,7 +1881,7 @@
                 processAndUploadSession()
             "
         >
-            Selesai & Proses Otomatis
+            ✓ Selesai & Proses
         </button>
 
     </div>
@@ -1353,12 +1898,21 @@
     class="screen"
 >
 
-    <h2>
-        Sesi Selesai
-    </h2>
+    <div class="page-header">
+
+        <h2>
+            Sesi Selesai
+        </h2>
+
+        <p>
+            Foto kamu sudah siap
+        </p>
+
+    </div>
 
 
     <div class="result-container">
+
 
         <div class="result-left">
 
@@ -1376,14 +1930,32 @@
 
         <div class="result-right">
 
-            <h3 style="margin-top:0;">
-                Scan untuk unduh foto
+            <h3
+                style="
+                    margin-top:0;
+                    font-size:22px;
+                "
+            >
+                Foto Kamu Sudah Siap! ✨
             </h3>
+
+
+            <p
+                style="
+                    font-size:13px;
+                    max-width:300px;
+                "
+            >
+                Scan QR Code untuk membuka
+                dan mengunduh hasil fotomu.
+            </p>
 
 
             <div
                 id="qrcode-container"
-                style="margin:10px 0;"
+                style="
+                    margin:15px 0;
+                "
             >
 
                 <div
@@ -1400,7 +1972,7 @@
                 id="qr-status-text"
                 style="
                     font-size:11px;
-                    color:#666;
+                    color:#64748b;
                     margin-bottom:15px;
                 "
             >
@@ -1412,8 +1984,9 @@
                 style="
                     display:flex;
                     flex-direction:column;
-                    gap:8px;
+                    gap:10px;
                     width:100%;
+                    max-width:320px;
                 "
             >
 
@@ -1435,12 +2008,14 @@
                 <button
                     class="outline"
 
-                    onclick="location.reload()"
+                    onclick="
+                        location.reload()
+                    "
 
                     style="
-                        background-color:#ffebeb;
-                        color:red;
-                        border-color:red;
+                        color:#dc2626;
+                        border-color:#fecaca;
+                        background:#fff5f5;
                     "
                 >
                     🔄 Sesi Baru
@@ -1468,18 +2043,24 @@ function nav(screenId) {
         .querySelectorAll('.screen')
         .forEach(screen => {
 
-            screen.classList.remove('active');
+            screen.classList.remove(
+                'active'
+            );
 
         });
 
 
     const target =
-        document.getElementById(screenId);
+        document.getElementById(
+            screenId
+        );
 
 
     if (target) {
 
-        target.classList.add('active');
+        target.classList.add(
+            'active'
+        );
 
     }
 
@@ -1509,131 +2090,8 @@ let currentCanvasFilter = 'none';
 let isTakingPhoto = false;
 
 
-/*
- * Nama pengguna.
- */
-
-let visitorName = '';
-
-
-/*
- * Nama folder yang dikirim
- * ke server.
- */
-
-let sessionFolderName = '';
-
-
 /* =====================================================
-   INPUT NAMA
-===================================================== */
-
-function continueToFrame() {
-
-    const input =
-        document.getElementById(
-            'visitor-name'
-        );
-
-
-    const name =
-        input.value.trim();
-
-
-    if (!name) {
-
-        alert(
-            'Silakan masukkan nama terlebih dahulu.'
-        );
-
-        input.focus();
-
-        return;
-
-    }
-
-
-    visitorName = cleanFileName(name);
-
-
-    if (!visitorName) {
-
-        alert(
-            'Nama tidak valid.'
-        );
-
-        return;
-
-    }
-
-
-    sessionFolderName =
-        visitorName +
-        '_' +
-        getCurrentDate();
-
-
-    nav('frame-screen');
-
-}
-
-
-/* =====================================================
-   BERSIHKAN NAMA FILE
-===================================================== */
-
-function cleanFileName(name) {
-
-    return name
-        .trim()
-        .replace(/[<>:"/\\|?*]/g, '')
-        .replace(/\s+/g, '_')
-        .substring(0, 50);
-
-}
-
-
-/* =====================================================
-   FORMAT TANGGAL
-===================================================== */
-
-function getCurrentDate() {
-
-    const date =
-        new Date();
-
-
-    const months = [
-
-        'Januari',
-        'Februari',
-        'Maret',
-        'April',
-        'Mei',
-        'Juni',
-        'Juli',
-        'Agustus',
-        'September',
-        'Oktober',
-        'November',
-        'Desember'
-
-    ];
-
-
-    return (
-        String(date.getDate()).padStart(2, '0') +
-        '_' +
-        months[date.getMonth()] +
-        '_' +
-        date.getFullYear()
-    );
-
-}
-
-
-/* =====================================================
-   DETECT TRANSPARENT FRAME HOLES
+   DETECT FRAME HOLES
 ===================================================== */
 
 async function detectFrameHoles(imgSrc) {
@@ -1641,14 +2099,12 @@ async function detectFrameHoles(imgSrc) {
     return new Promise(
         (resolve, reject) => {
 
-            const img =
-                new Image();
+            const img = new Image();
 
 
             img.onload = () => {
 
-                finalFrameImageObj =
-                    img;
+                finalFrameImageObj = img;
 
 
                 const canvas =
@@ -1667,20 +2123,14 @@ async function detectFrameHoles(imgSrc) {
                     );
 
 
-                const width =
-                    img.width;
+                const width = img.width;
+
+                const height = img.height;
 
 
-                const height =
-                    img.height;
+                canvas.width = width;
 
-
-                canvas.width =
-                    width;
-
-
-                canvas.height =
-                    height;
+                canvas.height = height;
 
 
                 ctx.drawImage(
@@ -1736,9 +2186,11 @@ async function detectFrameHoles(imgSrc) {
                         ) {
 
                             let minX = x;
+
                             let maxX = x;
 
                             let minY = y;
+
                             let maxY = y;
 
 
@@ -1757,9 +2209,7 @@ async function detectFrameHoles(imgSrc) {
                                 if (
                                     visited[idx]
                                 ) {
-
                                     continue;
-
                                 }
 
 
@@ -1778,50 +2228,75 @@ async function detectFrameHoles(imgSrc) {
                                         idx * 4 + 3
                                     ] >= 10
                                 ) {
-
                                     continue;
-
                                 }
 
 
                                 visited[idx] = 1;
 
 
-                                if (px < minX)
-                                    minX = px;
+                                minX =
+                                    Math.min(
+                                        minX,
+                                        px
+                                    );
 
-                                if (px > maxX)
-                                    maxX = px;
 
-                                if (py < minY)
-                                    minY = py;
+                                maxX =
+                                    Math.max(
+                                        maxX,
+                                        px
+                                    );
 
-                                if (py > maxY)
-                                    maxY = py;
+
+                                minY =
+                                    Math.min(
+                                        minY,
+                                        py
+                                    );
+
+
+                                maxY =
+                                    Math.max(
+                                        maxY,
+                                        py
+                                    );
 
 
                                 if (
                                     px + 1 < width
-                                )
-                                    stack.push(idx + 1);
+                                ) {
+                                    stack.push(
+                                        idx + 1
+                                    );
+                                }
 
 
                                 if (
                                     px - 1 >= 0
-                                )
-                                    stack.push(idx - 1);
+                                ) {
+                                    stack.push(
+                                        idx - 1
+                                    );
+                                }
 
 
                                 if (
                                     py + 1 < height
-                                )
-                                    stack.push(idx + width);
+                                ) {
+                                    stack.push(
+                                        idx + width
+                                    );
+                                }
 
 
                                 if (
                                     py - 1 >= 0
-                                )
-                                    stack.push(idx - width);
+                                ) {
+                                    stack.push(
+                                        idx - width
+                                    );
+                                }
 
                             }
 
@@ -1838,12 +2313,10 @@ async function detectFrameHoles(imgSrc) {
                                     y: minY,
 
                                     w:
-                                        maxX -
-                                        minX,
+                                        maxX - minX,
 
                                     h:
-                                        maxY -
-                                        minY
+                                        maxY - minY
 
                                 });
 
@@ -1907,7 +2380,9 @@ async function selectFrame(
 ) {
 
     document
-        .querySelectorAll('.frame-item')
+        .querySelectorAll(
+            '.frame-item'
+        )
         .forEach(frame => {
 
             frame.classList.remove(
@@ -1972,11 +2447,12 @@ async function selectFrame(
 
         button.disabled = false;
 
+
         button.innerText =
             `Lanjut (${requiredPhotos} Foto)`;
 
 
-    } catch(error) {
+    } catch (error) {
 
         console.error(error);
 
@@ -2071,7 +2547,9 @@ async function initCamera() {
                 } else {
 
                     video.onloadedmetadata =
-                        () => resolve();
+                        () => {
+                            resolve();
+                        };
 
                 }
 
@@ -2082,7 +2560,7 @@ async function initCamera() {
         buildFramePreview();
 
 
-    } catch(error) {
+    } catch (error) {
 
         console.error(error);
 
@@ -2101,7 +2579,9 @@ async function initCamera() {
 
 function buildFramePreview() {
 
-    if (!finalFrameImageObj) {
+    if (
+        !finalFrameImageObj
+    ) {
         return;
     }
 
@@ -2387,7 +2867,9 @@ function renderSlot(index) {
 
 
     const canvas =
-        slot.querySelector('canvas');
+        slot.querySelector(
+            'canvas'
+        );
 
 
     const ctx =
@@ -2413,7 +2895,7 @@ function renderSlot(index) {
     ) {
 
         ctx.fillStyle =
-            '#222';
+            '#172033';
 
 
         ctx.fillRect(
@@ -2537,20 +3019,15 @@ function drawImageIntoHole(
 
 
     ctx.drawImage(
-
         image,
-
         sourceX,
         sourceY,
-
         sourceWidth,
         sourceHeight,
-
         target.x,
         target.y,
         target.w,
         target.h
-
     );
 
 }
@@ -2579,7 +3056,7 @@ function toggleMirror() {
 
 
 /* =====================================================
-   TAKE ALL PHOTOS
+   TAKE PHOTOS
 ===================================================== */
 
 async function takePhotos() {
@@ -2607,7 +3084,6 @@ async function takePhotos() {
 
         await runCountdown();
 
-
         captureFrame(i);
 
     }
@@ -2633,7 +3109,7 @@ async function takePhotos() {
 
 
 /* =====================================================
-   RETAKE SATU SLOT
+   RETAKE FOTO
 ===================================================== */
 
 async function retakePhoto(index) {
@@ -2859,7 +3335,9 @@ function loadPreview() {
         stream
             .getTracks()
             .forEach(track => {
+
                 track.stop();
+
             });
 
 
@@ -2877,7 +3355,7 @@ function loadPreview() {
 
 
 /* =====================================================
-   APPLY FILTER
+   FILTER
 ===================================================== */
 
 function applyFilter(filterCss) {
@@ -2895,7 +3373,7 @@ function applyFilter(filterCss) {
 
 
 /* =====================================================
-   DRAW FINAL CANVAS
+   DRAW CANVAS
 ===================================================== */
 
 async function drawCanvas(
@@ -2966,27 +3444,26 @@ async function drawCanvas(
                             new Image();
 
 
-                        image.onload =
-                            () => {
+                        image.onload = () => {
 
-                                const hole =
-                                    frameHoles[index];
-
-
-                                if (hole) {
-
-                                    drawImageIntoHole(
-                                        ctx,
-                                        image,
-                                        hole
-                                    );
-
-                                }
+                            const hole =
+                                frameHoles[index];
 
 
-                                resolve();
+                            if (hole) {
 
-                            };
+                                drawImageIntoHole(
+                                    ctx,
+                                    image,
+                                    hole
+                                );
+
+                            }
+
+
+                            resolve();
+
+                        };
 
 
                         image.src =
@@ -3006,312 +3483,18 @@ async function drawCanvas(
 
     if (withFrame) {
 
-        ctx.filter =
-            'none';
+        ctx.filter = 'none';
 
 
         ctx.drawImage(
-
             finalFrameImageObj,
-
             0,
             0,
-
             canvas.width,
             canvas.height
-
         );
 
     }
-
-}
-
-
-/* =====================================================
-   BUAT FRAME GIF
-   FIX GIF GEPENG
-===================================================== */
-
-async function createGifFrames() {
-
-    const frames = [];
-
-
-    /*
-     * GIF menggunakan rasio frame asli.
-     */
-
-    const width =
-        finalFrameImageObj.width;
-
-
-    const height =
-        finalFrameImageObj.height;
-
-
-    /*
-     * Buat frame GIF secara bertahap.
-     *
-     * Setiap frame memiliki ukuran
-     * yang sama persis dengan frame utama.
-     */
-
-    for (
-        let step = 0;
-        step < capturedImages.length;
-        step++
-    ) {
-
-        const canvas =
-            document.createElement(
-                'canvas'
-            );
-
-
-        canvas.width =
-            width;
-
-
-        canvas.height =
-            height;
-
-
-        const ctx =
-            canvas.getContext(
-                '2d'
-            );
-
-
-        ctx.fillStyle =
-            '#FFFFFF';
-
-
-        ctx.fillRect(
-            0,
-            0,
-            width,
-            height
-        );
-
-
-        ctx.filter =
-            currentCanvasFilter;
-
-
-        /*
-         * Masukkan foto sampai
-         * foto pada step tersebut.
-         */
-
-        for (
-            let i = 0;
-            i <= step;
-            i++
-        ) {
-
-            if (
-                !capturedImages[i]
-            ) {
-                continue;
-            }
-
-
-            const image =
-                await loadImage(
-                    capturedImages[i]
-                );
-
-
-            const hole =
-                frameHoles[i];
-
-
-            if (hole) {
-
-                drawImageIntoHole(
-                    ctx,
-                    image,
-                    hole
-                );
-
-            }
-
-        }
-
-
-        /*
-         * Frame selalu paling atas.
-         */
-
-        ctx.filter =
-            'none';
-
-
-        ctx.drawImage(
-
-            finalFrameImageObj,
-
-            0,
-            0,
-            width,
-            height
-
-        );
-
-
-        frames.push(
-            canvas.toDataURL(
-                'image/jpeg',
-                0.90
-            )
-        );
-
-    }
-
-
-    /*
-     * Tambahkan frame final.
-     */
-
-    const finalCanvas =
-        document.createElement(
-            'canvas'
-        );
-
-
-    finalCanvas.width =
-        width;
-
-
-    finalCanvas.height =
-        height;
-
-
-    const finalCtx =
-        finalCanvas.getContext(
-            '2d'
-        );
-
-
-    finalCtx.fillStyle =
-        '#FFFFFF';
-
-
-    finalCtx.fillRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-
-    finalCtx.filter =
-        currentCanvasFilter;
-
-
-    for (
-        let i = 0;
-        i < capturedImages.length;
-        i++
-    ) {
-
-        if (
-            !capturedImages[i]
-        ) {
-            continue;
-        }
-
-
-        const image =
-            await loadImage(
-                capturedImages[i]
-            );
-
-
-        const hole =
-            frameHoles[i];
-
-
-        if (hole) {
-
-            drawImageIntoHole(
-                finalCtx,
-                image,
-                hole
-            );
-
-        }
-
-    }
-
-
-    finalCtx.filter =
-        'none';
-
-
-    finalCtx.drawImage(
-
-        finalFrameImageObj,
-
-        0,
-        0,
-        width,
-        height
-
-    );
-
-
-    frames.push(
-        finalCanvas.toDataURL(
-            'image/jpeg',
-            0.90
-        )
-    );
-
-
-    return {
-
-        frames: frames,
-
-        width: width,
-
-        height: height
-
-    };
-
-}
-
-
-/* =====================================================
-   LOAD IMAGE
-===================================================== */
-
-function loadImage(src) {
-
-    return new Promise(
-        (resolve, reject) => {
-
-            const image =
-                new Image();
-
-
-            image.onload =
-                () => resolve(image);
-
-
-            image.onerror =
-                () => reject(
-                    new Error(
-                        'Gagal memuat gambar.'
-                    )
-                );
-
-
-            image.src =
-                src;
-
-        }
-    );
 
 }
 
@@ -3329,7 +3512,7 @@ function downloadImage() {
 
 
     link.download =
-        `${visitorName}_frame.png`;
+        `photobooth_frame_${Date.now()}.png`;
 
 
     link.href =
@@ -3368,7 +3551,7 @@ function downloadTanpaFrame() {
 
 
             link.download =
-                `${visitorName}_foto_${index + 1}.jpg`;
+                `foto_satuan_${index + 1}_${Date.now()}.png`;
 
 
             link.href =
@@ -3384,7 +3567,7 @@ function downloadTanpaFrame() {
 
 
 /* =====================================================
-   PROCESS + UPLOAD SESSION
+   PROCESS + UPLOAD
 ===================================================== */
 
 async function processAndUploadSession() {
@@ -3416,249 +3599,163 @@ async function processAndUploadSession() {
             );
 
 
-    /*
-     * ================================================
-     * BUAT GIF DENGAN RASIO FRAME YANG BENAR
-     * ================================================
-     */
+    gifshot.createGIF(
 
-    let gifData = '';
+        {
+
+            images: [
+                ...capturedImages,
+                frameImageData
+            ],
+
+            interval: 0.6,
+
+            gifWidth: 600,
+
+            gifHeight:
+                Math.floor(
+                    600 *
+                    (
+                        finalFrameImageObj.height /
+                        finalFrameImageObj.width
+                    )
+                ),
+
+            numFrames:
+                capturedImages.length + 1
+
+        },
+
+        async function(obj) {
+
+            let gifData = '';
 
 
-    try {
+            if (!obj.error) {
 
-        const gifFrames =
-            await createGifFrames();
+                gifData =
+                    obj.image;
+
+            }
 
 
-        await new Promise(
-            resolve => {
+            try {
 
-                gifshot.createGIF(
+                const response =
+                    await fetch(
+                        '/upload-session',
+                        {
 
-                    {
+                            method: 'POST',
 
-                        images:
-                            gifFrames.frames,
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
 
-                        interval:
-                            0.8,
+                            body:
+                                JSON.stringify({
 
-                        gifWidth:
-                            600,
+                                    frameImage:
+                                        frameImageData,
 
-                        gifHeight:
-                            Math.round(
-                                600 *
-                                (
-                                    gifFrames.height /
-                                    gifFrames.width
-                                )
-                            ),
+                                    individualImages:
+                                        capturedImages,
 
-                        numFrames:
-                            gifFrames.frames.length,
+                                    gifImage:
+                                        gifData
 
-                        sampleInterval:
-                            10
-
-                    },
-
-                    function(obj) {
-
-                        if (
-                            !obj.error
-                        ) {
-
-                            gifData =
-                                obj.image;
+                                })
 
                         }
+                    );
 
 
-                        resolve();
+                const result =
+                    await response.json();
 
-                    }
 
+                if (
+                    result.success
+                ) {
+
+                    const qrContainer =
+                        document.getElementById(
+                            'qrcode-container'
+                        );
+
+
+                    qrContainer.innerHTML =
+                        '';
+
+
+                    new QRCode(
+                        qrContainer,
+                        {
+
+                            text:
+                                result.folder_link,
+
+                            width:
+                                170,
+
+                            height:
+                                170,
+
+                            colorDark:
+                                '#2563eb',
+
+                            colorLight:
+                                '#ffffff',
+
+                            correctLevel:
+                                QRCode
+                                    .CorrectLevel
+                                    .H
+
+                        }
+                    );
+
+
+                    document
+                        .getElementById(
+                            'qr-status-text'
+                        )
+                        .innerText =
+                        'Scan untuk mengunduh';
+
+                } else {
+
+                    alert(
+                        'Gagal membuat folder di Drive.'
+                    );
+
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    'Error:',
+                    error
+                );
+
+
+                alert(
+                    'Gagal menghubungi server Node.js.'
                 );
 
             }
-        );
-
-
-    } catch(error) {
-
-        console.error(
-            'GIF Error:',
-            error
-        );
-
-    }
-
-
-    /*
-     * ================================================
-     * UPLOAD KE SERVER
-     * ================================================
-     */
-
-    try {
-
-        const response =
-            await fetch(
-                '/upload-session',
-                {
-
-                    method:
-                        'POST',
-
-                    headers: {
-
-                        'Content-Type':
-                            'application/json'
-
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            /*
-                             * Nama pengguna.
-                             */
-
-                            name:
-                                visitorName,
-
-
-                            /*
-                             * Nama folder.
-                             */
-
-                            folderName:
-                                sessionFolderName,
-
-
-                            /*
-                             * Nama file.
-                             */
-
-                            frameFileName:
-                                `${visitorName}_frame.png`,
-
-                            gifFileName:
-                                `${visitorName}_gif.gif`,
-
-                            individualFileNames:
-                                capturedImages.map(
-                                    (img, index) =>
-                                        `${visitorName}_foto_${index + 1}.jpg`
-                                ),
-
-
-                            /*
-                             * Data gambar.
-                             */
-
-                            frameImage:
-                                frameImageData,
-
-                            individualImages:
-                                capturedImages,
-
-                            gifImage:
-                                gifData
-
-                        })
-
-                }
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (
-            result.success
-        ) {
-
-            const qrContainer =
-                document.getElementById(
-                    'qrcode-container'
-                );
-
-
-            qrContainer.innerHTML =
-                '';
-
-
-            new QRCode(
-
-                qrContainer,
-
-                {
-
-                    text:
-                        result.folder_link,
-
-                    width:
-                        170,
-
-                    height:
-                        170,
-
-                    colorDark:
-                        '#000000',
-
-                    colorLight:
-                        '#ffffff',
-
-                    correctLevel:
-                        QRCode
-                            .CorrectLevel
-                            .H
-
-                }
-
-            );
-
-
-            document
-                .getElementById(
-                    'qr-status-text'
-                )
-                .innerText =
-                'Scan untuk unduh';
-
-
-        } else {
-
-            alert(
-                'Gagal membuat folder di Drive.'
-            );
 
         }
 
-
-    } catch(error) {
-
-        console.error(
-            'Error:',
-            error
-        );
-
-
-        alert(
-            'Gagal menghubungi server Node.js.'
-        );
-
-    }
+    );
 
 }
 
 
 /* =====================================================
-   WINDOW RESIZE
+   RESIZE
 ===================================================== */
 
 window.addEventListener(
@@ -3684,32 +3781,7 @@ window.addEventListener(
     }
 );
 
-
-/* =====================================================
-   ENTER DI INPUT NAMA
-===================================================== */
-
-document
-    .getElementById(
-        'visitor-name'
-    )
-    .addEventListener(
-        'keydown',
-        event => {
-
-            if (
-                event.key === 'Enter'
-            ) {
-
-                continueToFrame();
-
-            }
-
-        }
-    );
-
 </script>
 
 </body>
-
 </html>
