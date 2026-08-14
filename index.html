@@ -1312,108 +1312,209 @@
 @media(max-width:700px){.screen:not(#start-screen)::before{inset:6px;border-radius:22px}.filters-carousel{justify-content:flex-start}.filter-thumb-item{min-width:54px}.camera-settings-panel{height:auto}}
 </style>
 
-<style id="camera-fullscreen-fix">
-/* =====================================================
-   CAMERA PREVIEW FULLSCREEN FIX
-   PATCH ONLY - TIDAK MENGUBAH CSS ASLI
-===================================================== */
+/* =========================================================
+   PATCH RESPONSIVE CAMERA - TIDAK MENGUBAH FUNGSI ASLI
+   ========================================================= */
 
-#video-wrapper.camera-preview-fullscreen {
+/* Desktop: 3 kolom benar-benar terpisah */
+.camera-screen-layout {
+    grid-template-columns:
+        clamp(180px, 18vw, 260px)
+        minmax(0, 1fr)
+        clamp(240px, 22vw, 340px);
+    width: 100%;
+    height: calc(100vh - 60px);
+    min-width: 0;
+    min-height: 0;
+}
+
+.camera-settings-panel,
+.camera-center-area,
+.camera-right-panel {
+    min-width: 0;
+    min-height: 0;
+}
+
+.camera-center-area {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+.video-wrapper {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+#camera-feed {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
+/* Tombol fullscreen kamera */
+.camera-fullscreen-btn {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    z-index: 500 !important;
+    width: 42px !important;
+    height: 42px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(0,0,0,.65) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,.45) !important;
+    font-size: 21px !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.camera-fullscreen-btn:hover {
+    background: rgba(25,118,210,.9) !important;
+    transform: none !important;
+}
+
+/* Fullscreen aplikasi kamera */
+#camera-screen.camera-fullscreen {
     position: fixed !important;
     inset: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    min-width: 100vw !important;
     min-height: 100vh !important;
-    max-width: none !important;
-    max-height: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    z-index: 2147483000 !important;
+    padding: clamp(6px, 1vw, 14px) !important;
     background: #000 !important;
+    z-index: 99999 !important;
     overflow: hidden !important;
 }
 
-#video-wrapper.camera-preview-fullscreen #camera-feed {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+#camera-screen.camera-fullscreen .camera-screen-layout {
     width: 100% !important;
     height: 100% !important;
-    min-width: 100% !important;
-    min-height: 100% !important;
-    object-fit: contain !important;
-    background: #000 !important;
-}
-
-#video-wrapper.camera-preview-fullscreen .shutter-btn-absolute {
-    z-index: 2147483002 !important;
-}
-
-#video-wrapper.camera-preview-fullscreen .countdown {
-    z-index: 2147483003 !important;
-}
-
-#video-wrapper.camera-preview-fullscreen .flash {
-    z-index: 2147483004 !important;
-}
-
-.camera-preview-fullscreen-btn {
-    position: absolute !important;
-    top: 14px !important;
-    right: 14px !important;
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: 1px solid rgba(255,255,255,.45) !important;
-    border-radius: 10px !important;
-    background: rgba(0,0,0,.65) !important;
-    color: #fff !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 22px !important;
-    line-height: 1 !important;
-    z-index: 2147483005 !important;
-    cursor: pointer !important;
-    box-shadow: 0 4px 14px rgba(0,0,0,.35) !important;
-    transform: none !important;
-}
-
-.camera-preview-fullscreen-btn:hover {
-    background: rgba(25,118,210,.9) !important;
-    transform: none !important;
-    box-shadow: 0 4px 16px rgba(0,0,0,.4) !important;
-}
-
-/*
-   Saat browser memakai F11 / fullscreen browser,
-   paksa preview tetap terlihat tanpa mengganggu layout asli.
-*/
-html.camera-browser-fullscreen #camera-feed {
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-html.camera-browser-fullscreen #video-wrapper {
+    min-width: 0 !important;
     min-height: 0 !important;
 }
 
-@media (max-width: 1100px) and (orientation: landscape) {
-    html.camera-browser-fullscreen .camera-center-area {
+#camera-screen.camera-fullscreen .camera-center-area {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+#camera-screen.camera-fullscreen .video-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    background: #000 !important;
+}
+
+#camera-screen.camera-fullscreen #camera-feed {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+    .camera-screen-layout {
+        display: grid !important;
+        grid-template-columns: minmax(150px, 22vw) minmax(0, 1fr) !important;
+        grid-template-rows: minmax(0, 1fr) auto !important;
+        height: calc(100vh - 60px) !important;
+        overflow: hidden !important;
+    }
+
+    .camera-right-panel {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: 190px !important;
+    }
+}
+
+/* Tablet portrait / HP */
+@media (max-width: 800px) {
+    .camera-screen-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: calc(100dvh - 40px) !important;
+        overflow-y: auto !important;
+    }
+
+    .camera-center-area {
+        order: 1 !important;
+        width: 100% !important;
+        height: min(62dvh, 680px) !important;
+        min-height: 280px !important;
+        flex: 0 0 auto !important;
+    }
+
+    .camera-settings-panel {
+        order: 2 !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: 280px !important;
+    }
+
+    .camera-right-panel {
+        order: 3 !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: 300px !important;
+    }
+
+    .video-wrapper {
+        width: 100% !important;
+        height: 100% !important;
+        aspect-ratio: 4 / 3 !important;
+    }
+}
+
+/* HP kecil */
+@media (max-width: 600px) {
+    .screen {
+        padding: 8px !important;
+    }
+
+    .camera-center-area {
+        height: 55dvh !important;
+        min-height: 240px !important;
+    }
+
+    .video-wrapper {
+        aspect-ratio: 3 / 4 !important;
+        border-radius: 12px !important;
+    }
+}
+
+/* Landscape HP/tablet */
+@media (max-width: 900px) and (orientation: landscape) {
+    .camera-screen-layout {
+        display: grid !important;
+        grid-template-columns: minmax(130px, 20vw) minmax(0, 1fr) !important;
+        grid-template-rows: minmax(0, 1fr) auto !important;
+        height: calc(100dvh - 20px) !important;
+        overflow: hidden !important;
+    }
+
+    .camera-center-area {
+        height: 100% !important;
         min-height: 0 !important;
     }
 
-    html.camera-browser-fullscreen #video-wrapper {
-        min-height: 0 !important;
-        aspect-ratio: auto !important;
+    .camera-right-panel {
+        grid-column: 1 / -1 !important;
+        max-height: 120px !important;
     }
 }
-</style>
 
 </head>
 
@@ -1629,6 +1730,15 @@ html.camera-browser-fullscreen #video-wrapper {
                     playsinline
                 ></video>
 
+                <button
+                    type="button"
+                    id="camera-fullscreen-btn"
+                    class="camera-fullscreen-btn"
+                    onclick="toggleCameraFullscreen()"
+                    title="Fullscreen Kamera"
+                    aria-label="Fullscreen Kamera"
+                >⛶</button>
+
                 <div class="shutter-btn-absolute" onclick="takePhotos()" id="btn-take">
                     <div class="shutter-inner">
                         📷
@@ -1653,6 +1763,8 @@ html.camera-browser-fullscreen #video-wrapper {
                 <button class="filter-thumb-item" onclick="applyCameraEffect('grayscale(45%) contrast(118%) sepia(15%)', this)"><div class="filter-thumb-placeholder" style="background:#8d8d8d;"></div><span>Film</span></button>
                 <button class="filter-thumb-item" onclick="applyCameraEffect('saturate(55%) contrast(108%) brightness(103%)', this)"><div class="filter-thumb-placeholder" style="background:#b7c1c7;"></div><span>Fade</span></button>
             </div>
+
+        </div><!-- /camera-center-area -->
 
         <!-- RIGHT: PHOTOS THUMBNAILS & NEXT BUTTON -->
         <div class="camera-right-panel">
@@ -4109,219 +4221,75 @@ initPreviewEditorDrag=function(){
         selectedEditorType=hit.type;selectedEditorIndex=hit.index;scheduleEditorDraw();
     },{passive:false});
 };
-</script>
 
-<script id="camera-fullscreen-fix-js">
-/* =====================================================
-   CAMERA PREVIEW FULLSCREEN FIX
-   PATCH ONLY - TIDAK MENGHAPUS / MENGGANTI FUNGSI ASLI
-===================================================== */
-(function () {
-    'use strict';
+/* =========================================================
+   PATCH CAMERA FULLSCREEN + RESPONSIVE RESIZE
+   ========================================================= */
 
-    const WRAPPER_ID = 'video-wrapper';
-    const VIDEO_ID = 'camera-feed';
-    const BUTTON_ID = 'camera-preview-fullscreen-btn';
-    const FULLSCREEN_CLASS = 'camera-preview-fullscreen';
-    const BROWSER_FULLSCREEN_CLASS = 'camera-browser-fullscreen';
+async function toggleCameraFullscreen() {
+    const screen = document.getElementById('camera-screen');
+    if (!screen) return;
 
-    function getWrapper() {
-        return document.getElementById(WRAPPER_ID);
-    }
-
-    function getVideo() {
-        return document.getElementById(VIDEO_ID);
-    }
-
-    function isWrapperFullscreen() {
-        const wrapper = getWrapper();
-        return !!wrapper && document.fullscreenElement === wrapper;
-    }
-
-    function updateFullscreenButton() {
-        const button = document.getElementById(BUTTON_ID);
-        if (!button) return;
-
-        const active = isWrapperFullscreen();
-        button.textContent = active ? '✕' : '⛶';
-        button.title = active ? 'Keluar Fullscreen Kamera' : 'Fullscreen Kamera';
-        button.setAttribute('aria-label', button.title);
-    }
-
-    function keepCameraVisible() {
-        const video = getVideo();
-        const wrapper = getWrapper();
-        if (!video || !wrapper) return;
-
-        /* Jangan mengganti srcObject atau stream asli. */
-        video.style.visibility = 'visible';
-        video.style.opacity = '1';
-        video.style.display = 'block';
-
-        if (document.fullscreenElement === wrapper) {
-            wrapper.classList.add(FULLSCREEN_CLASS);
-            video.style.width = '100%';
-            video.style.height = '100%';
-            video.style.objectFit = 'contain';
-        }
-
-        /* Kamera kadang berhenti menggambar setelah resize/fullscreen. */
-        if (video.srcObject && video.paused) {
-            const playPromise = video.play();
-            if (playPromise && typeof playPromise.catch === 'function') {
-                playPromise.catch(function () {});
-            }
-        }
-
-        updateFullscreenButton();
-    }
-
-    async function toggleCameraPreviewFullscreen() {
-        const wrapper = getWrapper();
-        const video = getVideo();
-
-        if (!wrapper || !video) return;
-
-        try {
-            if (document.fullscreenElement === wrapper) {
-                await document.exitFullscreen();
-                return;
-            }
-
-            if (document.fullscreenElement) {
-                await document.exitFullscreen();
-            }
-
-            if (wrapper.requestFullscreen) {
-                await wrapper.requestFullscreen();
-            } else if (wrapper.webkitRequestFullscreen) {
-                wrapper.webkitRequestFullscreen();
-            } else {
-                /* Fallback untuk browser yang tidak menyediakan Fullscreen API. */
-                wrapper.classList.add(FULLSCREEN_CLASS);
-            }
-        } catch (error) {
-            console.warn('Fullscreen kamera tidak tersedia:', error);
-            wrapper.classList.toggle(FULLSCREEN_CLASS);
-        }
-
-        setTimeout(keepCameraVisible, 100);
-        setTimeout(keepCameraVisible, 500);
-    }
-
-    function createFullscreenButton() {
-        const wrapper = getWrapper();
-        if (!wrapper || document.getElementById(BUTTON_ID)) return;
-
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.id = BUTTON_ID;
-        button.className = 'camera-preview-fullscreen-btn';
-        button.textContent = '⛶';
-        button.title = 'Fullscreen Kamera';
-        button.setAttribute('aria-label', 'Fullscreen Kamera');
-
-        button.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            toggleCameraPreviewFullscreen();
-        });
-
-        wrapper.appendChild(button);
-        updateFullscreenButton();
-    }
-
-    function syncBrowserFullscreenState() {
-        /* F11 tidak selalu memicu fullscreenchange. Resize lebih dapat diandalkan. */
-        const width = window.innerWidth || document.documentElement.clientWidth;
-        const height = window.innerHeight || document.documentElement.clientHeight;
-        const screenWidth = window.screen && window.screen.width ? window.screen.width : width;
-        const screenHeight = window.screen && window.screen.height ? window.screen.height : height;
-
-        const looksLikeBrowserFullscreen =
-            Math.abs(width - screenWidth) <= 2 &&
-            Math.abs(height - screenHeight) <= 2;
-
-        document.documentElement.classList.toggle(
-            BROWSER_FULLSCREEN_CLASS,
-            looksLikeBrowserFullscreen
-        );
-
-        keepCameraVisible();
-    }
-
-    function handleFullscreenChange() {
-        const wrapper = getWrapper();
-        if (!wrapper) return;
-
-        if (document.fullscreenElement === wrapper) {
-            wrapper.classList.add(FULLSCREEN_CLASS);
+    try {
+        if (!document.fullscreenElement) {
+            await screen.requestFullscreen();
         } else {
-            wrapper.classList.remove(FULLSCREEN_CLASS);
+            await document.exitFullscreen();
         }
+    } catch (err) {
+        console.warn('Fullscreen API tidak tersedia:', err);
 
-        updateFullscreenButton();
-        setTimeout(keepCameraVisible, 50);
-        setTimeout(keepCameraVisible, 250);
-        setTimeout(keepCameraVisible, 600);
+        // Fallback untuk browser yang tidak mengizinkan fullscreen API.
+        screen.classList.toggle('camera-fullscreen');
+        resizeCameraLayout();
+    }
+}
+
+document.addEventListener('fullscreenchange', function () {
+    const screen = document.getElementById('camera-screen');
+    if (!screen) return;
+
+    screen.classList.toggle(
+        'camera-fullscreen',
+        !!document.fullscreenElement
+    );
+
+    setTimeout(resizeCameraLayout, 80);
+});
+
+function resizeCameraLayout() {
+    const screen = document.getElementById('camera-screen');
+    const video = document.getElementById('camera-feed');
+    const wrapper = document.getElementById('video-wrapper');
+
+    if (!screen || !video || !wrapper) return;
+
+    if (screen.classList.contains('camera-fullscreen')) {
+        screen.classList.add('camera-fullscreen');
     }
 
-    function initCameraFullscreenPatch() {
-        createFullscreenButton();
-        keepCameraVisible();
-        syncBrowserFullscreenState();
+    // Pastikan stream tetap dimainkan setelah perubahan ukuran.
+    if (video.srcObject && video.paused) {
+        video.play().catch(() => {});
     }
 
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    // Jangan mengubah mirror kamera yang sudah dipilih pengguna.
+    video.style.transform = isMirrored
+        ? 'scaleX(-1)'
+        : 'scaleX(1)';
+}
 
-    window.addEventListener('resize', function () {
-        clearTimeout(window.__cameraFullscreenResizeTimer);
-        window.__cameraFullscreenResizeTimer = setTimeout(function () {
-            syncBrowserFullscreenState();
-        }, 80);
-    });
+window.addEventListener('resize', function () {
+    const screen = document.getElementById('camera-screen');
+    if (screen && screen.classList.contains('active')) {
+        requestAnimationFrame(resizeCameraLayout);
+    }
+});
 
-    window.addEventListener('orientationchange', function () {
-        setTimeout(keepCameraVisible, 200);
-        setTimeout(keepCameraVisible, 600);
-    });
+window.addEventListener('orientationchange', function () {
+    setTimeout(resizeCameraLayout, 150);
+});
 
-    document.addEventListener('visibilitychange', function () {
-        if (!document.hidden) {
-            setTimeout(keepCameraVisible, 100);
-        }
-    });
-
-    /*
-       Jangan mengganti initCamera() asli.
-       Patch ini hanya memastikan tombol dan preview dibuat
-       setelah DOM siap dan setelah kamera kemungkinan sudah dibuat.
-    */
-    document.addEventListener('DOMContentLoaded', function () {
-        initCameraFullscreenPatch();
-        setTimeout(initCameraFullscreenPatch, 300);
-        setTimeout(initCameraFullscreenPatch, 1000);
-    });
-
-    window.addEventListener('load', function () {
-        initCameraFullscreenPatch();
-        setTimeout(initCameraFullscreenPatch, 500);
-    });
-
-    /* Jika kode asli berpindah ke camera-screen setelah DOM siap. */
-    const observer = new MutationObserver(function () {
-        if (!document.getElementById(BUTTON_ID)) {
-            createFullscreenButton();
-        }
-    });
-
-    observer.observe(document.documentElement, {
-        childList: true,
-        subtree: true
-    });
-})();
 </script>
-
 </body>
 </html>
