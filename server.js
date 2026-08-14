@@ -573,14 +573,52 @@ app.post(
         try {
 
             const {
-                frameImage,
-                individualImages,
-                gifImage
-            } = req.body;
+    sessionName: clientSessionName,
+    date,
+    frameImage,
+    individualImages,
+    gifImage
+} = req.body;
 
 
-            const sessionName =
-                `Sesi_${Date.now()}`;
+// =================================================
+// GUNAKAN NAMA SESI DARI FRONTEND
+// =================================================
+
+const safeSessionName =
+    String(
+        clientSessionName ||
+        `Sesi_${Date.now()}`
+    )
+        .trim()
+        .replace(/[<>:"/\\|?*]+/g, '')
+        .replace(/\s+/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .substring(0, 80) ||
+    `Sesi_${Date.now()}`;
+
+
+// =================================================
+// GUNAKAN TANGGAL DARI FRONTEND
+// =================================================
+
+const safeDate =
+    String(date || '')
+        .trim()
+        .replace(/[<>:"/\\|?*]+/g, '')
+        .replace(/\s+/g, '_')
+        .substring(0, 30);
+
+
+// =================================================
+// NAMA FOLDER GOOGLE DRIVE
+// =================================================
+
+const sessionName =
+    safeDate
+        ? `${safeSessionName}_${safeDate}`
+        : safeSessionName;
 
 
             // =================================================
