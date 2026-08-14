@@ -5,10 +5,7 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Photobooth Web</title>
 
@@ -16,22 +13,30 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+
     <style>
 
         :root {
+
             --bg-color: #F5F5F7;
             --primary: #000000;
             --on-primary: #FFFFFF;
             --text-secondary: #777777;
+
         }
+
 
         * {
             box-sizing: border-box;
         }
 
+
         body {
+
             margin: 0;
+
             height: 100vh;
+
             overflow: hidden;
 
             font-family:
@@ -43,54 +48,88 @@
                 sans-serif;
 
             background-color: var(--bg-color);
+
             color: var(--primary);
+
         }
+
 
         .screen {
+
             display: none;
+
             height: 100vh;
+
             padding: 16px 24px;
+
             flex-direction: column;
+
         }
+
 
         .screen.active {
+
             display: flex;
+
         }
+
 
         h1 {
+
             font-size: 32px;
+
             margin: 0 0 8px 0;
+
         }
+
 
         h2 {
+
             margin: 0 0 16px 0;
+
         }
+
 
         p {
+
             color: var(--text-secondary);
+
             margin: 0 0 24px 0;
+
         }
 
+
         .bottom-actions {
+
             margin-top: auto;
+
             padding-top: 16px;
 
             display: flex;
+
             gap: 10px;
+
             flex-wrap: wrap;
+
             justify-content: center;
+
         }
 
+
         button {
+
             background-color: var(--primary);
+
             color: var(--on-primary);
 
             border: none;
+
             border-radius: 30px;
 
             padding: 12px 20px;
 
             font-size: 14px;
+
             font-weight: 600;
 
             cursor: pointer;
@@ -98,100 +137,120 @@
             transition:
                 opacity 0.2s,
                 transform 0.15s;
+
         }
+
 
         button:hover:not(:disabled) {
+
             transform: translateY(-1px);
+
         }
+
 
         button:disabled {
+
             opacity: 0.5;
+
             cursor: not-allowed;
+
         }
 
+
         button.outline {
+
             background-color: transparent;
+
             color: var(--primary);
+
             border: 2px solid var(--primary);
+
         }
+
 
         /* =====================================================
            INPUT NAMA
         ===================================================== */
 
         .name-container {
+
             flex: 1;
 
             display: flex;
+
+            flex-direction: column;
+
             justify-content: center;
+
             align-items: center;
 
-            width: 100%;
         }
 
+
         .name-box {
-            width: min(600px, 90vw);
+
+            width: min(500px, 90vw);
 
             background: white;
 
-            border-radius: 20px;
-
             padding: 35px;
 
+            border-radius: 20px;
+
             box-shadow:
-                0 10px 35px rgba(0, 0, 0, 0.08);
+                0 10px 40px rgba(0,0,0,0.08);
 
             text-align: center;
+
         }
+
 
         .name-box h1 {
+
             margin-bottom: 10px;
+
         }
+
 
         .name-box p {
+
             margin-bottom: 25px;
+
         }
 
-        #guest-name {
+
+        #visitor-name {
+
             width: 100%;
 
-            padding: 16px 20px;
+            padding: 15px 18px;
 
             border: 2px solid #ddd;
 
-            border-radius: 14px;
+            border-radius: 12px;
 
             outline: none;
 
-            font-size: 18px;
+            font-size: 17px;
 
             text-align: center;
 
-            transition:
-                border-color 0.2s;
         }
 
-        #guest-name:focus {
+
+        #visitor-name:focus {
+
             border-color: #000;
+
         }
 
-        .name-preview {
-            margin-top: 15px;
-
-            font-size: 12px;
-
-            color: #777;
-        }
-
-        .name-preview strong {
-            color: #000;
-        }
 
         /* =====================================================
            PILIH FRAME
         ===================================================== */
 
         .frame-grid {
+
             display: flex;
 
             align-items: center;
@@ -203,6 +262,7 @@
             width: 100%;
 
             overflow-x: auto;
+
             overflow-y: hidden;
 
             padding: 30px 12vw;
@@ -210,18 +270,24 @@
             scroll-behavior: smooth;
 
             scrollbar-width: none;
+
         }
+
 
         .frame-grid::-webkit-scrollbar {
+
             display: none;
+
         }
 
+
         .frame-item {
+
             flex: 0 0 auto;
 
-            width: min(390px, 32vw);
+            width: min(500px, 45vw);
 
-            height: min(560px, 50vh);
+            height: min(700px, 75vh);
 
             background-color: #ddd;
 
@@ -229,7 +295,7 @@
 
             background-position: center;
 
-            background-size: cover;
+            background-size: contain;
 
             border-radius: 16px;
 
@@ -242,30 +308,39 @@
             transition:
                 transform 0.2s ease,
                 border-color 0.2s ease;
+
         }
+
 
         .frame-item:hover {
+
             transform: scale(1.02);
+
         }
 
+
         .frame-item.selected {
+
             border-color: #000;
 
             transform: scale(1.05);
 
             box-shadow: none;
+
         }
 
+
         .frame-item.selected::after {
+
             content: "✓";
 
             position: absolute;
 
             top: 50%;
+
             left: 50%;
 
-            transform:
-                translate(-50%, -50%);
+            transform: translate(-50%, -50%);
 
             color: white;
 
@@ -276,18 +351,21 @@
             line-height: 1;
 
             text-shadow:
-                0 2px 6px rgba(0, 0, 0, 0.35);
+                0 2px 6px rgba(0,0,0,0.35);
 
             pointer-events: none;
 
             z-index: 100;
+
         }
+
 
         /* =====================================================
            CAMERA
         ===================================================== */
 
         .camera-container {
+
             display: flex;
 
             gap: 20px;
@@ -295,9 +373,12 @@
             flex: 1;
 
             min-height: 0;
+
         }
 
+
         .video-wrapper {
+
             flex: 3;
 
             background: #000;
@@ -315,12 +396,16 @@
             align-items: center;
 
             min-height: 0;
+
         }
 
+
         #camera-feed {
+
             display: block;
 
             width: 100%;
+
             height: 100%;
 
             object-fit: cover;
@@ -328,20 +413,23 @@
             transform: scaleX(-1);
 
             background: #000;
+
         }
+
 
         /* =====================================================
            COUNTDOWN
         ===================================================== */
 
         .countdown {
+
             position: absolute;
 
             top: 50%;
+
             left: 50%;
 
-            transform:
-                translate(-50%, -50%);
+            transform: translate(-50%, -50%);
 
             font-size: 80px;
 
@@ -350,12 +438,15 @@
             font-weight: bold;
 
             text-shadow:
-                2px 2px 10px rgba(0, 0, 0, 0.5);
+                2px 2px 10px rgba(0,0,0,0.5);
 
             z-index: 100;
+
         }
 
+
         .flash {
+
             position: absolute;
 
             inset: 0;
@@ -367,20 +458,25 @@
             pointer-events: none;
 
             z-index: 200;
+
         }
+
 
         .flash.active {
+
             opacity: 0.8;
 
-            transition:
-                opacity 0.1s;
+            transition: opacity 0.1s;
+
         }
+
 
         /* =====================================================
            PREVIEW FRAME DI SAMPING KAMERA
         ===================================================== */
 
         .preview-wrapper {
+
             flex: 2;
 
             background: #dcdcdc;
@@ -398,12 +494,16 @@
             min-height: 0;
 
             overflow: hidden;
+
         }
 
+
         .frame-preview-container {
+
             position: relative;
 
             width: 100%;
+
             height: 100%;
 
             display: flex;
@@ -413,9 +513,12 @@
             justify-content: center;
 
             overflow: hidden;
+
         }
 
+
         #camera-side-frame {
+
             position: absolute;
 
             display: block;
@@ -425,21 +528,27 @@
             pointer-events: none;
 
             z-index: 30;
+
         }
 
+
         #photo-slots {
+
             position: absolute;
 
             z-index: 10;
 
             pointer-events: none;
+
         }
+
 
         /* =====================================================
            SLOT FOTO
         ===================================================== */
 
         .photo-slot {
+
             position: absolute;
 
             overflow: hidden;
@@ -455,42 +564,53 @@
                 outline 0.15s;
 
             z-index: 20;
+
         }
+
 
         .photo-slot:hover {
+
             transform: scale(1.015);
 
-            outline:
-                2px solid white;
+            outline: 2px solid white;
 
             z-index: 60;
+
         }
 
+
         .photo-slot canvas {
+
             width: 100%;
+
             height: 100%;
 
             display: block;
+
         }
 
+
         .slot-number {
+
             position: absolute;
 
             top: 5px;
+
             left: 5px;
 
             width: 25px;
+
             height: 25px;
 
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
             border-radius: 50%;
 
-            background:
-                rgba(0, 0, 0, 0.65);
+            background: rgba(0,0,0,0.65);
 
             color: white;
 
@@ -501,9 +621,12 @@
             z-index: 70;
 
             pointer-events: none;
+
         }
 
+
         .slot-empty {
+
             position: absolute;
 
             inset: 0;
@@ -511,6 +634,7 @@
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
             text-align: center;
@@ -521,15 +645,17 @@
 
             font-weight: bold;
 
-            background:
-                rgba(0, 0, 0, 0.35);
+            background: rgba(0,0,0,0.35);
 
             z-index: 30;
 
             pointer-events: none;
+
         }
 
+
         .retake-label {
+
             position: absolute;
 
             inset: 0;
@@ -537,12 +663,12 @@
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
             text-align: center;
 
-            background:
-                rgba(0, 0, 0, 0.55);
+            background: rgba(0,0,0,0.55);
 
             color: white;
 
@@ -552,23 +678,28 @@
 
             opacity: 0;
 
-            transition:
-                opacity 0.15s;
+            transition: opacity 0.15s;
 
             z-index: 80;
 
             pointer-events: none;
+
         }
 
+
         .photo-slot:hover .retake-label {
+
             opacity: 1;
+
         }
+
 
         /* =====================================================
            PREVIEW EDIT
         ===================================================== */
 
         .editor-container {
+
             display: flex;
 
             gap: 16px;
@@ -576,14 +707,18 @@
             flex: 1;
 
             min-height: 0;
+
         }
 
+
         .canvas-area {
+
             flex: 3;
 
             display: flex;
 
             justify-content: center;
+
             align-items: center;
 
             background: #e0e0e0;
@@ -595,9 +730,12 @@
             padding: 10px;
 
             position: relative;
+
         }
 
+
         canvas {
+
             max-width: 100%;
 
             max-height: 100%;
@@ -607,10 +745,13 @@
             border-radius: 10px;
 
             box-shadow:
-                0 10px 30px rgba(0, 0, 0, 0.1);
+                0 10px 30px rgba(0,0,0,0.1);
+
         }
 
+
         .tools-area {
+
             flex: 2;
 
             background: white;
@@ -620,13 +761,16 @@
             padding: 15px;
 
             overflow-y: auto;
+
         }
+
 
         /* =====================================================
            RESULT
         ===================================================== */
 
         .result-container {
+
             display: flex;
 
             gap: 20px;
@@ -636,9 +780,12 @@
             min-height: 0;
 
             align-items: center;
+
         }
 
+
         .result-left {
+
             flex: 1;
 
             height: 100%;
@@ -646,14 +793,18 @@
             display: flex;
 
             justify-content: center;
+
             align-items: center;
 
             background: #e0e0e0;
 
             border-radius: 12px;
+
         }
 
+
         .result-right {
+
             flex: 1;
 
             display: flex;
@@ -673,47 +824,53 @@
             height: 100%;
 
             text-align: center;
+
         }
+
 
         /* =====================================================
            LOADING
         ===================================================== */
 
         #loading-overlay {
+
             display: none;
 
             position: absolute;
 
             inset: 0;
 
-            background:
-                rgba(255, 255, 255, 0.8);
+            background: rgba(255,255,255,0.8);
 
             z-index: 10;
 
             justify-content: center;
+
             align-items: center;
 
             flex-direction: column;
 
             border-radius: 10px;
+
         }
 
-        .spinner {
-            border:
-                4px solid #f3f3f3;
 
-            border-top:
-                4px solid #000;
+        .spinner {
+
+            border: 4px solid #f3f3f3;
+
+            border-top: 4px solid #000;
 
             border-radius: 50%;
 
             width: 40px;
+
             height: 40px;
 
-            animation:
-                spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+
         }
+
 
         @keyframes spin {
 
@@ -727,6 +884,7 @@
 
         }
 
+
         /* =====================================================
            RESPONSIVE
         ===================================================== */
@@ -734,34 +892,50 @@
         @media (max-width: 800px) {
 
             .frame-item {
-                width: 260px;
-                height: 390px;
+
+                width: 280px;
+
+                height: 430px;
+
             }
+
 
             .frame-grid {
+
                 padding: 25px 40px;
+
                 gap: 25px;
+
             }
+
 
             .camera-container {
+
                 flex-direction: column;
+
             }
+
 
             .video-wrapper {
+
                 min-height: 50vh;
+
             }
+
 
             .preview-wrapper {
+
                 min-height: 30vh;
+
             }
+
 
             .editor-container,
-            .result-container {
-                flex-direction: column;
-            }
 
-            .name-box {
-                padding: 25px 20px;
+            .result-container {
+
+                flex-direction: column;
+
             }
 
         }
@@ -769,6 +943,7 @@
     </style>
 
 </head>
+
 
 <body>
 
@@ -802,11 +977,10 @@
 
     </div>
 
+
     <div class="bottom-actions">
 
-        <button
-            onclick="nav('name-screen')"
-        >
+        <button onclick="nav('name-screen')">
             Mulai Sesi
         </button>
 
@@ -816,7 +990,7 @@
 
 
 <!-- =====================================================
-     INPUT NAMA SCREEN
+     NAME SCREEN
 ===================================================== -->
 
 <div
@@ -838,25 +1012,16 @@
 
             <input
                 type="text"
-                id="guest-name"
-                placeholder="Contoh: Budi Otomo"
+                id="visitor-name"
+                placeholder="Masukkan nama"
                 maxlength="50"
                 autocomplete="off"
             >
 
-            <div class="name-preview">
-
-                Nama folder:
-
-                <strong id="folder-preview">
-                    -
-                </strong>
-
-            </div>
-
         </div>
 
     </div>
+
 
     <div class="bottom-actions">
 
@@ -868,10 +1033,9 @@
         </button>
 
         <button
-            id="btn-name-continue"
             onclick="continueToFrame()"
         >
-            Lanjut Pilih Frame
+            Lanjutkan
         </button>
 
     </div>
@@ -892,6 +1056,7 @@
         Pilih Frame
     </h2>
 
+
     <div
         class="frame-grid"
         id="frame-list"
@@ -904,7 +1069,8 @@
                 background-image:
                 url('frame/default.png');
 
-                background-size:cover;
+                background-size:contain;
+
                 background-position:center;
             "
 
@@ -918,6 +1084,7 @@
 
     </div>
 
+
     <div class="bottom-actions">
 
         <button
@@ -926,6 +1093,7 @@
         >
             Kembali
         </button>
+
 
         <button
             id="btn-continue-camera"
@@ -963,20 +1131,9 @@
     >
 
         <h2 style="margin:0;">
-
             Kamera
-
-            <span
-                id="camera-name-display"
-                style="
-                    font-size:13px;
-                    color:#777;
-                    font-weight:normal;
-                    margin-left:8px;
-                "
-            ></span>
-
         </h2>
+
 
         <button
             class="outline"
@@ -995,9 +1152,9 @@
 
     </div>
 
+
     <div class="camera-container">
 
-        <!-- KAMERA LIVE -->
 
         <div
             class="video-wrapper"
@@ -1010,10 +1167,12 @@
                 playsinline
             ></video>
 
+
             <div
                 id="countdown"
                 class="countdown"
             ></div>
+
 
             <div
                 id="flash"
@@ -1022,7 +1181,6 @@
 
         </div>
 
-        <!-- FRAME + HASIL FOTO -->
 
         <div class="preview-wrapper">
 
@@ -1031,13 +1189,10 @@
                 id="frame-preview-container"
             >
 
-                <!-- SLOT FOTO -->
-
                 <div
                     id="photo-slots"
                 ></div>
 
-                <!-- FRAME ASLI -->
 
                 <img
                     id="camera-side-frame"
@@ -1051,6 +1206,7 @@
 
     </div>
 
+
     <div class="bottom-actions">
 
         <button
@@ -1059,6 +1215,7 @@
         >
             Ambil Foto
         </button>
+
 
         <button
             id="btn-next-preview"
@@ -1090,6 +1247,7 @@
         Preview & Edit
     </h2>
 
+
     <div class="editor-container">
 
         <div class="canvas-area">
@@ -1097,6 +1255,7 @@
             <canvas
                 id="result-canvas"
             ></canvas>
+
 
             <div id="loading-overlay">
 
@@ -1115,41 +1274,13 @@
 
         </div>
 
+
         <div class="tools-area">
 
             <h3 style="margin-top:0;">
-                Informasi Sesi
-            </h3>
-
-            <div
-                style="
-                    background:#f5f5f5;
-                    padding:12px;
-                    border-radius:10px;
-                    margin-bottom:20px;
-                    font-size:13px;
-                "
-            >
-
-                <div>
-                    Nama:
-                    <strong id="preview-name">
-                        -
-                    </strong>
-                </div>
-
-                <div style="margin-top:5px;">
-                    Folder:
-                    <strong id="preview-folder">
-                        -
-                    </strong>
-                </div>
-
-            </div>
-
-            <h3>
                 Filter Warna
             </h3>
+
 
             <div
                 style="
@@ -1162,12 +1293,11 @@
 
                 <button
                     class="outline"
-                    onclick="
-                        applyFilter('none')
-                    "
+                    onclick="applyFilter('none')"
                 >
                     Original
                 </button>
+
 
                 <button
                     class="outline"
@@ -1179,6 +1309,7 @@
                 >
                     Hitam Putih
                 </button>
+
 
                 <button
                     class="outline"
@@ -1196,6 +1327,7 @@
         </div>
 
     </div>
+
 
     <div class="bottom-actions">
 
@@ -1225,12 +1357,14 @@
         Sesi Selesai
     </h2>
 
+
     <div class="result-container">
 
         <div class="result-left">
 
             <canvas
                 id="final-preview-canvas"
+
                 style="
                     max-height:100%;
                     border-radius:8px;
@@ -1239,19 +1373,13 @@
 
         </div>
 
+
         <div class="result-right">
 
             <h3 style="margin-top:0;">
-
-                <span id="result-name">
-                    Foto
-                </span>
-
+                Scan untuk unduh foto
             </h3>
 
-            <p>
-                Scan untuk unduh foto
-            </p>
 
             <div
                 id="qrcode-container"
@@ -1267,6 +1395,7 @@
 
             </div>
 
+
             <p
                 id="qr-status-text"
                 style="
@@ -1277,6 +1406,7 @@
             >
                 Loading...
             </p>
+
 
             <div
                 style="
@@ -1293,6 +1423,7 @@
                     ⬇️ Unduh Foto Frame
                 </button>
 
+
                 <button
                     class="outline"
                     onclick="downloadTanpaFrame()"
@@ -1300,8 +1431,10 @@
                     🖼️ Unduh Foto Satuan
                 </button>
 
+
                 <button
                     class="outline"
+
                     onclick="location.reload()"
 
                     style="
@@ -1324,6 +1457,7 @@
 
 <script>
 
+
 /* =====================================================
    NAVIGATION
 ===================================================== */
@@ -1332,26 +1466,20 @@ function nav(screenId) {
 
     document
         .querySelectorAll('.screen')
-        .forEach(
-            screen => {
+        .forEach(screen => {
 
-                screen.classList.remove(
-                    'active'
-                );
+            screen.classList.remove('active');
 
-            }
-        );
+        });
+
 
     const target =
-        document.getElementById(
-            screenId
-        );
+        document.getElementById(screenId);
+
 
     if (target) {
 
-        target.classList.add(
-            'active'
-        );
+        target.classList.add('active');
 
     }
 
@@ -1382,131 +1510,35 @@ let isTakingPhoto = false;
 
 
 /*
- * DATA NAMA SESI
+ * Nama pengguna.
  */
 
-let sessionName = '';
+let visitorName = '';
+
+
+/*
+ * Nama folder yang dikirim
+ * ke server.
+ */
 
 let sessionFolderName = '';
 
-let sessionFilePrefix = '';
-
 
 /* =====================================================
-   FORMAT NAMA
-===================================================== */
-
-/*
- * Membersihkan nama agar aman digunakan
- * sebagai nama folder/file.
- */
-
-function sanitizeName(name) {
-
-    return name
-        .trim()
-        .replace(/[<>:"/\\|?*]+/g, '')
-        .replace(/\s+/g, '_')
-        .replace(/_+/g, '_');
-
-}
-
-
-/*
- * Nama bulan Indonesia.
- */
-
-function getIndonesianMonth(month) {
-
-    const months = [
-        'Januari',
-        'Februari',
-        'Maret',
-        'April',
-        'Mei',
-        'Juni',
-        'Juli',
-        'Agustus',
-        'September',
-        'Oktober',
-        'November',
-        'Desember'
-    ];
-
-    return months[month];
-
-}
-
-
-/*
- * Membuat nama folder.
- *
- * Contoh:
- *
- * Budi_Otomo_14_Agustus_2026
- */
-
-function createFolderName(name) {
-
-    const now = new Date();
-
-    const day =
-        String(
-            now.getDate()
-        ).padStart(
-            2,
-            '0'
-        );
-
-    const month =
-        getIndonesianMonth(
-            now.getMonth()
-        );
-
-    const year =
-        now.getFullYear();
-
-    return (
-        sanitizeName(name) +
-        '_' +
-        day +
-        '_' +
-        month +
-        '_' +
-        year
-    );
-
-}
-
-
-/*
- * Prefix nama file.
- *
- * Contoh:
- *
- * Budi_Otomo
- */
-
-function createFilePrefix(name) {
-
-    return sanitizeName(name);
-
-}
-
-
-/* =====================================================
-   CONTINUE INPUT NAMA
+   INPUT NAMA
 ===================================================== */
 
 function continueToFrame() {
 
     const input =
         document.getElementById(
-            'guest-name'
+            'visitor-name'
         );
+
 
     const name =
         input.value.trim();
+
 
     if (!name) {
 
@@ -1521,139 +1553,90 @@ function continueToFrame() {
     }
 
 
-    sessionName = name;
+    visitorName = cleanFileName(name);
+
+
+    if (!visitorName) {
+
+        alert(
+            'Nama tidak valid.'
+        );
+
+        return;
+
+    }
+
 
     sessionFolderName =
-        createFolderName(
-            sessionName
-        );
-
-    sessionFilePrefix =
-        createFilePrefix(
-            sessionName
-        );
+        visitorName +
+        '_' +
+        getCurrentDate();
 
 
-    /*
-     * Update preview.
-     */
+    nav('frame-screen');
 
-    document
-        .getElementById(
-            'folder-preview'
-        )
-        .innerText =
-        sessionFolderName;
+}
 
 
-    document
-        .getElementById(
-            'preview-name'
-        )
-        .innerText =
-        sessionName;
+/* =====================================================
+   BERSIHKAN NAMA FILE
+===================================================== */
+
+function cleanFileName(name) {
+
+    return name
+        .trim()
+        .replace(/[<>:"/\\|?*]/g, '')
+        .replace(/\s+/g, '_')
+        .substring(0, 50);
+
+}
 
 
-    document
-        .getElementById(
-            'preview-folder'
-        )
-        .innerText =
-        sessionFolderName;
+/* =====================================================
+   FORMAT TANGGAL
+===================================================== */
+
+function getCurrentDate() {
+
+    const date =
+        new Date();
 
 
-    document
-        .getElementById(
-            'camera-name-display'
-        )
-        .innerText =
-        `• ${sessionName}`;
+    const months = [
+
+        'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember'
+
+    ];
 
 
-    document
-        .getElementById(
-            'result-name'
-        )
-        .innerText =
-        sessionName;
-
-
-    nav(
-        'frame-screen'
+    return (
+        String(date.getDate()).padStart(2, '0') +
+        '_' +
+        months[date.getMonth()] +
+        '_' +
+        date.getFullYear()
     );
 
 }
 
 
 /* =====================================================
-   INPUT NAMA PREVIEW REALTIME
-===================================================== */
-
-document
-    .getElementById(
-        'guest-name'
-    )
-    .addEventListener(
-        'input',
-        function() {
-
-            const name =
-                this.value.trim();
-
-            const preview =
-                document.getElementById(
-                    'folder-preview'
-                );
-
-            if (!name) {
-
-                preview.innerText =
-                    '-';
-
-                return;
-
-            }
-
-            preview.innerText =
-                createFolderName(
-                    name
-                );
-
-        }
-    );
-
-
-/*
- * Enter = lanjut.
- */
-
-document
-    .getElementById(
-        'guest-name'
-    )
-    .addEventListener(
-        'keydown',
-        function(event) {
-
-            if (
-                event.key === 'Enter'
-            ) {
-
-                continueToFrame();
-
-            }
-
-        }
-    );
-
-
-/* =====================================================
    DETECT TRANSPARENT FRAME HOLES
 ===================================================== */
 
-async function detectFrameHoles(
-    imgSrc
-) {
+async function detectFrameHoles(imgSrc) {
 
     return new Promise(
         (resolve, reject) => {
@@ -1661,15 +1644,18 @@ async function detectFrameHoles(
             const img =
                 new Image();
 
+
             img.onload = () => {
 
                 finalFrameImageObj =
                     img;
 
+
                 const canvas =
                     document.createElement(
                         'canvas'
                     );
+
 
                 const ctx =
                     canvas.getContext(
@@ -1680,23 +1666,29 @@ async function detectFrameHoles(
                         }
                     );
 
+
                 const width =
                     img.width;
+
 
                 const height =
                     img.height;
 
+
                 canvas.width =
                     width;
 
+
                 canvas.height =
                     height;
+
 
                 ctx.drawImage(
                     img,
                     0,
                     0
                 );
+
 
                 const imageData =
                     ctx.getImageData(
@@ -1706,15 +1698,19 @@ async function detectFrameHoles(
                         height
                     );
 
+
                 const data =
                     imageData.data;
+
 
                 const visited =
                     new Uint8Array(
                         width * height
                     );
 
+
                 const holes = [];
+
 
                 for (
                     let y = 0;
@@ -1731,6 +1727,7 @@ async function detectFrameHoles(
                         const index =
                             y * width + x;
 
+
                         if (
                             data[
                                 index * 4 + 3
@@ -1744,8 +1741,10 @@ async function detectFrameHoles(
                             let minY = y;
                             let maxY = y;
 
+
                             const stack =
                                 [index];
+
 
                             while (
                                 stack.length > 0
@@ -1754,88 +1753,78 @@ async function detectFrameHoles(
                                 const idx =
                                     stack.pop();
 
+
                                 if (
                                     visited[idx]
                                 ) {
+
                                     continue;
+
                                 }
+
 
                                 const px =
                                     idx % width;
+
 
                                 const py =
                                     Math.floor(
                                         idx / width
                                     );
 
+
                                 if (
                                     data[
                                         idx * 4 + 3
                                     ] >= 10
                                 ) {
+
                                     continue;
+
                                 }
 
-                                visited[idx] =
-                                    1;
 
-                                if (
-                                    px < minX
-                                ) {
+                                visited[idx] = 1;
+
+
+                                if (px < minX)
                                     minX = px;
-                                }
 
-                                if (
-                                    px > maxX
-                                ) {
+                                if (px > maxX)
                                     maxX = px;
-                                }
 
-                                if (
-                                    py < minY
-                                ) {
+                                if (py < minY)
                                     minY = py;
-                                }
 
-                                if (
-                                    py > maxY
-                                ) {
+                                if (py > maxY)
                                     maxY = py;
-                                }
+
 
                                 if (
                                     px + 1 < width
-                                ) {
-                                    stack.push(
-                                        idx + 1
-                                    );
-                                }
+                                )
+                                    stack.push(idx + 1);
+
 
                                 if (
                                     px - 1 >= 0
-                                ) {
-                                    stack.push(
-                                        idx - 1
-                                    );
-                                }
+                                )
+                                    stack.push(idx - 1);
+
 
                                 if (
                                     py + 1 < height
-                                ) {
-                                    stack.push(
-                                        idx + width
-                                    );
-                                }
+                                )
+                                    stack.push(idx + width);
+
 
                                 if (
                                     py - 1 >= 0
-                                ) {
-                                    stack.push(
-                                        idx - width
-                                    );
-                                }
+                                )
+                                    stack.push(idx - width);
 
                             }
+
 
                             if (
                                 maxX - minX > 80 &&
@@ -1866,6 +1855,7 @@ async function detectFrameHoles(
 
                 }
 
+
                 holes.sort(
                     (a, b) => {
 
@@ -1875,24 +1865,20 @@ async function detectFrameHoles(
                             ) < 20
                         ) {
 
-                            return (
-                                a.x - b.x
-                            );
+                            return a.x - b.x;
 
                         }
 
-                        return (
-                            a.y - b.y
-                        );
+                        return a.y - b.y;
 
                     }
                 );
 
-                resolve(
-                    holes
-                );
+
+                resolve(holes);
 
             };
+
 
             img.onerror = () => {
 
@@ -1902,8 +1888,8 @@ async function detectFrameHoles(
 
             };
 
-            img.src =
-                imgSrc;
+
+            img.src = imgSrc;
 
         }
     );
@@ -1921,36 +1907,36 @@ async function selectFrame(
 ) {
 
     document
-        .querySelectorAll(
-            '.frame-item'
-        )
-        .forEach(
-            frame => {
+        .querySelectorAll('.frame-item')
+        .forEach(frame => {
 
-                frame.classList.remove(
-                    'selected'
-                );
+            frame.classList.remove(
+                'selected'
+            );
 
-            }
-        );
+        });
+
 
     element.classList.add(
         'selected'
     );
 
+
     selectedFramePath =
         framePath;
+
 
     const button =
         document.getElementById(
             'btn-continue-camera'
         );
 
-    button.disabled =
-        true;
+
+    button.disabled = true;
 
     button.innerText =
         'Memindai Frame...';
+
 
     try {
 
@@ -1959,42 +1945,42 @@ async function selectFrame(
                 framePath
             );
 
+
         requiredPhotos =
             frameHoles.length;
+
 
         if (
             requiredPhotos === 0
         ) {
 
-            button.disabled =
-                true;
+            button.disabled = true;
 
             button.innerText =
                 'Pilih Frame Dulu';
+
 
             alert(
                 'Frame tidak mempunyai lubang transparan.'
             );
 
+
             return;
 
         }
 
-        button.disabled =
-            false;
+
+        button.disabled = false;
 
         button.innerText =
             `Lanjut (${requiredPhotos} Foto)`;
 
+
     } catch(error) {
 
-        console.error(
-            error
-        );
+        console.error(error);
 
-        alert(
-            error
-        );
+        alert(error);
 
     }
 
@@ -2013,13 +1999,12 @@ async function initCamera() {
 
             stream
                 .getTracks()
-                .forEach(
-                    track => {
-                        track.stop();
-                    }
-                );
+                .forEach(track => {
+                    track.stop();
+                });
 
         }
+
 
         stream =
             await navigator
@@ -2043,18 +2028,22 @@ async function initCamera() {
 
                 });
 
+
         const video =
             document.getElementById(
                 'camera-feed'
             );
 
+
         video.srcObject =
             stream;
+
 
         capturedImages =
             new Array(
                 requiredPhotos
             );
+
 
         document
             .getElementById(
@@ -2062,11 +2051,13 @@ async function initCamera() {
             )
             .disabled = false;
 
+
         document
             .getElementById(
                 'btn-next-preview'
             )
             .disabled = true;
+
 
         await new Promise(
             resolve => {
@@ -2080,22 +2071,20 @@ async function initCamera() {
                 } else {
 
                     video.onloadedmetadata =
-                        () => {
-                            resolve();
-                        };
+                        () => resolve();
 
                 }
 
             }
         );
 
+
         buildFramePreview();
+
 
     } catch(error) {
 
-        console.error(
-            error
-        );
+        console.error(error);
 
         alert(
             'Izin kamera diperlukan.'
@@ -2112,49 +2101,56 @@ async function initCamera() {
 
 function buildFramePreview() {
 
-    if (
-        !finalFrameImageObj
-    ) {
+    if (!finalFrameImageObj) {
         return;
     }
+
 
     const container =
         document.getElementById(
             'frame-preview-container'
         );
 
+
     const frame =
         document.getElementById(
             'camera-side-frame'
         );
+
 
     const slots =
         document.getElementById(
             'photo-slots'
         );
 
+
     const containerWidth =
         container.clientWidth;
+
 
     const containerHeight =
         container.clientHeight;
 
+
     const frameWidth =
         finalFrameImageObj.width;
+
 
     const frameHeight =
         finalFrameImageObj.height;
 
+
     const frameRatio =
-        frameWidth /
-        frameHeight;
+        frameWidth / frameHeight;
+
 
     let displayWidth =
         containerWidth;
 
+
     let displayHeight =
-        displayWidth /
-        frameRatio;
+        displayWidth / frameRatio;
+
 
     if (
         displayHeight >
@@ -2164,11 +2160,13 @@ function buildFramePreview() {
         displayHeight =
             containerHeight;
 
+
         displayWidth =
             displayHeight *
             frameRatio;
 
     }
+
 
     const offsetX =
         (
@@ -2176,55 +2174,65 @@ function buildFramePreview() {
             displayWidth
         ) / 2;
 
+
     const offsetY =
         (
             containerHeight -
             displayHeight
         ) / 2;
 
+
     frame.src =
         selectedFramePath;
+
 
     frame.style.width =
         displayWidth + 'px';
 
+
     frame.style.height =
         displayHeight + 'px';
+
 
     frame.style.left =
         offsetX + 'px';
 
+
     frame.style.top =
         offsetY + 'px';
+
 
     slots.style.left =
         offsetX + 'px';
 
+
     slots.style.top =
         offsetY + 'px';
+
 
     slots.style.width =
         displayWidth + 'px';
 
+
     slots.style.height =
         displayHeight + 'px';
 
-    slots.innerHTML =
-        '';
+
+    slots.innerHTML = '';
+
 
     frameHoles.forEach(
-        (
-            hole,
-            index
-        ) => {
+        (hole, index) => {
 
             const slot =
                 document.createElement(
                     'div'
                 );
 
+
             slot.className =
                 'photo-slot';
+
 
             slot.style.left =
                 (
@@ -2233,12 +2241,14 @@ function buildFramePreview() {
                     displayWidth
                 ) + 'px';
 
+
             slot.style.top =
                 (
                     hole.y /
                     frameHeight *
                     displayHeight
                 ) + 'px';
+
 
             slot.style.width =
                 (
@@ -2247,6 +2257,7 @@ function buildFramePreview() {
                     displayWidth
                 ) + 'px';
 
+
             slot.style.height =
                 (
                     hole.h /
@@ -2254,68 +2265,78 @@ function buildFramePreview() {
                     displayHeight
                 ) + 'px';
 
+
             slot.dataset.index =
                 index;
+
 
             const canvas =
                 document.createElement(
                     'canvas'
                 );
 
+
             canvas.width =
                 hole.w;
+
 
             canvas.height =
                 hole.h;
 
-            slot.appendChild(
-                canvas
-            );
+
+            slot.appendChild(canvas);
+
 
             const number =
                 document.createElement(
                     'div'
                 );
 
+
             number.className =
                 'slot-number';
+
 
             number.innerText =
                 index + 1;
 
-            slot.appendChild(
-                number
-            );
+
+            slot.appendChild(number);
+
 
             const empty =
                 document.createElement(
                     'div'
                 );
 
+
             empty.className =
                 'slot-empty';
+
 
             empty.innerHTML =
                 `Foto ${index + 1}`;
 
-            slot.appendChild(
-                empty
-            );
+
+            slot.appendChild(empty);
+
 
             const retake =
                 document.createElement(
                     'div'
                 );
 
+
             retake.className =
                 'retake-label';
+
 
             retake.innerHTML =
                 '↻ Ambil Ulang';
 
-            slot.appendChild(
-                retake
-            );
+
+            slot.appendChild(retake);
+
 
             slot.addEventListener(
                 'click',
@@ -2325,22 +2346,18 @@ function buildFramePreview() {
                         capturedImages[index]
                     ) {
 
-                        retakePhoto(
-                            index
-                        );
+                        retakePhoto(index);
 
                     }
 
                 }
             );
 
-            slots.appendChild(
-                slot
-            );
 
-            renderSlot(
-                index
-            );
+            slots.appendChild(slot);
+
+
+            renderSlot(index);
 
         }
     );
@@ -2359,22 +2376,23 @@ function renderSlot(index) {
             '.photo-slot'
         );
 
+
     const slot =
         slots[index];
+
 
     if (!slot) {
         return;
     }
 
+
     const canvas =
-        slot.querySelector(
-            'canvas'
-        );
+        slot.querySelector('canvas');
+
 
     const ctx =
-        canvas.getContext(
-            '2d'
-        );
+        canvas.getContext('2d');
+
 
     ctx.clearRect(
         0,
@@ -2383,10 +2401,12 @@ function renderSlot(index) {
         canvas.height
     );
 
+
     const empty =
         slot.querySelector(
             '.slot-empty'
         );
+
 
     if (
         !capturedImages[index]
@@ -2395,12 +2415,14 @@ function renderSlot(index) {
         ctx.fillStyle =
             '#222';
 
+
         ctx.fillRect(
             0,
             0,
             canvas.width,
             canvas.height
         );
+
 
         if (empty) {
 
@@ -2409,9 +2431,11 @@ function renderSlot(index) {
 
         }
 
+
         return;
 
     }
+
 
     if (empty) {
 
@@ -2420,28 +2444,26 @@ function renderSlot(index) {
 
     }
 
+
     const image =
         new Image();
 
-    image.onload =
-        () => {
 
-            drawImageIntoHole(
+    image.onload = () => {
 
-                ctx,
+        drawImageIntoHole(
+            ctx,
+            image,
+            {
+                x: 0,
+                y: 0,
+                w: canvas.width,
+                h: canvas.height
+            }
+        );
 
-                image,
+    };
 
-                {
-                    x: 0,
-                    y: 0,
-                    w: canvas.width,
-                    h: canvas.height
-                }
-
-            );
-
-        };
 
     image.src =
         capturedImages[index];
@@ -2463,19 +2485,24 @@ function drawImageIntoHole(
         image.width /
         image.height;
 
+
     const targetRatio =
         target.w /
         target.h;
 
+
     let sourceWidth =
         image.width;
+
 
     let sourceHeight =
         image.height;
 
+
     let sourceX = 0;
 
     let sourceY = 0;
+
 
     if (
         imageRatio >
@@ -2485,6 +2512,7 @@ function drawImageIntoHole(
         sourceWidth =
             image.height *
             targetRatio;
+
 
         sourceX =
             (
@@ -2498,6 +2526,7 @@ function drawImageIntoHole(
             image.width /
             targetRatio;
 
+
         sourceY =
             (
                 image.height -
@@ -2505,6 +2534,7 @@ function drawImageIntoHole(
             ) / 2;
 
     }
+
 
     ctx.drawImage(
 
@@ -2518,7 +2548,6 @@ function drawImageIntoHole(
 
         target.x,
         target.y,
-
         target.w,
         target.h
 
@@ -2536,12 +2565,12 @@ function toggleMirror() {
     isMirrored =
         !isMirrored;
 
+
     document
         .getElementById(
             'camera-feed'
         )
         .style.transform =
-
         isMirrored
             ? 'scaleX(-1)'
             : 'scaleX(1)';
@@ -2555,20 +2584,20 @@ function toggleMirror() {
 
 async function takePhotos() {
 
-    if (
-        isTakingPhoto
-    ) {
+    if (isTakingPhoto) {
         return;
     }
 
-    isTakingPhoto =
-        true;
+
+    isTakingPhoto = true;
+
 
     document
         .getElementById(
             'btn-take'
         )
         .disabled = true;
+
 
     for (
         let i = 0;
@@ -2578,20 +2607,21 @@ async function takePhotos() {
 
         await runCountdown();
 
-        captureFrame(
-            i
-        );
+
+        captureFrame(i);
 
     }
 
-    isTakingPhoto =
-        false;
+
+    isTakingPhoto = false;
+
 
     document
         .getElementById(
             'btn-take'
         )
         .disabled = false;
+
 
     document
         .getElementById(
@@ -2606,9 +2636,7 @@ async function takePhotos() {
    RETAKE SATU SLOT
 ===================================================== */
 
-async function retakePhoto(
-    index
-) {
+async function retakePhoto(index) {
 
     if (
         isTakingPhoto ||
@@ -2617,40 +2645,40 @@ async function retakePhoto(
         return;
     }
 
-    isTakingPhoto =
-        true;
+
+    isTakingPhoto = true;
+
 
     const slots =
         document.querySelectorAll(
             '.photo-slot'
         );
 
-    slots.forEach(
-        slot => {
 
-            slot.style.pointerEvents =
-                'none';
+    slots.forEach(slot => {
 
-        }
-    );
+        slot.style.pointerEvents =
+            'none';
+
+    });
+
 
     await runCountdown();
 
-    captureFrame(
-        index
-    );
 
-    slots.forEach(
-        slot => {
+    captureFrame(index);
 
-            slot.style.pointerEvents =
-                'auto';
 
-        }
-    );
+    slots.forEach(slot => {
 
-    isTakingPhoto =
-        false;
+        slot.style.pointerEvents =
+            'auto';
+
+    });
+
+
+    isTakingPhoto = false;
+
 
     document
         .getElementById(
@@ -2672,19 +2700,23 @@ function runCountdown() {
 
             let count = 3;
 
+
             const countdown =
                 document.getElementById(
                     'countdown'
                 );
 
+
             countdown.innerText =
                 count;
+
 
             const interval =
                 setInterval(
                     () => {
 
                         count--;
+
 
                         if (
                             count > 0
@@ -2699,17 +2731,21 @@ function runCountdown() {
                                 interval
                             );
 
+
                             countdown.innerText =
                                 '';
+
 
                             const flash =
                                 document.getElementById(
                                     'flash'
                                 );
 
+
                             flash.classList.add(
                                 'active'
                             );
+
 
                             setTimeout(
                                 () => {
@@ -2721,6 +2757,7 @@ function runCountdown() {
                                 },
                                 120
                             );
+
 
                             resolve();
 
@@ -2740,14 +2777,13 @@ function runCountdown() {
    CAPTURE FRAME
 ===================================================== */
 
-function captureFrame(
-    index
-) {
+function captureFrame(index) {
 
     const video =
         document.getElementById(
             'camera-feed'
         );
+
 
     if (
         !video.videoWidth ||
@@ -2758,30 +2794,32 @@ function captureFrame(
 
     }
 
+
     const canvas =
         document.createElement(
             'canvas'
         );
 
+
     canvas.width =
         video.videoWidth;
+
 
     canvas.height =
         video.videoHeight;
 
-    const ctx =
-        canvas.getContext(
-            '2d'
-        );
 
-    if (
-        isMirrored
-    ) {
+    const ctx =
+        canvas.getContext('2d');
+
+
+    if (isMirrored) {
 
         ctx.translate(
             canvas.width,
             0
         );
+
 
         ctx.scale(
             -1,
@@ -2790,11 +2828,13 @@ function captureFrame(
 
     }
 
+
     ctx.drawImage(
         video,
         0,
         0
     );
+
 
     capturedImages[index] =
         canvas.toDataURL(
@@ -2802,9 +2842,8 @@ function captureFrame(
             0.92
         );
 
-    renderSlot(
-        index
-    );
+
+    renderSlot(index);
 
 }
 
@@ -2819,18 +2858,15 @@ function loadPreview() {
 
         stream
             .getTracks()
-            .forEach(
-                track => {
+            .forEach(track => {
+                track.stop();
+            });
 
-                    track.stop();
 
-                }
-            );
-
-        stream =
-            null;
+        stream = null;
 
     }
+
 
     drawCanvas(
         true,
@@ -2844,12 +2880,11 @@ function loadPreview() {
    APPLY FILTER
 ===================================================== */
 
-function applyFilter(
-    filterCss
-) {
+function applyFilter(filterCss) {
 
     currentCanvasFilter =
         filterCss;
+
 
     drawCanvas(
         true,
@@ -2876,24 +2911,28 @@ async function drawCanvas(
 
     }
 
+
     const canvas =
         document.getElementById(
             canvasId
         );
 
+
     const ctx =
-        canvas.getContext(
-            '2d'
-        );
+        canvas.getContext('2d');
+
 
     canvas.width =
         finalFrameImageObj.width;
 
+
     canvas.height =
         finalFrameImageObj.height;
 
+
     ctx.fillStyle =
         '#FFFFFF';
+
 
     ctx.fillRect(
         0,
@@ -2902,22 +2941,19 @@ async function drawCanvas(
         canvas.height
     );
 
+
     ctx.filter =
         currentCanvasFilter;
 
+
     const photoPromises =
         capturedImages.map(
-            (
-                source,
-                index
-            ) => {
+            (source, index) => {
 
                 return new Promise(
                     resolve => {
 
-                        if (
-                            !source
-                        ) {
+                        if (!source) {
 
                             resolve();
 
@@ -2925,36 +2961,33 @@ async function drawCanvas(
 
                         }
 
+
                         const image =
                             new Image();
+
 
                         image.onload =
                             () => {
 
                                 const hole =
-                                    frameHoles[
-                                        index
-                                    ];
+                                    frameHoles[index];
 
-                                if (
-                                    hole
-                                ) {
+
+                                if (hole) {
 
                                     drawImageIntoHole(
-
                                         ctx,
-
                                         image,
-
                                         hole
-
                                     );
 
                                 }
 
+
                                 resolve();
 
                             };
+
 
                         image.src =
                             source;
@@ -2965,16 +2998,17 @@ async function drawCanvas(
             }
         );
 
+
     await Promise.all(
         photoPromises
     );
 
-    if (
-        withFrame
-    ) {
+
+    if (withFrame) {
 
         ctx.filter =
             'none';
+
 
         ctx.drawImage(
 
@@ -2994,6 +3028,295 @@ async function drawCanvas(
 
 
 /* =====================================================
+   BUAT FRAME GIF
+   FIX GIF GEPENG
+===================================================== */
+
+async function createGifFrames() {
+
+    const frames = [];
+
+
+    /*
+     * GIF menggunakan rasio frame asli.
+     */
+
+    const width =
+        finalFrameImageObj.width;
+
+
+    const height =
+        finalFrameImageObj.height;
+
+
+    /*
+     * Buat frame GIF secara bertahap.
+     *
+     * Setiap frame memiliki ukuran
+     * yang sama persis dengan frame utama.
+     */
+
+    for (
+        let step = 0;
+        step < capturedImages.length;
+        step++
+    ) {
+
+        const canvas =
+            document.createElement(
+                'canvas'
+            );
+
+
+        canvas.width =
+            width;
+
+
+        canvas.height =
+            height;
+
+
+        const ctx =
+            canvas.getContext(
+                '2d'
+            );
+
+
+        ctx.fillStyle =
+            '#FFFFFF';
+
+
+        ctx.fillRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+        ctx.filter =
+            currentCanvasFilter;
+
+
+        /*
+         * Masukkan foto sampai
+         * foto pada step tersebut.
+         */
+
+        for (
+            let i = 0;
+            i <= step;
+            i++
+        ) {
+
+            if (
+                !capturedImages[i]
+            ) {
+                continue;
+            }
+
+
+            const image =
+                await loadImage(
+                    capturedImages[i]
+                );
+
+
+            const hole =
+                frameHoles[i];
+
+
+            if (hole) {
+
+                drawImageIntoHole(
+                    ctx,
+                    image,
+                    hole
+                );
+
+            }
+
+        }
+
+
+        /*
+         * Frame selalu paling atas.
+         */
+
+        ctx.filter =
+            'none';
+
+
+        ctx.drawImage(
+
+            finalFrameImageObj,
+
+            0,
+            0,
+            width,
+            height
+
+        );
+
+
+        frames.push(
+            canvas.toDataURL(
+                'image/jpeg',
+                0.90
+            )
+        );
+
+    }
+
+
+    /*
+     * Tambahkan frame final.
+     */
+
+    const finalCanvas =
+        document.createElement(
+            'canvas'
+        );
+
+
+    finalCanvas.width =
+        width;
+
+
+    finalCanvas.height =
+        height;
+
+
+    const finalCtx =
+        finalCanvas.getContext(
+            '2d'
+        );
+
+
+    finalCtx.fillStyle =
+        '#FFFFFF';
+
+
+    finalCtx.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    finalCtx.filter =
+        currentCanvasFilter;
+
+
+    for (
+        let i = 0;
+        i < capturedImages.length;
+        i++
+    ) {
+
+        if (
+            !capturedImages[i]
+        ) {
+            continue;
+        }
+
+
+        const image =
+            await loadImage(
+                capturedImages[i]
+            );
+
+
+        const hole =
+            frameHoles[i];
+
+
+        if (hole) {
+
+            drawImageIntoHole(
+                finalCtx,
+                image,
+                hole
+            );
+
+        }
+
+    }
+
+
+    finalCtx.filter =
+        'none';
+
+
+    finalCtx.drawImage(
+
+        finalFrameImageObj,
+
+        0,
+        0,
+        width,
+        height
+
+    );
+
+
+    frames.push(
+        finalCanvas.toDataURL(
+            'image/jpeg',
+            0.90
+        )
+    );
+
+
+    return {
+
+        frames: frames,
+
+        width: width,
+
+        height: height
+
+    };
+
+}
+
+
+/* =====================================================
+   LOAD IMAGE
+===================================================== */
+
+function loadImage(src) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const image =
+                new Image();
+
+
+            image.onload =
+                () => resolve(image);
+
+
+            image.onerror =
+                () => reject(
+                    new Error(
+                        'Gagal memuat gambar.'
+                    )
+                );
+
+
+            image.src =
+                src;
+
+        }
+    );
+
+}
+
+
+/* =====================================================
    DOWNLOAD FRAME
 ===================================================== */
 
@@ -3004,8 +3327,10 @@ function downloadImage() {
             'a'
         );
 
+
     link.download =
-        `${sessionFilePrefix}_Foto_Frame.png`;
+        `${visitorName}_frame.png`;
+
 
     link.href =
         document
@@ -3015,6 +3340,7 @@ function downloadImage() {
             .toDataURL(
                 'image/png'
             );
+
 
     link.click();
 
@@ -3028,29 +3354,26 @@ function downloadImage() {
 function downloadTanpaFrame() {
 
     capturedImages.forEach(
-        (
-            image,
-            index
-        ) => {
+        (image, index) => {
 
-            if (
-                !image
-            ) {
-
+            if (!image) {
                 return;
-
             }
+
 
             const link =
                 document.createElement(
                     'a'
                 );
 
+
             link.download =
-                `${sessionFilePrefix}_Foto_${index + 1}.jpg`;
+                `${visitorName}_foto_${index + 1}.jpg`;
+
 
             link.href =
                 image;
+
 
             link.click();
 
@@ -3061,50 +3384,21 @@ function downloadTanpaFrame() {
 
 
 /* =====================================================
-   PROCESS + UPLOAD
+   PROCESS + UPLOAD SESSION
 ===================================================== */
 
 async function processAndUploadSession() {
-
-    /*
-     * Pastikan nama tersedia.
-     */
-
-    if (
-        !sessionName
-    ) {
-
-        alert(
-            'Nama sesi belum diisi.'
-        );
-
-        nav(
-            'name-screen'
-        );
-
-        return;
-
-    }
-
 
     nav(
         'result-screen'
     );
 
 
-    /*
-     * Preview final.
-     */
-
     await drawCanvas(
         true,
         'final-preview-canvas'
     );
 
-
-    /*
-     * Buat hasil utama.
-     */
 
     await drawCanvas(
         true,
@@ -3123,186 +3417,242 @@ async function processAndUploadSession() {
 
 
     /*
-     * Buat GIF.
+     * ================================================
+     * BUAT GIF DENGAN RASIO FRAME YANG BENAR
+     * ================================================
      */
 
-    gifshot.createGIF(
+    let gifData = '';
 
-        {
 
-            images: [
-                ...capturedImages,
-                frameImageData
-            ],
+    try {
 
-            interval: 0.6,
+        const gifFrames =
+            await createGifFrames();
 
-            gifWidth: 600,
 
-            gifHeight:
-                Math.floor(
-                    600 *
-                    (
-                        finalFrameImageObj.height /
-                        finalFrameImageObj.width
-                    )
-                ),
+        await new Promise(
+            resolve => {
 
-            numFrames:
-                capturedImages.length + 1
+                gifshot.createGIF(
 
-        },
+                    {
 
-        async function(obj) {
+                        images:
+                            gifFrames.frames,
 
-            let gifData =
-                '';
+                        interval:
+                            0.8,
 
-            if (
-                !obj.error
-            ) {
+                        gifWidth:
+                            600,
 
-                gifData =
-                    obj.image;
+                        gifHeight:
+                            Math.round(
+                                600 *
+                                (
+                                    gifFrames.height /
+                                    gifFrames.width
+                                )
+                            ),
+
+                        numFrames:
+                            gifFrames.frames.length,
+
+                        sampleInterval:
+                            10
+
+                    },
+
+                    function(obj) {
+
+                        if (
+                            !obj.error
+                        ) {
+
+                            gifData =
+                                obj.image;
+
+                        }
+
+
+                        resolve();
+
+                    }
+
+                );
 
             }
-
-            try {
-
-                /*
-                 * Upload ke server.
-                 *
-                 * TAMBAHAN:
-                 *
-                 * sessionName
-                 * folderName
-                 * fileNamePrefix
-                 */
-
-                const response =
-                    await fetch(
-                        '/upload-session',
-                        {
-
-                            method: 'POST',
-
-                            headers: {
-                                'Content-Type':
-                                    'application/json'
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    /*
-                                     * DATA NAMA
-                                     */
-
-                                    sessionName:
-                                        sessionName,
-
-                                    folderName:
-                                        sessionFolderName,
-
-                                    fileNamePrefix:
-                                        sessionFilePrefix,
-
-                                    /*
-                                     * DATA FOTO
-                                     */
-
-                                    frameImage:
-                                        frameImageData,
-
-                                    individualImages:
-                                        capturedImages,
-
-                                    gifImage:
-                                        gifData
-
-                                })
-
-                        }
-                    );
+        );
 
 
-                const result =
-                    await response.json();
+    } catch(error) {
+
+        console.error(
+            'GIF Error:',
+            error
+        );
+
+    }
 
 
-                if (
-                    result.success
-                ) {
+    /*
+     * ================================================
+     * UPLOAD KE SERVER
+     * ================================================
+     */
 
-                    const qrContainer =
-                        document.getElementById(
-                            'qrcode-container'
-                        );
+    try {
 
-                    qrContainer.innerHTML =
-                        '';
+        const response =
+            await fetch(
+                '/upload-session',
+                {
 
+                    method:
+                        'POST',
 
-                    new QRCode(
-                        qrContainer,
-                        {
+                    headers: {
 
-                            text:
-                                result.folder_link,
+                        'Content-Type':
+                            'application/json'
 
-                            width:
-                                170,
+                    },
 
-                            height:
-                                170,
+                    body:
+                        JSON.stringify({
 
-                            colorDark:
-                                '#000000',
+                            /*
+                             * Nama pengguna.
+                             */
 
-                            colorLight:
-                                '#ffffff',
-
-                            correctLevel:
-                                QRCode
-                                    .CorrectLevel
-                                    .H
-
-                        }
-                    );
+                            name:
+                                visitorName,
 
 
-                    document
-                        .getElementById(
-                            'qr-status-text'
-                        )
-                        .innerText =
-                        `Folder ${sessionFolderName} siap diunduh.`;
+                            /*
+                             * Nama folder.
+                             */
 
-                } else {
+                            folderName:
+                                sessionFolderName,
 
-                    alert(
-                        'Gagal membuat folder di Drive.'
-                    );
+
+                            /*
+                             * Nama file.
+                             */
+
+                            frameFileName:
+                                `${visitorName}_frame.png`,
+
+                            gifFileName:
+                                `${visitorName}_gif.gif`,
+
+                            individualFileNames:
+                                capturedImages.map(
+                                    (img, index) =>
+                                        `${visitorName}_foto_${index + 1}.jpg`
+                                ),
+
+
+                            /*
+                             * Data gambar.
+                             */
+
+                            frameImage:
+                                frameImageData,
+
+                            individualImages:
+                                capturedImages,
+
+                            gifImage:
+                                gifData
+
+                        })
+
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (
+            result.success
+        ) {
+
+            const qrContainer =
+                document.getElementById(
+                    'qrcode-container'
+                );
+
+
+            qrContainer.innerHTML =
+                '';
+
+
+            new QRCode(
+
+                qrContainer,
+
+                {
+
+                    text:
+                        result.folder_link,
+
+                    width:
+                        170,
+
+                    height:
+                        170,
+
+                    colorDark:
+                        '#000000',
+
+                    colorLight:
+                        '#ffffff',
+
+                    correctLevel:
+                        QRCode
+                            .CorrectLevel
+                            .H
 
                 }
 
+            );
 
-            } catch(error) {
 
-                console.error(
-                    'Error:',
-                    error
-                );
+            document
+                .getElementById(
+                    'qr-status-text'
+                )
+                .innerText =
+                'Scan untuk unduh';
 
-                alert(
-                    'Gagal menghubungi server Node.js.'
-                );
 
-            }
+        } else {
+
+            alert(
+                'Gagal membuat folder di Drive.'
+            );
 
         }
 
-    );
+
+    } catch(error) {
+
+        console.error(
+            'Error:',
+            error
+        );
+
+
+        alert(
+            'Gagal menghubungi server Node.js.'
+        );
+
+    }
 
 }
 
@@ -3320,6 +3670,7 @@ window.addEventListener(
                 'camera-screen'
             );
 
+
         if (
             cameraScreen.classList.contains(
                 'active'
@@ -3332,6 +3683,30 @@ window.addEventListener(
 
     }
 );
+
+
+/* =====================================================
+   ENTER DI INPUT NAMA
+===================================================== */
+
+document
+    .getElementById(
+        'visitor-name'
+    )
+    .addEventListener(
+        'keydown',
+        event => {
+
+            if (
+                event.key === 'Enter'
+            ) {
+
+                continueToFrame();
+
+            }
+
+        }
+    );
 
 </script>
 
