@@ -1234,6 +1234,154 @@
 .filters-carousel{justify-content:flex-start;overflow-x:auto;scrollbar-width:thin}.filter-thumb-item{flex:0 0 58px;opacity:.72;border:2px solid transparent;border-radius:10px}.filter-thumb-item.active{opacity:1;border-color:var(--blue);background:#eaf4ff}.filter-thumb-placeholder{position:relative;overflow:hidden;background:linear-gradient(135deg,#ddd,#fff)}.filter-bw{filter:grayscale(1);background:linear-gradient(135deg,#111,#eee)}.filter-retro{filter:sepia(.9) saturate(1.3);background:linear-gradient(135deg,#b5651d,#f2c078)}.filter-vintage{filter:sepia(.35) contrast(.9) brightness(1.05);background:linear-gradient(135deg,#caa27c,#eee)}.filter-warm{filter:saturate(1.25) sepia(.15);background:linear-gradient(135deg,#ff9b5e,#ffe1b5)}.filter-cool{filter:saturate(.9) hue-rotate(12deg);background:linear-gradient(135deg,#75b7e8,#d9f0ff)}.filter-vivid{filter:saturate(1.8) contrast(1.08);background:linear-gradient(135deg,#ff3d71,#4bc0ff)}.filter-fade{filter:contrast(.82) brightness(1.12) saturate(.7);background:linear-gradient(135deg,#eee,#cdd)}.filter-noir{filter:grayscale(1) contrast(1.45);background:linear-gradient(135deg,#000,#aaa)}.filter-dreamy{filter:brightness(1.08) saturate(.8) contrast(.9);background:linear-gradient(135deg,#ffcce8,#d8f2ff)}.filter-dramatic{filter:contrast(1.35) saturate(1.15);background:linear-gradient(135deg,#222,#d33)}.filter-fisheye{background:radial-gradient(circle,#ddd 35%,#777 100%);border-radius:50%}
 #camera-feed.filter-fisheye{border-radius:50%;transform:scale(.92) !important;object-fit:cover;box-shadow:0 0 0 9999px #000}
 </style>
+<style>
+
+/* =====================================================
+   UNIFIED DESIGN SYSTEM - ALL SCREENS
+   ===================================================== */
+:root{
+    --theme-primary:#1976d2;
+    --theme-primary-dark:#0d47a1;
+    --theme-primary-light:#42a5f5;
+    --theme-bg:#f4f9ff;
+    --theme-surface:rgba(255,255,255,.96);
+    --theme-border:#d9e8f7;
+    --theme-text:#111827;
+    --theme-muted:#6b7d91;
+    --theme-shadow:0 12px 35px rgba(13,71,161,.09);
+}
+
+html,body{background:var(--theme-bg)!important;color:var(--theme-text)}
+body{
+    background:
+      radial-gradient(circle at 10% 0%,rgba(66,165,245,.14),transparent 28%),
+      radial-gradient(circle at 90% 100%,rgba(25,118,210,.10),transparent 30%),
+      linear-gradient(135deg,#f4f9ff 0%,#fff 48%,#edf6ff 100%)!important;
+}
+
+.screen{
+    background:transparent;
+    padding:20px 25px;
+}
+.screen::before{
+    content:"";
+    position:absolute;
+    inset:10px;
+    border:1px solid rgba(25,118,210,.08);
+    border-radius:28px;
+    pointer-events:none;
+    z-index:0;
+}
+.screen > *{position:relative;z-index:1}
+
+button{
+    background:linear-gradient(135deg,var(--theme-primary),var(--theme-primary-dark))!important;
+    color:#fff!important;
+    border-color:transparent;
+}
+button.outline,
+.photo-select-btn,
+.sticker-select-btn,
+.filter-thumb-item{
+    background:#fff!important;
+    color:var(--theme-primary-dark)!important;
+    border-color:var(--theme-border)!important;
+}
+button.outline:hover,
+.photo-select-btn:hover,
+.sticker-select-btn:hover{
+    background:#eaf4ff!important;
+    border-color:var(--theme-primary)!important;
+}
+
+/* Start */
+#start-screen{padding:0!important;background:transparent!important}
+.start-background{
+    inset:10px!important;
+    border:1px solid rgba(25,118,210,.10);
+    border-radius:28px!important;
+    background:
+      radial-gradient(circle at 50% 42%,rgba(66,165,245,.28),transparent 34%),
+      linear-gradient(135deg,#eaf5ff 0%,#fff 48%,#e3f1ff 100%)!important;
+    box-shadow:var(--theme-shadow);
+}
+.start-small{color:var(--theme-primary)!important}
+.start-subtitle{color:var(--theme-muted)!important}
+
+/* Name / frame */
+.name-card,
+.camera-settings-panel,
+.camera-right-panel,
+.filters-carousel,
+.preview-custom-left,
+.preview-custom-right,
+.custom-result-left,
+.result-card-social,
+.result-card-edit,
+.result-card-actions{
+    background:var(--theme-surface)!important;
+    border-color:var(--theme-border)!important;
+    box-shadow:var(--theme-shadow)!important;
+}
+.name-card{border-radius:22px!important}
+.name-input{border-color:var(--theme-border)!important}
+.name-input:focus{border-color:var(--theme-primary)!important;box-shadow:0 0 0 4px rgba(25,118,210,.08)!important}
+
+.frame-item.selected{border-color:var(--theme-primary)!important;box-shadow:0 15px 40px rgba(25,118,210,.20)!important}
+.frame-item.selected::after{border-color:rgba(25,118,210,.7)!important}
+.frame-scroll-btn{color:var(--theme-primary-dark)!important;border-color:var(--theme-primary)!important;background:#fff!important}
+.frame-scroll-btn:hover{background:var(--theme-primary)!important;color:#fff!important}
+
+/* Camera */
+.camera-settings-panel,.camera-right-panel{border-radius:20px!important}
+.setting-toggle-row{background:#f8fbff!important;border-color:var(--theme-border)!important}
+.setting-buttons button{background:#f0f4f8!important;color:var(--theme-text)!important;border-color:transparent!important}
+.setting-buttons button.active,.setting-buttons button:hover{background:var(--theme-primary)!important;color:#fff!important}
+.video-wrapper{border-radius:20px!important;box-shadow:var(--theme-shadow)!important}
+.filters-carousel{border-radius:16px!important}
+.filter-thumb-item.active{border-color:var(--theme-primary)!important;background:#eaf4ff!important;color:var(--theme-primary-dark)!important}
+.filter-thumb-item span{color:var(--theme-text)!important}
+
+/* Preview */
+#preview-screen,#result-screen{padding:20px 30px!important}
+.preview-custom-left,.custom-result-left{border:2px solid var(--theme-primary)!important;border-radius:20px!important}
+.preview-custom-right{border-radius:20px!important}
+.photo-editor-panel,.sticker-editor-panel{background:#f9fcff!important;border-color:var(--theme-border)!important}
+.photo-select-btn.active,.sticker-select-btn.active{border-color:var(--theme-primary)!important;background:#eaf5ff!important;color:var(--theme-primary)!important}
+.editor-bbox{border-color:var(--theme-primary)!important}
+.editor-handle{border-color:var(--theme-primary)!important}
+.editor-selection-label{background:var(--theme-primary)!important}
+.editor-toolbar{border-color:var(--theme-border)!important}
+.editor-tool-btn{color:var(--theme-primary)!important;border-color:var(--theme-border)!important}
+.sticker-item-btn{background:#f4f9ff!important;border-color:var(--theme-border)!important;color:var(--theme-text)!important}
+.sticker-item-btn:hover{background:#e5f2ff!important}
+
+/* Result - remove old purple styling and use same blue theme */
+.custom-result-left{border:2px solid var(--theme-primary)!important}
+.result-card-social,.result-card-edit,.result-card-actions{border:1px solid var(--theme-border)!important;border-radius:18px!important}
+.social-card-title,.barcode-section-title,.quick-edit-label,.actions-header-title{color:var(--theme-primary-dark)!important}
+.barcode-section-box{background:#f4f9ff!important;border-color:var(--theme-border)!important}
+.social-box-item{border-color:var(--theme-border)!important;background:#fbfdff!important}
+.btn-edit-custom,.btn-save-print,.btn-download-now{background:linear-gradient(135deg,var(--theme-primary),var(--theme-primary-dark))!important;color:#fff!important}
+
+/* Consistent headings */
+.screen h1,.screen h2,.screen h3{color:var(--theme-text)}
+.screen p{color:var(--theme-muted)}
+
+/* Scroll areas keep the same visual language */
+.frame-grid,.slots-grid-container,.preview-custom-right,.custom-result-right,.sticker-scroll-box{
+    scrollbar-color:#b9d8f5 transparent;
+}
+.frame-grid::-webkit-scrollbar,.slots-grid-container::-webkit-scrollbar,.preview-custom-right::-webkit-scrollbar,.custom-result-right::-webkit-scrollbar,.sticker-scroll-box::-webkit-scrollbar{width:7px;height:7px}
+.frame-grid::-webkit-scrollbar-thumb,.slots-grid-container::-webkit-scrollbar-thumb,.preview-custom-right::-webkit-scrollbar-thumb,.custom-result-right::-webkit-scrollbar-thumb,.sticker-scroll-box::-webkit-scrollbar-thumb{background:#b9d8f5;border-radius:20px}
+
+@media(max-width:768px){
+    .screen{padding:14px!important}
+    .screen::before{inset:6px;border-radius:22px}
+    #preview-screen,#result-screen{padding:14px!important}
+}
+
+</style>
 </head>
 
 
