@@ -17,15 +17,10 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
 const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
-// Nama admin yang boleh upload frame dan sticker
-const ADMIN_NAME = (
-    process.env.ADMIN_NAME || 'cekrek'
-).trim().toLowerCase();
-
 const oauth2Client = new google.auth.OAuth2(
     CLIENT_ID,
     CLIENT_SECRET,
-    'https://developers.google.com/oauthplayground'
+    "https://developers.google.com/oauthplayground"
 );
 
 oauth2Client.setCredentials({
@@ -36,39 +31,6 @@ const drive = google.drive({
     version: 'v3',
     auth: oauth2Client
 });
-
-// =====================================================
-// CEK ADMIN
-// =====================================================
-
-function isAdmin(name) {
-    return String(name || '')
-        .trim()
-        .toLowerCase() === ADMIN_NAME;
-}
-
-// =====================================================
-// MEMBERSIHKAN BASE64
-// =====================================================
-
-function cleanBase64(data) {
-    return String(data || '').replace(
-        /^data:[^;]+;base64,/,
-        ''
-    );
-}
-
-// =====================================================
-// URL GOOGLE DRIVE
-// =====================================================
-
-function getDirectDriveUrl(fileId) {
-    return `https://drive.google.com/uc?export=view&id=${fileId}`;
-}
-
-// =====================================================
-// UPLOAD BUFFER KE GOOGLE DRIVE
-// =====================================================
 
 async function uploadBufferToDrive(
     buffer,
@@ -93,10 +55,9 @@ async function uploadBufferToDrive(
     const uploaded = await drive.files.create({
         resource: fileMetadata,
         media: media,
-        fields: 'id,name,webViewLink,webContentLink'
+        fields: 'id, webViewLink, webContentLink'
     });
 
-    // Membuat file bisa dibaca oleh siapa saja
     await drive.permissions.create({
         fileId: uploaded.data.id,
         requestBody: {
@@ -105,37 +66,21 @@ async function uploadBufferToDrive(
         }
     });
 
-    return {
-        id: uploaded.data.id,
-        name: uploaded.data.name,
-        webViewLink:
-            uploaded.data.webViewLink ||
-            `https://drive.google.com/file/d/${uploaded.data.id}/view`,
-        webContentLink:
-            uploaded.data.webContentLink || null,
-        directUrl:
-            getDirectDriveUrl(uploaded.data.id)
-    };
+    return uploaded.data.webContentLink ||
+        uploaded.data.webViewLink;
 }
 
+
 // =====================================================
-// GET / CREATE FOLDER
+// Fungsi pembantu untuk mencari atau membuat subfolder
+// "frame" di dalam GOOGLE_DRIVE_FOLDER_ID
 // =====================================================
 
-async function getOrCreateFolder(folderName) {
+async function getOrCreateFrameFolder() {
     try {
-        const escapedName = folderName.replace(
-            /'/g,
-            "\\'"
-        );
-
         const response = await drive.files.list({
-            q:
-                `name = '${escapedName}' ` +
-                `and '${GOOGLE_DRIVE_FOLDER_ID}' in parents ` +
-                `and mimeType = 'application/vnd.google-apps.folder' ` +
-                `and trashed = false`,
-            fields: 'files(id,name)'
+            q: `name = 'frame' and '${GOOGLE_DRIVE_FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+            fields: 'files(id, name)'
         });
 
         if (
@@ -143,25 +88,28 @@ async function getOrCreateFolder(folderName) {
             response.data.files.length > 0
         ) {
             return response.data.files[0].id;
+
+        } else {
+
+            const folder = await drive.files.create({
+                resource: {
+                    name: 'frame',
+                    mimeType:
+                        'application/vnd.google-apps.folder',
+                    parents: [
+                        GOOGLE_DRIVE_FOLDER_ID
+                    ]
+                },
+                fields: 'id'
+            });
+
+            return folder.data.id;
         }
 
-        const folder = await drive.files.create({
-            resource: {
-                name: folderName,
-                mimeType:
-                    'application/vnd.google-apps.folder',
-                parents: [
-                    GOOGLE_DRIVE_FOLDER_ID
-                ]
-            },
-            fields: 'id,name'
-        });
-
-        return folder.data.id;
-
     } catch (error) {
+
         console.error(
-            `Error membuat folder ${folderName}:`,
+            'Error saat mencari/membuat folder frame:',
             error
         );
 
@@ -169,25 +117,59 @@ async function getOrCreateFolder(folderName) {
     }
 }
 
-// =====================================================
-// FOLDER FRAME
-// =====================================================
-
-async function getOrCreateFrameFolder() {
-    return await getOrCreateFolder('frame');
-}
 
 // =====================================================
-// FOLDER STICKER
+// TAMBAHAN STICKER
+// Fungsi mencari / membuat folder "sticker"
 // =====================================================
 
 async function getOrCreateStickerFolder() {
-    return await getOrCreateFolder('sticker');
+    try {
+
+        const response = await drive.files.list({
+            q: `name = 'sticker' and '${GOOGLE_DRIVE_FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+            fields: 'files(id, name)'
+        });
+
+        if (
+            response.data.files &&
+            response.data.files.length > 0
+        ) {
+
+            return response.data.files[0].id;
+
+        } else {
+
+            const folder = await drive.files.create({
+                resource: {
+                    name: 'sticker',
+                    mimeType:
+                        'application/vnd.google-apps.folder',
+                    parents: [
+                        GOOGLE_DRIVE_FOLDER_ID
+                    ]
+                },
+                fields: 'id'
+            });
+
+            return folder.data.id;
+        }
+
+    } catch (error) {
+
+        console.error(
+            'Error saat mencari/membuat folder sticker:',
+            error
+        );
+
+        throw error;
+    }
 }
 
+
 // =====================================================
-// ENDPOINT 1
-// UPLOAD SESSION
+// ENDPOINT 1: UPLOAD SESSION
+// TETAP SEPERTI SCRIPT ASLI
 // =====================================================
 
 app.post('/upload-session', async (req, res) => {
@@ -196,61 +178,39 @@ app.post('/upload-session', async (req, res) => {
         const {
             frameImage,
             individualImages,
-            gifImage,
-            sessionName,
-            date
+            gifImage
         } = req.body;
 
-        const rawName =
-            sessionName ||
+        const sessionName =
             `Sesi_${Date.now()}`;
 
-        const safeName =
-            String(rawName)
-                .trim()
-                .replace(
-                    /[<>:"/\\|?*]+/g,
-                    ''
-                )
-                .replace(
-                    /\s+/g,
-                    '_'
-                )
-                .substring(
-                    0,
-                    80
-                ) ||
-            `Sesi_${Date.now()}`;
-
-        const sessionFolderName =
-            `${safeName}_${date || Date.now()}`;
-
-        // Buat folder sesi
         const folder =
             await drive.files.create({
                 resource: {
-                    name: sessionFolderName,
+                    name: sessionName,
                     mimeType:
                         'application/vnd.google-apps.folder',
                     parents: [
                         GOOGLE_DRIVE_FOLDER_ID
                     ]
                 },
-                fields: 'id,webViewLink'
+                fields: 'id, webViewLink'
             });
 
         const subFolderId =
             folder.data.id;
 
-        // =================================================
-        // 1. UPLOAD HASIL FRAME
-        // =================================================
+
+        // 1. Upload Hasil Frame
 
         if (frameImage) {
 
             const frameBuffer =
                 Buffer.from(
-                    cleanBase64(frameImage),
+                    frameImage.replace(
+                        /^data:image\/\w+;base64,/,
+                        ""
+                    ),
                     'base64'
                 );
 
@@ -262,9 +222,8 @@ app.post('/upload-session', async (req, res) => {
             );
         }
 
-        // =================================================
-        // 2. UPLOAD FOTO SATUAN
-        // =================================================
+
+        // 2. Upload Foto Satuan
 
         if (
             individualImages &&
@@ -277,14 +236,11 @@ app.post('/upload-session', async (req, res) => {
                 i++
             ) {
 
-                if (!individualImages[i]) {
-                    continue;
-                }
-
                 const singleBuffer =
                     Buffer.from(
-                        cleanBase64(
-                            individualImages[i]
+                        individualImages[i].replace(
+                            /^data:image\/\w+;base64,/,
+                            ""
                         ),
                         'base64'
                     );
@@ -298,15 +254,17 @@ app.post('/upload-session', async (req, res) => {
             }
         }
 
-        // =================================================
-        // 3. UPLOAD GIF
-        // =================================================
+
+        // 3. Upload GIF
 
         if (gifImage) {
 
             const gifBuffer =
                 Buffer.from(
-                    cleanBase64(gifImage),
+                    gifImage.replace(
+                        /^data:image\/\w+;base64,/,
+                        ""
+                    ),
                     'base64'
                 );
 
@@ -318,21 +276,17 @@ app.post('/upload-session', async (req, res) => {
             );
         }
 
-        // =================================================
-        // RESPONSE
-        // =================================================
 
         res.json({
             success: true,
             folder_link:
-                folder.data.webViewLink ||
-                `https://drive.google.com/drive/folders/${subFolderId}`
+                folder.data.webViewLink
         });
 
     } catch (error) {
 
         console.error(
-            'Error upload session:',
+            'Error:',
             error
         );
 
@@ -346,10 +300,10 @@ app.post('/upload-session', async (req, res) => {
     }
 });
 
+
 // =====================================================
-// ENDPOINT 2
-// UPLOAD FRAME
-// KHUSUS ADMIN CEKREK
+// ENDPOINT 2: UPLOAD CUSTOM FRAME
+// TETAP SEPERTI SCRIPT ASLI
 // =====================================================
 
 app.post('/upload-frame', async (req, res) => {
@@ -357,67 +311,44 @@ app.post('/upload-frame', async (req, res) => {
     try {
 
         const {
-            adminName,
             frameName,
             frameData
         } = req.body;
-
-        // =================================================
-        // CEK ADMIN
-        // =================================================
-
-        if (!isAdmin(adminName)) {
-
-            return res.status(403).json({
-                success: false,
-                message:
-                    'Anda tidak memiliki akses upload frame.'
-            });
-        }
-
-        // =================================================
-        // CEK DATA
-        // =================================================
 
         if (!frameData) {
 
             return res.status(400).json({
                 success: false,
                 message:
-                    'Data frame tidak ditemukan.'
+                    'Data frame tidak ditemukan'
             });
         }
 
-        // =================================================
-        // FOLDER FRAME
-        // =================================================
 
         const frameFolderId =
             await getOrCreateFrameFolder();
 
-        // =================================================
-        // NAMA FILE
-        // =================================================
+
+        const base64Clean =
+            frameData.replace(
+                /^data:image\/\w+;base64,/,
+                ""
+            );
+
+
+        const frameBuffer =
+            Buffer.from(
+                base64Clean,
+                'base64'
+            );
+
 
         const fileName =
             frameName ||
             `Custom_Frame_${Date.now()}.png`;
 
-        // =================================================
-        // BUFFER
-        // =================================================
 
-        const frameBuffer =
-            Buffer.from(
-                cleanBase64(frameData),
-                'base64'
-            );
-
-        // =================================================
-        // UPLOAD
-        // =================================================
-
-        const uploaded =
+        const fileUrl =
             await uploadBufferToDrive(
                 frameBuffer,
                 fileName,
@@ -425,18 +356,17 @@ app.post('/upload-frame', async (req, res) => {
                 frameFolderId
             );
 
-        // =================================================
-        // RESPONSE
-        // =================================================
+
+        const directUrl =
+            `https://drive.google.com/uc?export=view&id=${
+                fileUrl.match(/id=([^&]+)/)?.[1] || ''
+            }`;
+
 
         res.json({
             success: true,
             frame_url:
-                uploaded.directUrl,
-            id:
-                uploaded.id,
-            name:
-                uploaded.name
+                directUrl
         });
 
     } catch (error) {
@@ -456,10 +386,10 @@ app.post('/upload-frame', async (req, res) => {
     }
 });
 
+
 // =====================================================
-// ENDPOINT 3
-// GET SEMUA FRAME
-// PUBLIC
+// ENDPOINT 3: AMBIL DAFTAR FRAME
+// TETAP SEPERTI SCRIPT ASLI
 // =====================================================
 
 app.get('/get-frames', async (req, res) => {
@@ -469,35 +399,23 @@ app.get('/get-frames', async (req, res) => {
         const frameFolderId =
             await getOrCreateFrameFolder();
 
+
         const response =
             await drive.files.list({
                 q:
-                    `'${frameFolderId}' in parents ` +
-                    `and trashed = false ` +
-                    `and mimeType != 'application/vnd.google-apps.folder'`,
-
+                    `'${frameFolderId}' in parents and trashed = false`,
                 fields:
-                    'files(id,name)',
-
-                orderBy:
-                    'createdTime'
+                    'files(id, name, webContentLink, webViewLink)'
             });
 
+
         const frames =
-            response.data.files.map(
-                file => ({
-                    id:
-                        file.id,
+            response.data.files.map(file => {
 
-                    name:
-                        file.name,
+                return `https://drive.google.com/uc?export=view&id=${file.id}`;
 
-                    url:
-                        getDirectDriveUrl(
-                            file.id
-                        )
-                })
-            );
+            });
+
 
         res.json({
             success: true,
@@ -522,10 +440,11 @@ app.get('/get-frames', async (req, res) => {
     }
 });
 
+
 // =====================================================
-// ENDPOINT 4
-// UPLOAD STIKER PNG
-// KHUSUS ADMIN CEKREK
+// TAMBAHAN STICKER
+// ENDPOINT UPLOAD STICKER PNG
+// KHUSUS NAMA "CEKREK"
 // =====================================================
 
 app.post('/upload-sticker', async (req, res) => {
@@ -538,11 +457,14 @@ app.post('/upload-sticker', async (req, res) => {
             stickerData
         } = req.body;
 
-        // =================================================
-        // CEK ADMIN
-        // =================================================
 
-        if (!isAdmin(adminName)) {
+        // Hanya cekrek yang boleh upload
+
+        if (
+            String(adminName || '')
+                .trim()
+                .toLowerCase() !== 'cekrek'
+        ) {
 
             return res.status(403).json({
                 success: false,
@@ -551,60 +473,63 @@ app.post('/upload-sticker', async (req, res) => {
             });
         }
 
-        // =================================================
-        // CEK DATA
-        // =================================================
 
         if (!stickerData) {
 
             return res.status(400).json({
                 success: false,
                 message:
-                    'Data sticker tidak ditemukan.'
+                    'Data sticker tidak ditemukan'
             });
         }
 
-        // =================================================
-        // FOLDER STICKER
-        // =================================================
+
+        // Cari / buat folder sticker
 
         const stickerFolderId =
             await getOrCreateStickerFolder();
 
-        // =================================================
-        // NAMA FILE
-        // =================================================
+
+        // Bersihkan Base64
+
+        const base64Clean =
+            stickerData.replace(
+                /^data:image\/\w+;base64,/,
+                ""
+            );
+
+
+        // Ubah ke Buffer
+
+        const stickerBuffer =
+            Buffer.from(
+                base64Clean,
+                'base64'
+            );
+
+
+        // Nama file
 
         let fileName =
             stickerName ||
             `Sticker_${Date.now()}.png`;
 
-        // Pastikan ekstensi PNG
+
+        // Pastikan PNG
+
         if (
             !fileName
                 .toLowerCase()
                 .endsWith('.png')
         ) {
+
             fileName += '.png';
         }
 
-        // =================================================
-        // BUFFER
-        // =================================================
 
-        const stickerBuffer =
-            Buffer.from(
-                cleanBase64(
-                    stickerData
-                ),
-                'base64'
-            );
+        // Upload ke Google Drive
 
-        // =================================================
-        // UPLOAD KE GOOGLE DRIVE
-        // =================================================
-
-        const uploaded =
+        const fileUrl =
             await uploadBufferToDrive(
                 stickerBuffer,
                 fileName,
@@ -612,22 +537,28 @@ app.post('/upload-sticker', async (req, res) => {
                 stickerFolderId
             );
 
-        // =================================================
-        // RESPONSE
-        // =================================================
+
+        // Ambil ID file
+
+        const fileId =
+            fileUrl.match(
+                /id=([^&]+)/
+            )?.[1] || '';
+
+
+        // URL yang bisa langsung dipakai
+        // sebagai gambar
+
+        const directUrl =
+            `https://drive.google.com/uc?export=view&id=${fileId}`;
+
 
         res.json({
             success: true,
-
             sticker_url:
-                uploaded.directUrl,
-
-            id:
-                uploaded.id,
-
-            name:
-                uploaded.name
+                directUrl
         });
+
 
     } catch (error) {
 
@@ -646,54 +577,66 @@ app.post('/upload-sticker', async (req, res) => {
     }
 });
 
+
 // =====================================================
-// ENDPOINT 5
-// GET SEMUA STIKER
-// PUBLIC
+// TAMBAHAN STICKER
+// ENDPOINT AMBIL SEMUA STICKER
+// BISA DIAKSES SEMUA USER
 // =====================================================
 
 app.get('/get-stickers', async (req, res) => {
 
     try {
 
+        // Cari / buat folder sticker
+
         const stickerFolderId =
             await getOrCreateStickerFolder();
 
+
+        // Ambil semua file
+
         const response =
             await drive.files.list({
+
                 q:
-                    `'${stickerFolderId}' in parents ` +
-                    `and trashed = false ` +
-                    `and mimeType != 'application/vnd.google-apps.folder'`,
+                    `'${stickerFolderId}' in parents and trashed = false`,
 
                 fields:
-                    'files(id,name)',
+                    'files(id, name, webContentLink, webViewLink)',
 
                 orderBy:
                     'createdTime'
             });
 
+
+        // Ubah menjadi URL gambar
+
         const stickers =
             response.data.files.map(
-                file => ({
-                    id:
-                        file.id,
+                file => {
 
-                    name:
-                        file.name,
+                    return {
+                        id:
+                            file.id,
 
-                    url:
-                        getDirectDriveUrl(
-                            file.id
-                        )
-                })
+                        name:
+                            file.name,
+
+                        url:
+                            `https://drive.google.com/uc?export=view&id=${file.id}`
+                    };
+
+                }
             );
+
 
         res.json({
             success: true,
             stickers:
                 stickers
         });
+
 
     } catch (error) {
 
@@ -712,73 +655,15 @@ app.get('/get-stickers', async (req, res) => {
     }
 });
 
+
 // =====================================================
-// ROOT
+// SERVER
 // =====================================================
 
-app.get('/health', (req, res) => {
+app.listen(PORT, () => {
 
-    res.json({
-        success: true,
-        message:
-            'Server berjalan',
-        admin:
-            ADMIN_NAME
-    });
+    console.log(
+        `Server berjalan di port ${PORT}`
+    );
+
 });
-
-// =====================================================
-// ERROR HANDLER
-// =====================================================
-
-app.use(
-    (err, req, res, next) => {
-
-        console.error(
-            'Unhandled error:',
-            err
-        );
-
-        res.status(500).json({
-            success: false,
-            message:
-                'Terjadi kesalahan pada server.',
-            error:
-                err.message
-        });
-    }
-);
-
-// =====================================================
-// START SERVER
-// =====================================================
-
-app.listen(
-    PORT,
-    () => {
-
-        console.log(
-            '========================================'
-        );
-
-        console.log(
-            `Server berjalan di port ${PORT}`
-        );
-
-        console.log(
-            `Admin upload: ${ADMIN_NAME}`
-        );
-
-        console.log(
-            'Google Drive Frame : /get-frames'
-        );
-
-        console.log(
-            'Google Drive Sticker : /get-stickers'
-        );
-
-        console.log(
-            '========================================'
-        );
-    }
-);
