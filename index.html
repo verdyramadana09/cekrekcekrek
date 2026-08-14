@@ -534,7 +534,7 @@
         @media (max-width: 600px) {
             .screen { padding: 12px; }
             .camera-screen-layout { min-height: calc(100dvh - 24px); }
-            .video-wrapper { min-height: 0; border-radius: 14px; }
+            .video-wrapper { min-height: 0; aspect-ratio: 3 / 4; border-radius: 14px; }
             .camera-settings-panel, .camera-right-panel { padding: 12px; }
         }
 
@@ -553,7 +553,7 @@
             .camera-center-area { order: 1; min-height: 58vh; }
             .camera-settings-panel { order: 2; height: auto; }
             .camera-right-panel { order: 3; height: auto; max-height: 280px; }
-            .video-wrapper { min-height: 0; }
+            .video-wrapper { min-height: 52vh; }
         }
 
         .camera-settings-panel {
@@ -572,6 +572,76 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+        }
+
+        /* =====================================================
+            CAMERA SELECTOR
+        ===================================================== */
+
+        .camera-select {
+            width: 100%;
+            min-height: 40px;
+            padding: 8px 34px 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fbff;
+            color: var(--black);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .camera-select:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 2px rgba(25,118,210,.10);
+        }
+
+        .camera-select:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .camera-switch-btn {
+            width: 100%;
+            min-height: 38px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--blue-dark);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .camera-switch-btn:hover:not(:disabled) {
+            border-color: var(--blue);
+            background: var(--blue-soft);
+        }
+
+        .camera-switch-btn:active:not(:disabled) {
+            transform: scale(.98);
+        }
+
+        .camera-switch-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 1100px) {
+            .camera-select {
+                min-height: 42px;
+                font-size: 13px;
+            }
+
+            .camera-switch-btn {
+                min-height: 42px;
+                font-size: 13px;
+            }
         }
 
         .setting-label {
@@ -623,10 +693,8 @@
         }
 
         .video-wrapper {
-            flex: 0 0 auto;
-            width: 100%;
-            aspect-ratio: 4 / 3;
-            background: transparent;
+            flex: 1;
+            background: #000;
             border-radius: 18px;
             overflow: hidden;
             position: relative;
@@ -635,89 +703,15 @@
             align-items: center;
             box-shadow: 0 10px 35px rgba(0,0,0,0.10);
             min-height: 0;
-            max-width: 100%;
-            max-height: 100%;
         }
 
         #camera-feed {
             display: block;
             width: 100%;
             height: 100%;
-            min-width: 0;
-            min-height: 0;
             object-fit: cover;
             transform: scaleX(-1);
-            background: transparent;
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .camera-status {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 10px;
-            padding: 24px;
-            text-align: center;
-            color: #fff;
-            background: rgba(0,0,0,.58);
-            z-index: 35;
-        }
-
-        .camera-status.hidden {
-            display: none;
-        }
-
-        .camera-status-icon {
-            font-size: 38px;
-            line-height: 1;
-        }
-
-        .camera-status-title {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .camera-status-text {
-            max-width: 430px;
-            font-size: 12px;
-            line-height: 1.55;
-            color: rgba(255,255,255,.88);
-        }
-
-        .camera-status button {
-            margin-top: 4px;
-            padding: 10px 20px;
-            font-size: 12px;
-        }
-
-        .camera-loading {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 10px;
-            color: #fff;
-            background: rgba(0,0,0,.35);
-            z-index: 34;
-            pointer-events: none;
-        }
-
-        .camera-loading.hidden {
-            display: none;
-        }
-
-        .camera-loading .spinner {
-            width: 32px;
-            height: 32px;
-            border-width: 3px;
-            border-color: rgba(255,255,255,.35);
-            border-top-color: #fff;
+            background: #000;
         }
 
         .shutter-btn-absolute {
@@ -964,7 +958,7 @@
         }
         #result-canvas {cursor:grab;touch-action:none}
         #result-canvas.dragging {cursor:grabbing}
-        .photo-editor-panel,.sticker-editor-panel{border:1px solid var(--border);border-radius:14px;padding:14px;background:#f9fcff}.editor-row{display:flex;align-items:center;gap:8px;margin:8px 0}.editor-row label{width:82px;font-size:12px;font-weight:600}.editor-row input[type=range]{flex:1}.editor-value{width:44px;text-align:right;font-size:11px;color:#666}.photo-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px;margin-bottom:10px}.photo-select-btn,.sticker-select-btn{border:1px solid var(--border);background:#fff;border-radius:9px;padding:7px 5px;cursor:pointer;font-size:11px}.photo-select-btn.active,.sticker-select-btn.active{border-color:var(--blue);background:#eaf5ff;color:var(--blue);font-weight:700}.sticker-list{display:none}.sticker-editor-help{font-size:11px;color:#666;margin:6px 0 0}@media(max-width:600px){.preview-custom-right{padding:14px}.preview-custom-wrapper{gap:14px}}
+        .photo-editor-panel,.sticker-editor-panel{border:1px solid var(--border);border-radius:14px;padding:14px;background:#f9fcff}.editor-row{display:flex;align-items:center;gap:8px;margin:8px 0}.editor-row label{width:82px;font-size:12px;font-weight:600}.editor-row input[type=range]{flex:1}.editor-value{width:44px;text-align:right;font-size:11px;color:#666}.photo-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px;margin-bottom:10px}.photo-select-btn,.sticker-select-btn{border:1px solid var(--border);background:#fff;border-radius:9px;padding:7px 5px;cursor:pointer;font-size:11px}.photo-select-btn.active,.sticker-select-btn.active{border-color:var(--blue);background:#eaf5ff;color:var(--blue);font-weight:700}.sticker-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.sticker-editor-help{font-size:11px;color:#666;margin:6px 0 0}@media(max-width:600px){.preview-custom-right{padding:14px}.preview-custom-wrapper{gap:14px}}
 
         .preview-custom-right {
             display: flex;
@@ -1340,8 +1334,11 @@
     
 .preview-custom-left{overflow:hidden}
 #result-canvas{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.sticker-list{display:none}
-
+.sticker-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sticker-chip{display:inline-flex;align-items:center;gap:5px;border:2px solid #1976d2;background:#fff;border-radius:10px;padding:4px 5px 4px 8px;cursor:pointer;user-select:none}
+.sticker-chip.active{background:#eaf5ff;box-shadow:0 0 0 1px #1976d2 inset}
+.sticker-chip-delete{border:0;background:transparent;color:#1976d2;font-size:16px;font-weight:700;line-height:1;cursor:pointer;padding:1px 3px}
+.sticker-chip-delete:hover{color:#d32f2f}
 <style>
 #google-drive-stickers{grid-template-columns:repeat(4,1fr);max-height:190px;overflow-y:auto;padding-right:2px}
 #google-drive-stickers .sticker-item-btn img{pointer-events:none}
@@ -1383,97 +1380,6 @@
 #google-drive-stickers{max-height:150px;overflow-y:auto;overflow-x:hidden}
 #sticker-selector{max-height:110px;overflow-y:auto;overflow-x:hidden}
 @media(max-width:700px){.screen:not(#start-screen)::before{inset:6px;border-radius:22px}.filters-carousel{justify-content:flex-start}.filter-thumb-item{min-width:54px}.camera-settings-panel{height:auto}}
-</style>
-
-<style>
-#result-canvas{overflow:visible !important;position:relative;z-index:2;touch-action:none;-webkit-user-select:none;user-select:none;}
-.preview-custom-left{overflow:visible !important;}
-#result-canvas.dragging{cursor:grabbing !important;}
-</style>
-
-<style>
-/* =====================================================
-   FINAL RESULT PAGE — SAME THEME AS START PAGE
-===================================================== */
-#result-screen{
-    padding:0;
-    overflow:auto;
-    position:relative;
-    background:transparent !important;
-    min-height:100vh;
-}
-#result-screen::before{display:none !important;}
-.result-background{
-    position:fixed;
-    inset:12px;
-    border-radius:35px;
-    overflow:hidden;
-    background:
-        radial-gradient(circle at center, rgba(66,165,245,.45), transparent 38%),
-        linear-gradient(135deg,#dceeff,#ffffff 48%,#d8edff);
-    z-index:0;
-    pointer-events:none;
-}
-.result-page-header{
-    position:relative;
-    z-index:2;
-    text-align:center;
-    padding:28px 20px 4px;
-}
-.result-page-header .start-small{
-    margin-bottom:6px;
-}
-.result-page-header h2{
-    margin:0;
-    font-size:clamp(28px,4vw,42px);
-    font-weight:500;
-    letter-spacing:-1px;
-    color:var(--black);
-}
-.result-page-header p{
-    margin:8px 0 0;
-    color:#6b7d91;
-    font-size:14px;
-}
-#result-screen .custom-result-wrapper{
-    position:relative;
-    z-index:2;
-    padding:14px 30px 25px;
-    max-width:1350px;
-}
-#result-screen .custom-result-left,
-#result-screen .result-card-social,
-#result-screen .result-card-actions{
-    background:rgba(255,255,255,.96);
-    border-color:var(--blue);
-    box-shadow:0 20px 60px rgba(13,71,161,.10);
-}
-#result-screen .custom-result-left{
-    border-width:3px;
-}
-#result-screen .social-card-title,
-#result-screen .barcode-section-title,
-#result-screen .actions-header-title,
-#result-screen .actions-main-heading{
-    color:var(--blue-dark);
-}
-#result-screen .barcode-section-box{
-    background:var(--blue-soft);
-    border-color:#c7def5;
-}
-#result-screen .bottom-actions{
-    position:relative;
-    z-index:3;
-    padding:0 20px 25px;
-}
-@media(max-width:1024px){
-    #result-screen .custom-result-wrapper{padding-left:20px;padding-right:20px;}
-}
-@media(max-width:600px){
-    .result-background{inset:6px;border-radius:22px;}
-    .result-page-header{padding-top:20px;}
-    #result-screen .custom-result-wrapper{padding:10px 12px 20px;}
-}
 </style>
 </head>
 
@@ -1624,7 +1530,7 @@
             disabled
             onclick="
                 nav('camera-screen');
-                requestAnimationFrame(() => initCamera());
+                initCamera();
             "
         >
             Pilih Frame Dulu
@@ -1658,9 +1564,23 @@
 
             <div class="setting-group">
                 <div class="setting-label">📷 Camera</div>
-                <div style="background:#f8fbff; padding:8px 12px; border-radius:10px; text-align:center; font-size:12px; font-weight:600; border:1px solid var(--border);">
-                    Front Camera
-                </div>
+
+                <select
+                    id="camera-select"
+                    class="camera-select"
+                    aria-label="Pilih kamera"
+                >
+                    <option value="">Memuat kamera...</option>
+                </select>
+
+                <button
+                    type="button"
+                    id="camera-switch-btn"
+                    class="camera-switch-btn"
+                    onclick="switchCamera()"
+                >
+                    🔄 Ganti Kamera
+                </button>
             </div>
 
             <div class="setting-toggle-row mirror-switch-row">
@@ -1686,25 +1606,8 @@
                 <video
                     id="camera-feed"
                     autoplay
-                    muted
                     playsinline
-                    webkit-playsinline="true"
-                    disablepictureinpicture
                 ></video>
-
-                <div id="camera-loading" class="camera-loading hidden">
-                    <div class="spinner"></div>
-                    <div style="font-size:12px;font-weight:600;">Mengaktifkan kamera...</div>
-                </div>
-
-                <div id="camera-status" class="camera-status hidden">
-                    <div class="camera-status-icon">📷</div>
-                    <div id="camera-status-title" class="camera-status-title">Kamera belum aktif</div>
-                    <div id="camera-status-text" class="camera-status-text">
-                        Izinkan akses kamera pada browser, lalu coba lagi.
-                    </div>
-                    <button type="button" class="outline" onclick="initCamera(true)">Aktifkan Kamera</button>
-                </div>
 
                 <div class="shutter-btn-absolute" onclick="takePhotos()" id="btn-take">
                     <div class="shutter-inner">
@@ -1730,7 +1633,6 @@
                 <button class="filter-thumb-item" onclick="applyCameraEffect('grayscale(45%) contrast(118%) sepia(15%)', this)"><div class="filter-thumb-placeholder" style="background:#8d8d8d;"></div><span>Film</span></button>
                 <button class="filter-thumb-item" onclick="applyCameraEffect('saturate(55%) contrast(108%) brightness(103%)', this)"><div class="filter-thumb-placeholder" style="background:#b7c1c7;"></div><span>Fade</span></button>
             </div>
-        </div>
 
         <!-- RIGHT: PHOTOS THUMBNAILS & NEXT BUTTON -->
         <div class="camera-right-panel">
@@ -1791,8 +1693,10 @@
         <!-- Sisi Kanan: Panel Edit Foto & Stiker -->
         <div class="preview-custom-right">
             <div class="sticker-category-title">Edit Foto</div>
+            <div class="photo-editor-panel"><div id="photo-editor-selector" class="photo-selector"></div><p class="sticker-editor-help">Pilih foto, lalu <b>tarik langsung</b> pada preview untuk menggeser. Gunakan <b>scroll mouse</b> atau <b>pinch dua jari</b> untuk zoom. Tidak perlu slider.</p><button class="outline" style="width:100%;margin-top:6px" onclick="resetSelectedPhotoTransform()">Reset Posisi Foto</button></div>
             <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
             <div class="sticker-category-title">Stiker & Posisi</div><div class="sticker-grid"><button class="sticker-item-btn" onclick="addSticker('❤️')">❤️</button><button class="sticker-item-btn" onclick="addSticker('⭐')">⭐</button><button class="sticker-item-btn" onclick="addSticker('🔥')">🔥</button><button class="sticker-item-btn" onclick="addSticker('👑')">👑</button><button class="sticker-item-btn" onclick="addSticker('✨')">✨</button><button class="sticker-item-btn" onclick="addSticker('🎉')">🎉</button><button class="sticker-item-btn" onclick="addSticker('😎')">😎</button><button class="sticker-item-btn" onclick="addSticker('🌸')">🌸</button></div><div id="custom-sticker-admin" style="display:none;margin-bottom:12px"><input type="file" id="custom-sticker-input" accept="image/png" style="display:none" onchange="handleCustomStickerUpload(this)"><button class="outline" style="width:100%" onclick="document.getElementById('custom-sticker-input').click()">+ Tambah Stiker PNG</button></div><div class="sticker-category-title" style="margin-top:10px">Stiker Tersimpan</div><div id="google-drive-stickers" class="sticker-grid"></div>
+            <div id="sticker-editor-panel" class="sticker-editor-panel" style="display:none;"><div id="sticker-selector" class="sticker-list"></div><p class="sticker-editor-help">Pilih stiker, lalu tarik langsung pada bounding box untuk menggeser. Gunakan handle ↘ untuk memperbesar atau memperkecil, ↻ untuk memutar, dan 🗑 untuk menghapus. Tidak perlu slider.</p></div>
             <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
             <div class="sticker-category-title">Filter Warna</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('none')">Original</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('grayscale(100%)')">Hitam Putih</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('sepia(100%)')">Retro</button></div>
         </div>
@@ -1826,12 +1730,6 @@
     id="result-screen"
     class="screen"
 >
-    <div class="result-background"></div>
-    <div class="result-page-header">
-        <div class="start-small">EST. 2026</div>
-        <h2>Hasil Foto</h2>
-        <p>Foto Anda sudah siap. Simpan atau unduh hasilnya.</p>
-    </div>
     <div class="custom-result-wrapper">
         
         <!-- Left Box: Photo Frame Preview -->
@@ -1877,6 +1775,18 @@
                 </div>
             </div>
 
+            <!-- Card 2: Quick Edit / Edit Photo -->
+            <div class="result-card-edit">
+                <div>
+                    <div class="quick-edit-label">Quick Edit</div>
+                    <div class="quick-edit-heading">Edit Foto & Stiker</div>
+                    <p class="quick-edit-sub">Sesuaikan posisi, ukuran, rotasi, dan tampilan sebelum menyimpan hasil.</p>
+                </div>
+                <button class="btn-edit-custom" onclick="nav('preview-screen')">
+                    ✏️ Edit Photo
+                </button>
+            </div>
+
             <!-- Card 3: Final Actions (Save & Print / Download Now) -->
             <div class="result-card-actions">
                 <div class="actions-header-title">Langkah Berikutnya</div>
@@ -1919,6 +1829,12 @@ let stream = null;
 let isMirrored = true;
 
 let capturedImages = [];
+
+let selectedCameraId = '';
+
+let availableCameras = [];
+
+let cameraSwitchBusy = false;
 
 let finalFrameImageObj = null;
 
@@ -2563,674 +2479,788 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 /* =====================================================
-   CAMERA PREVIEW MENGIKUTI LUBANG TRANSPARAN FRAME
-   Tidak menampilkan area hitam. Rasio preview mengikuti
-   slot transparan yang sedang akan dipotret.
+   INIT CAMERA
 ===================================================== */
-function getNextCameraHoleIndex(preferredIndex = 0) {
-    if (!Array.isArray(frameHoles) || !frameHoles.length) return -1;
-    const start = Math.max(0, Math.min(preferredIndex, frameHoles.length - 1));
-    for (let i = start; i < frameHoles.length; i++) {
-        if (!capturedImages[i]) return i;
-    }
-    return start;
-}
 
-function syncCameraPreviewToHole(preferredIndex = 0) {
-    const wrapper = document.getElementById('video-wrapper');
-    const center = document.querySelector('.camera-center-area');
-    const filters = document.getElementById('camera-filters');
-    if (!wrapper || !center || !Array.isArray(frameHoles) || !frameHoles.length) return;
-
-    const index = getNextCameraHoleIndex(preferredIndex);
-    const hole = frameHoles[index];
-    if (!hole || !hole.w || !hole.h) return;
-
-    const ratio = hole.w / hole.h;
-    const gap = parseFloat(getComputedStyle(center).gap) || 10;
-    const filterHeight = filters ? filters.getBoundingClientRect().height : 0;
-    const availableWidth = Math.max(120, center.clientWidth);
-    const availableHeight = Math.max(120, center.clientHeight - filterHeight - gap);
-
-    // Hitung ukuran maksimum yang tetap mempertahankan rasio lubang frame.
-    let width = availableWidth;
-    let height = width / ratio;
-    if (height > availableHeight) {
-        height = availableHeight;
-        width = height * ratio;
-    }
-
-    width = Math.max(1, Math.min(width, availableWidth));
-    height = Math.max(1, Math.min(height, availableHeight));
-
-    wrapper.style.width = `${Math.floor(width)}px`;
-    wrapper.style.height = `${Math.floor(height)}px`;
-    wrapper.style.aspectRatio = `${hole.w} / ${hole.h}`;
-    wrapper.style.marginInline = 'auto';
-    wrapper.style.background = 'transparent';
-    wrapper.dataset.holeIndex = String(index);
-
-    const video = document.getElementById('camera-feed');
-    if (video) {
-        video.style.width = '100%';
-        video.style.height = '100%';
-        video.style.objectFit = 'cover';
-        video.style.background = 'transparent';
-    }
-}
-
-async function initCamera(fromRetry = false) {
-    const video = document.getElementById('camera-feed');
-    const status = document.getElementById('camera-status');
-    const statusTitle = document.getElementById('camera-status-title');
-    const statusText = document.getElementById('camera-status-text');
-    const loading = document.getElementById('camera-loading');
-    const takeButton = document.getElementById('btn-take');
-    const nextButton = document.getElementById('btn-next-preview');
-
-    const showStatus = (title, message) => {
-        if (statusTitle) statusTitle.textContent = title;
-        if (statusText) statusText.textContent = message;
-        if (status) status.classList.remove('hidden');
-        if (loading) loading.classList.add('hidden');
-        if (takeButton) takeButton.style.pointerEvents = 'none';
-    };
-
-    const hideStatus = () => {
-        if (status) status.classList.add('hidden');
-        if (loading) loading.classList.add('hidden');
-        if (takeButton) takeButton.style.pointerEvents = 'auto';
-    };
-
-    const stopCurrentStream = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => {
-                try { track.stop(); } catch (_) {}
-            });
-            stream = null;
-        }
-        if (video) video.srcObject = null;
-    };
-
-    if (!video) {
-        console.error('Elemen #camera-feed tidak ditemukan.');
-        return;
-    }
-
-    // Jangan meminta kamera saat halaman kamera belum benar-benar aktif.
-    const cameraScreen = document.getElementById('camera-screen');
-    if (cameraScreen && !cameraScreen.classList.contains('active')) {
-        return;
-    }
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        showStatus(
-            'Browser tidak mendukung kamera',
-            'Gunakan Chrome, Edge, Safari, atau Firefox versi terbaru. Kamera juga membutuhkan HTTPS atau localhost.'
-        );
-        return;
-    }
-
-    // getUserMedia hanya dapat bekerja pada secure context.
-    if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        showStatus(
-            'Koneksi tidak aman',
-            'Akses kamera diblokir karena halaman tidak menggunakan HTTPS. Buka website melalui HTTPS atau localhost.'
-        );
-        return;
-    }
+async function initCamera(preferredDeviceId = '') {
 
     try {
-        if (loading) loading.classList.remove('hidden');
-        if (status) status.classList.add('hidden');
-        if (takeButton) takeButton.style.pointerEvents = 'none';
 
-        stopCurrentStream();
+        if (!navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia) {
+
+            alert('Browser tidak mendukung kamera.');
+
+            return;
+        }
+
+
+        if (stream) {
+
+            stream
+                .getTracks()
+                .forEach(
+                    track => {
+                        try {
+                            track.stop();
+                        } catch (_) {}
+                    }
+                );
+
+            stream = null;
+        }
+
+
+        let constraints;
+
 
         /*
-         * Jangan memakai resolusi wajib.
-         * ideal + fallback membuat kamera lebih kompatibel dengan
-         * Android, iPhone/iPad, laptop, webcam USB, dan browser desktop.
+         * Jika pengguna sudah memilih kamera,
+         * gunakan deviceId tersebut.
+         *
+         * Jika belum, tetap gunakan kamera depan
+         * seperti perilaku script asli.
          */
-        const constraintSets = [
-            {
+
+        if (preferredDeviceId) {
+
+            constraints = {
+
                 video: {
-                    facingMode: { ideal: 'user' },
-                    width: { ideal: 1280, min: 320 },
-                    height: { ideal: 720, min: 240 }
-                },
-                audio: false
-            },
-            {
-                video: {
-                    facingMode: 'user'
-                },
-                audio: false
-            },
-            {
-                video: true,
-                audio: false
-            }
-        ];
 
-        let lastError = null;
+                    deviceId: {
+                        exact: preferredDeviceId
+                    },
 
-        for (const constraints of constraintSets) {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
-                if (stream) break;
-            } catch (error) {
-                lastError = error;
+                    width: {
+                        ideal: 1280
+                    },
 
-                // Constraint yang terlalu spesifik dapat gagal di perangkat tertentu.
-                if (
-                    error.name !== 'OverconstrainedError' &&
-                    error.name !== 'NotFoundError'
-                ) {
-                    break;
-                }
-            }
-        }
-
-        if (!stream) {
-            throw lastError || new Error('Kamera tidak ditemukan.');
-        }
-
-        video.muted = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.setAttribute('playsinline', '');
-        video.setAttribute('webkit-playsinline', '');
-        video.srcObject = stream;
-
-        // Tunggu metadata agar videoWidth/videoHeight sudah tersedia.
-        await new Promise((resolve, reject) => {
-            if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
-                resolve();
-                return;
-            }
-
-            const timeout = setTimeout(() => {
-                cleanup();
-                reject(new Error('Kamera tidak mengirimkan metadata video.'));
-            }, 10000);
-
-            const onLoaded = () => {
-                cleanup();
-                resolve();
-            };
-
-            const onError = () => {
-                cleanup();
-                reject(new Error('Video kamera gagal dimuat.'));
-            };
-
-            function cleanup() {
-                clearTimeout(timeout);
-                video.removeEventListener('loadedmetadata', onLoaded);
-                video.removeEventListener('error', onError);
-            }
-
-            video.addEventListener('loadedmetadata', onLoaded, { once: true });
-            video.addEventListener('error', onError, { once: true });
-        });
-
-        // Beberapa browser desktop tidak otomatis memulai playback walaupun autoplay aktif.
-        try {
-            await video.play();
-        } catch (playError) {
-            console.warn('video.play() ditolak:', playError);
-        }
-
-        requestAnimationFrame(() => syncCameraPreviewToHole(0));
-
-        if (!video.videoWidth || !video.videoHeight) {
-            throw new Error('Ukuran video kamera masih 0.');
-        }
-
-        // Pastikan video tidak tertutup elemen lain.
-        video.style.display = 'block';
-        video.style.visibility = 'visible';
-        video.style.opacity = '1';
-        video.style.transform =
-            (isMirrored ? 'scaleX(-1)' : 'scaleX(1)') +
-            (activeCameraEffectName === 'fisheye' ? ' scale(1.08)' : '');
-
-        hideStatus();
-
-        capturedImages = new Array(requiredPhotos);
-
-        if (nextButton) nextButton.disabled = true;
-
-        // Tunggu satu frame browser supaya layout kamera sudah selesai.
-        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-        buildFramePreview();
-
-        console.log('Kamera aktif:', {
-            width: video.videoWidth,
-            height: video.videoHeight,
-            device: stream.getVideoTracks()[0]?.label || 'Unknown'
-        });
-
-    } catch (error) {
-        console.error('Gagal mengaktifkan kamera:', error);
-        stopCurrentStream();
-
-        let title = 'Kamera tidak dapat diakses';
-        let message = 'Pastikan kamera tersedia dan izin kamera sudah diberikan.';
-
-        switch (error?.name) {
-            case 'NotAllowedError':
-            case 'PermissionDeniedError':
-                title = 'Izin kamera ditolak';
-                message = 'Klik ikon kamera di address bar browser, izinkan kamera untuk website ini, lalu tekan "Aktifkan Kamera".';
-                break;
-
-            case 'NotFoundError':
-            case 'DevicesNotFoundError':
-                title = 'Kamera tidak ditemukan';
-                message = 'Pastikan webcam terpasang dan tidak sedang digunakan aplikasi lain seperti Zoom, Teams, OBS, atau aplikasi kamera.';
-                break;
-
-            case 'NotReadableError':
-            case 'TrackStartError':
-                title = 'Kamera sedang digunakan';
-                message = 'Tutup aplikasi lain yang sedang menggunakan kamera, kemudian tekan "Aktifkan Kamera" lagi.';
-                break;
-
-            case 'OverconstrainedError':
-                title = 'Konfigurasi kamera tidak cocok';
-                message = 'Browser tidak dapat menggunakan konfigurasi kamera yang dipilih. Coba aktifkan kamera kembali.';
-                break;
-
-            case 'SecurityError':
-                title = 'Akses kamera diblokir';
-                message = 'Periksa HTTPS, izin situs, dan pengaturan privasi kamera pada perangkat.';
-                break;
-
-            default:
-                message = error?.message
-                    ? `Kamera gagal dimulai: ${error.message}`
-                    : 'Pastikan kamera tersedia, izin sudah diberikan, dan website dibuka melalui HTTPS.';
-        }
-
-        showStatus(title, message);
-    }
-}
-
-/* =====================================================
-   BUILD FRAME PREVIEW
-===================================================== */
-
-function buildFramePreview() {
-
-    if (
-        !finalFrameImageObj
-    ) {
-
-        return;
-
-    }
-
-
-    const slots =
-        document.getElementById(
-            'photo-slots'
-        );
-
-
-    slots.innerHTML = '';
-    photoTransforms = frameHoles.map((_,i) => photoTransforms[i] || {scale:1,x:0,y:0});
-    selectedPhotoIndex = Math.min(selectedPhotoIndex, Math.max(0, frameHoles.length-1));
-    renderPhotoEditorControls();
-
-    frameHoles.forEach(
-        (
-            hole,
-            index
-        ) => {
-
-            const slot =
-                document.createElement(
-                    'div'
-                );
-
-
-            slot.className =
-                'photo-slot';
-
-
-            const targetWidth = 140;
-            const targetHeight = Math.round(targetWidth * (hole.h / hole.w));
-
-            slot.style.width = targetWidth + 'px';
-            slot.style.height = targetHeight + 'px';
-            slot.style.flex = `0 0 ${targetHeight}px`;
-
-
-            slot.dataset.index =
-                index;
-
-
-            const canvas =
-                document.createElement(
-                    'canvas'
-                );
-
-
-            canvas.width =
-                hole.w;
-
-
-            canvas.height =
-                hole.h;
-
-
-            slot.appendChild(
-                canvas
-            );
-
-
-            const empty =
-                document.createElement(
-                    'div'
-                );
-
-
-            empty.className =
-                'slot-empty';
-
-
-            empty.innerText =
-                `${index + 1}`;
-
-
-            slot.appendChild(
-                empty
-            );
-
-
-            const retake =
-                document.createElement(
-                    'div'
-                );
-
-
-            retake.className =
-                'retake-label';
-
-
-            retake.innerText =
-                'Ambil Ulang';
-
-
-            slot.appendChild(
-                retake
-            );
-
-
-            slot.addEventListener(
-                'click',
-                () => {
-
-                    if (
-                        capturedImages[index]
-                    ) {
-
-                        retakePhoto(
-                            index
-                        );
-
+                    height: {
+                        ideal: 720
                     }
 
-                }
-            );
+                },
 
+                audio: false
 
-            slots.appendChild(
-                slot
-            );
+            };
 
+        } else {
 
-            renderSlot(
-                index
-            );
+            constraints = {
+
+                video: {
+
+                    facingMode: {
+                        ideal: 'user'
+                    },
+
+                    width: {
+                        ideal: 1280
+                    },
+
+                    height: {
+                        ideal: 720
+                    }
+
+                },
+
+                audio: false
+
+            };
 
         }
-    );
-
-    updatePhotoCounter();
-
-}
 
 
-/* =====================================================
-   UPDATE PHOTO COUNTER
-===================================================== */
+        try {
 
-function updatePhotoCounter() {
-    const count = capturedImages.filter(img => img !== undefined && img !== null).length;
-    const counterText = document.getElementById('photo-counter-text');
-    if (counterText) {
-        counterText.innerText = `${count}/${requiredPhotos}`;
+            stream =
+                await navigator
+                    .mediaDevices
+                    .getUserMedia(
+                        constraints
+                    );
+
+        } catch (error) {
+
+            /*
+             * Fallback untuk browser/perangkat
+             * yang tidak menerima constraint tertentu.
+             */
+
+            console.warn(
+                'Constraint kamera gagal, menggunakan fallback:',
+                error
+            );
+
+            stream =
+                await navigator
+                    .mediaDevices
+                    .getUserMedia({
+
+                        video: true,
+
+                        audio: false
+
+                    });
+        }
+
+
+        const video =
+            document.getElementById(
+                'camera-feed'
+            );
+
+
+        if (!video) {
+
+            throw new Error(
+                'Elemen camera-feed tidak ditemukan.'
+            );
+        }
+
+
+        video.muted = true;
+
+        video.autoplay = true;
+
+        video.playsInline = true;
+
+        video.setAttribute(
+            'playsinline',
+            ''
+        );
+
+        video.setAttribute(
+            'webkit-playsinline',
+            ''
+        );
+
+
+        video.srcObject =
+            stream;
+
+
+        /*
+         * Simpan deviceId kamera yang benar-benar
+         * sedang digunakan oleh browser.
+         */
+
+        const activeTrack =
+            stream.getVideoTracks()[0];
+
+        if (activeTrack) {
+
+            const settings =
+                activeTrack.getSettings();
+
+            if (settings.deviceId) {
+
+                selectedCameraId =
+                    settings.deviceId;
+            }
+        }
+
+
+        /*
+         * Pertahankan mirror seperti script asli.
+         */
+
+        video.style.transform =
+            isMirrored
+                ? 'scaleX(-1)'
+                : 'scaleX(1)';
+
+
+        /*
+         * Tunggu metadata agar kamera siap.
+         * Ini penting terutama di iPad/iPhone.
+         */
+
+        await new Promise(
+            resolve => {
+
+                if (
+                    video.readyState >= 2
+                ) {
+
+                    resolve();
+
+                    return;
+                }
+
+                const onReady =
+                    () => {
+
+                        video.removeEventListener(
+                            'loadedmetadata',
+                            onReady
+                        );
+
+                        resolve();
+                    };
+
+                video.addEventListener(
+                    'loadedmetadata',
+                    onReady
+                );
+
+                setTimeout(
+                    () => {
+
+                        video.removeEventListener(
+                            'loadedmetadata',
+                            onReady
+                        );
+
+                        resolve();
+
+                    },
+                    5000
+                );
+            }
+        );
+
+
+        /*
+         * Beberapa browser membutuhkan play()
+         * setelah penggantian source.
+         */
+
+        try {
+
+            await video.play();
+
+        } catch (playError) {
+
+            console.warn(
+                'Video play menunggu interaksi pengguna:',
+                playError
+            );
+        }
+
+
+        capturedImages =
+            new Array(
+                requiredPhotos
+            );
+
+
+        document
+            .getElementById(
+                'btn-take'
+            )
+            .style.pointerEvents = 'auto';
+
+
+        document
+            .getElementById(
+                'btn-next-preview'
+            )
+            .disabled = true;
+
+
+        /*
+         * Setelah izin kamera diberikan,
+         * enumerateDevices() biasanya sudah
+         * mengembalikan label kamera.
+         */
+
+        await loadCameraDevices();
+
+
+        const select =
+            document.getElementById(
+                'camera-select'
+            );
+
+
+        if (
+            select &&
+            selectedCameraId
+        ) {
+
+            const optionExists =
+                Array.from(
+                    select.options
+                ).some(
+                    option =>
+                        option.value ===
+                        selectedCameraId
+                );
+
+            if (optionExists) {
+
+                select.value =
+                    selectedCameraId;
+            }
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            'Gagal membuka kamera:',
+            error
+        );
+
+        if (stream) {
+
+            stream
+                .getTracks()
+                .forEach(
+                    track => {
+                        try {
+                            track.stop();
+                        } catch (_) {}
+                    }
+                );
+
+            stream = null;
+        }
+
+        alert(
+            'Kamera tidak dapat digunakan. Pastikan izin kamera sudah diberikan.'
+        );
     }
 }
 
 
 /* =====================================================
-   RENDER SLOT
+   CAMERA DEVICE LIST
 ===================================================== */
 
-function renderSlot(index) {
+function getCameraDisplayName(
+    camera,
+    index
+) {
 
-    const slots =
-        document.querySelectorAll(
-            '.photo-slot'
-        );
+    const label =
+        String(
+            camera.label || ''
+        ).trim();
 
 
-    const slot =
-        slots[index];
+    if (!label) {
 
-
-    if (!slot) {
-
-        return;
-
+        return `Kamera ${index + 1}`;
     }
 
 
-    const canvas =
-        slot.querySelector(
-            'canvas'
-        );
+    const lower =
+        label.toLowerCase();
 
 
-    const ctx =
-        canvas.getContext(
-            '2d'
-        );
+    /*
+     * Nama kamera iPhone/iPad/Safari
+     * tidak selalu konsisten. Kita hanya
+     * normalisasi nama yang jelas.
+     */
+
+    if (
+        lower.includes('front') ||
+        lower.includes('user') ||
+        lower.includes('facetime')
+    ) {
+
+        return 'Kamera Depan';
+    }
 
 
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+    if (
+        lower.includes('back') ||
+        lower.includes('rear') ||
+        lower.includes('environment')
+    ) {
+
+        if (
+            lower.includes('ultra') ||
+            lower.includes('wide')
+        ) {
+
+            return 'Kamera Belakang Wide';
+        }
+
+        return 'Kamera Belakang';
+    }
 
 
-    const empty =
-        slot.querySelector(
-            '.slot-empty'
+    return label;
+}
+
+
+async function loadCameraDevices() {
+
+    const select =
+        document.getElementById(
+            'camera-select'
         );
 
 
     if (
-        !capturedImages[index]
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.enumerateDevices
     ) {
 
-        ctx.fillStyle =
-            '#ffffff';
+        if (select) {
+
+            select.innerHTML =
+                '<option value="">Kamera tidak tersedia</option>';
+
+            select.disabled = true;
+        }
+
+        return [];
+    }
 
 
-        ctx.fillRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
+    try {
+
+        const devices =
+            await navigator
+                .mediaDevices
+                .enumerateDevices();
+
+
+        availableCameras =
+            devices.filter(
+                device =>
+                    device.kind ===
+                    'videoinput'
+            );
+
+
+        if (!select) {
+
+            return availableCameras;
+        }
+
+
+        select.innerHTML = '';
+
+
+        if (!availableCameras.length) {
+
+            select.innerHTML =
+                '<option value="">Kamera tidak ditemukan</option>';
+
+            select.disabled = true;
+
+            return [];
+        }
+
+
+        select.disabled = false;
+
+
+        availableCameras.forEach(
+            (camera, index) => {
+
+                const option =
+                    document.createElement(
+                        'option'
+                    );
+
+                option.value =
+                    camera.deviceId;
+
+                option.textContent =
+                    getCameraDisplayName(
+                        camera,
+                        index
+                    );
+
+                select.appendChild(
+                    option
+                );
+            }
         );
 
 
-        if (empty) {
+        if (
+            selectedCameraId &&
+            availableCameras.some(
+                camera =>
+                    camera.deviceId ===
+                    selectedCameraId
+            )
+        ) {
 
-            empty.style.display =
-                'flex';
+            select.value =
+                selectedCameraId;
 
+        } else if (
+            select.options.length
+        ) {
+
+            select.selectedIndex = 0;
+
+            selectedCameraId =
+                select.value;
         }
 
-        updatePhotoCounter();
-        return;
 
+        return availableCameras;
+
+    } catch (error) {
+
+        console.error(
+            'Gagal membaca daftar kamera:',
+            error
+        );
+
+
+        if (select) {
+
+            select.innerHTML =
+                '<option value="">Gagal membaca kamera</option>';
+
+            select.disabled = true;
+        }
+
+
+        return [];
     }
-
-
-    if (empty) {
-
-        empty.style.display =
-            'none';
-
-    }
-
-
-    const image =
-        new Image();
-
-
-    image.onload =
-        () => {
-
-            drawImageIntoHole(
-
-                ctx,
-
-                image,
-
-                {
-
-                    x: 0,
-
-                    y: 0,
-
-                    w:
-                        canvas.width,
-
-                    h:
-                        canvas.height
-
-                }
-
-            );
-
-        };
-
-
-    image.src =
-        capturedImages[index];
-
-    updatePhotoCounter();
-
 }
 
 
 /* =====================================================
-   DRAW IMAGE INTO HOLE
+   SELECT CAMERA FROM DROPDOWN
 ===================================================== */
 
-const editorImageCache={};let editorDrawRAF=0;let editorPointers=new Map();let editorPinchStart=null;
-function getEditorImage(source){if(editorImageCache[source])return Promise.resolve(editorImageCache[source]);return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{editorImageCache[source]=img;resolve(img)};img.onerror=reject;img.src=source})}
-function drawImageIntoHole(ctx,image,target,transform={scale:1,x:0,y:0}){const imageRatio=image.width/image.height,targetRatio=target.w/target.h;let baseW=image.width,baseH=image.height,sourceX=0,sourceY=0;if(imageRatio>targetRatio){baseW=image.height*targetRatio;sourceX=(image.width-baseW)/2}else{baseH=image.width/targetRatio;sourceY=(image.height-baseH)/2}const scale=Math.max(.35,Math.min(4,transform.scale||1)),cropW=baseW/scale,cropH=baseH/scale,maxX=Math.max(0,(baseW-cropW)/2),maxY=Math.max(0,(baseH-cropH)/2),panX=Math.max(-1,Math.min(1,(transform.x||0)/100))*maxX,panY=Math.max(-1,Math.min(1,(transform.y||0)/100))*maxY,sx=sourceX+(baseW-cropW)/2+panX,sy=sourceY+(baseH-cropH)/2+panY;ctx.save();ctx.beginPath();ctx.rect(target.x,target.y,target.w,target.h);ctx.clip();ctx.drawImage(image,sx,sy,cropW,cropH,target.x,target.y,target.w,target.h);ctx.restore()}
-function renderPhotoEditorControls(){const box=document.getElementById('photo-editor-selector');if(!box)return;box.innerHTML='';frameHoles.forEach((_,i)=>{const b=document.createElement('button');b.className='photo-select-btn'+(i===selectedPhotoIndex?' active':'');b.textContent=`Foto ${i+1}`;b.onclick=()=>selectPhotoForEdit(i);box.appendChild(b)});updatePhotoEditorInputs()}
-function selectPhotoForEdit(i){selectedPhotoIndex=i;renderPhotoEditorControls();scheduleEditorDraw()}
-function updatePhotoEditorInputs(){}
-function updatePhotoTransform(type,value){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};const v=Number(value);if(type==='zoom')photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,v/100));else photoTransforms[selectedPhotoIndex][type]=v;scheduleEditorDraw()}
-function resetSelectedPhotoTransform(){photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};scheduleEditorDraw()}
-function addSticker(text){stickers.push({type:'text',text,x:finalFrameImageObj?finalFrameImageObj.width/2:0,y:finalFrameImageObj?finalFrameImageObj.height/2:0,size:90,rotation:0});selectedStickerIndex=stickers.length-1;selectedEditorType='sticker';selectedEditorIndex=selectedStickerIndex;renderStickerEditor();scheduleEditorDraw()}
-async function handleCustomStickerUpload(input){
-    if(!sessionName||sessionName.trim().toLowerCase()!=='cekrek'){input.value='';return}
-    const file=input.files&&input.files[0];
-    if(!file||file.type!=='image/png'){alert('Pilih file PNG transparan.');input.value='';return}
-    const reader=new FileReader();
-    reader.onload=async e=>{
-        try{
-            const response=await fetch('/upload-sticker',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminName:sessionName,stickerName:file.name,stickerData:e.target.result})});
-            const result=await response.json();
-            if(!response.ok||!result.success||!result.sticker_url)throw new Error(result.message||'Gagal menyimpan stiker ke Google Drive.');
-            await loadStickersFromGoogleDrive();
-            await addImageSticker(result.sticker_url,file.name);
-        }catch(err){
-            console.error('Error upload sticker:',err);
-            alert('Gagal mengunggah stiker: '+err.message);
-        }finally{input.value='';}
-    };
-    reader.readAsDataURL(file);
-}
-async function addImageSticker(url,name='Stiker PNG'){
-    return new Promise((resolve,reject)=>{
-        const img=new Image();
-        img.onload=()=>{
-            const size=Math.min(220,Math.max(80,Math.round(Math.min(img.width,img.height)*0.35)));
-            stickers.push({type:'image',src:url,img,name,x:finalFrameImageObj?finalFrameImageObj.width/2:0,y:finalFrameImageObj?finalFrameImageObj.height/2:0,size});
-            selectedStickerIndex=stickers.length-1;
-            renderStickerEditor();
-            scheduleEditorDraw();
-            resolve();
-        };
-        img.onerror=()=>reject(new Error('Stiker tidak dapat dimuat dari Google Drive.'));
-        img.src=url;
-    });
-}
-async function loadStickersFromGoogleDrive(){
-    try{
-        const response=await fetch('/get-stickers');
-        if(!response.ok)throw new Error(`HTTP ${response.status}`);
-        const result=await response.json();
-        if(!result.success||!Array.isArray(result.stickers))throw new Error(result.message||'Gagal memuat stiker.');
-        googleDriveStickers=result.stickers;
-        const container=document.getElementById('google-drive-stickers');
-        if(!container)return;
-        container.innerHTML='';
-        googleDriveStickers.forEach(sticker=>{
-            const button=document.createElement('button');
-            button.className='sticker-item-btn';
-            button.type='button';
-            button.title=sticker.name||'Stiker PNG';
-            const img=document.createElement('img');
-            img.src=sticker.url;
-            img.alt=sticker.name||'Stiker PNG';
-            img.style.width='55px';
-            img.style.height='55px';
-            img.style.objectFit='contain';
-            img.loading='lazy';
-            button.appendChild(img);
-            button.onclick=()=>addImageSticker(sticker.url,sticker.name);
-            container.appendChild(button);
-        });
-    }catch(error){console.error('Gagal memuat stiker dari Google Drive:',error);}
+async function selectCamera(
+    deviceId
+) {
+
+    if (!deviceId) {
+        return;
+    }
+
+
+    if (cameraSwitchBusy) {
+        return;
+    }
+
+
+    cameraSwitchBusy =
+        true;
+
+
+    const select =
+        document.getElementById(
+            'camera-select'
+        );
+
+
+    const switchButton =
+        document.getElementById(
+            'camera-switch-btn'
+        );
+
+
+    if (select) {
+
+        select.disabled = true;
+    }
+
+
+    if (switchButton) {
+
+        switchButton.disabled = true;
+
+        switchButton.textContent =
+            '⏳ Mengganti Kamera...';
+    }
+
+
+    try {
+
+        selectedCameraId =
+            deviceId;
+
+
+        await initCamera(
+            deviceId
+        );
+
+    } finally {
+
+        cameraSwitchBusy =
+            false;
+
+
+        if (select) {
+
+            select.disabled = false;
+        }
+
+
+        if (switchButton) {
+
+            switchButton.disabled =
+                false;
+
+            switchButton.textContent =
+                '🔄 Ganti Kamera';
+        }
+    }
 }
 
-function renderStickerEditor(){const p=document.getElementById('sticker-editor-panel');if(!p)return;p.style.display=stickers.length?'block':'none';updateStickerInputs();scheduleEditorDraw()}
-function updateStickerInputs(){const st=stickers[selectedStickerIndex];if(!st)return;const i=document.getElementById('sticker-size'),v=document.getElementById('sticker-size-value');if(i)i.value=Math.round(st.size);if(v)v.textContent=Math.round(st.size)}
-function updateStickerTransform(type,value){const st=stickers[selectedStickerIndex];if(!st)return;st[type]=Number(value);const v=document.getElementById(`sticker-${type}-value`);if(v)v.textContent=Math.round(st[type]);scheduleEditorDraw()}
-function deleteStickerAt(i){stickers.splice(i,1);selectedStickerIndex=stickers.length?Math.min(i,stickers.length-1):-1;renderStickerEditor();scheduleEditorDraw()}
-function deleteSelectedSticker(){if(selectedStickerIndex>=0)deleteStickerAt(selectedStickerIndex)}
-function drawStickers(ctx,showSelection=false){stickers.forEach((st,i)=>{ctx.save();if(st.type==='image'&&st.img){const w=st.size,h=st.size*(st.img.height/st.img.width);ctx.drawImage(st.img,st.x-w/2,st.y-h/2,w,h);if(showSelection&&i===selectedStickerIndex){ctx.strokeStyle='#1976d2';ctx.lineWidth=3;ctx.strokeRect(st.x-w/2-8,st.y-h/2-8,w+16,h+16)}}else{ctx.font=`${st.size}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=5;ctx.fillText(st.text,st.x,st.y);if(showSelection&&i===selectedStickerIndex){const w=ctx.measureText(st.text).width;ctx.shadowBlur=0;ctx.strokeStyle='#1976d2';ctx.lineWidth=3;ctx.strokeRect(st.x-w/2-8,st.y-st.size/2-8,w+16,st.size+16)}}ctx.restore()})}
-function stickerBounds(st){if(st.type==='image'&&st.img){const w=st.size,h=st.size*(st.img.height/st.img.width);return{x:st.x-w/2,y:st.y-h/2,w,h}}return{x:st.x-st.size/2,y:st.y-st.size/2,w:st.size,h:st.size}}
-function pointInSticker(st,p){const b=stickerBounds(st);return p.x>=b.x-15&&p.x<=b.x+b.w+15&&p.y>=b.y-15&&p.y<=b.y+b.h+15}
-function scheduleEditorDraw(){if(editorDrawRAF)return;editorDrawRAF=requestAnimationFrame(()=>{editorDrawRAF=0;drawCanvas(true,'result-canvas')})}
-function editorPoint(c,e){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)}}
-function initPreviewEditorDrag(){const c=document.getElementById('result-canvas');if(!c||c.dataset.editorReady)return;c.dataset.editorReady='1';c.style.touchAction='none';c.addEventListener('pointerdown',e=>{const p=editorPoint(c,e);editorPointers.set(e.pointerId,p);if(editorPointers.size===2){editorDrag=null;const a=[...editorPointers.values()];editorPinchStart={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),scale:photoTransforms[selectedPhotoIndex]?.scale||1};return}if(selectedStickerIndex>=0&&stickers[selectedStickerIndex]&&pointInSticker(stickers[selectedStickerIndex],p)){const st=stickers[selectedStickerIndex];editorDrag={type:'sticker',sx:p.x,sy:p.y,ox:st.x,oy:st.y,os:st.size};c.setPointerCapture(e.pointerId);c.classList.add('dragging');return}if(frameHoles[selectedPhotoIndex]&&capturedImages[selectedPhotoIndex]){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};editorDrag={type:'photo',sx:p.x,sy:p.y,ox:photoTransforms[selectedPhotoIndex].x,oy:photoTransforms[selectedPhotoIndex].y};c.setPointerCapture(e.pointerId);c.classList.add('dragging')}});c.addEventListener('pointermove',e=>{const p=editorPoint(c,e);if(editorPointers.has(e.pointerId))editorPointers.set(e.pointerId,p);if(editorPointers.size===2){const a=[...editorPointers.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(editorPinchStart){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,editorPinchStart.scale*(d/editorPinchStart.distance)));scheduleEditorDraw()}return}if(!editorDrag)return;const dx=p.x-editorDrag.sx,dy=p.y-editorDrag.sy;if(editorDrag.type==='sticker'){const st=stickers[selectedStickerIndex];st.x=Math.max(0,Math.min(c.width,editorDrag.ox+dx));st.y=Math.max(0,Math.min(c.height,editorDrag.oy+dy));}else{const t=photoTransforms[selectedPhotoIndex];t.x=Math.max(-100,Math.min(100,editorDrag.ox+dx*100/c.width));t.y=Math.max(-100,Math.min(100,editorDrag.oy+dy*100/c.height));}scheduleEditorDraw()});const end=e=>{editorPointers.delete(e.pointerId);if(editorPointers.size<2)editorPinchStart=null;editorDrag=null;c.classList.remove('dragging')};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('wheel',e=>{if(!frameHoles[selectedPhotoIndex]||!capturedImages[selectedPhotoIndex])return;e.preventDefault();if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,photoTransforms[selectedPhotoIndex].scale*(e.deltaY<0?1.08:.925)));scheduleEditorDraw()},{passive:false})}
+
+/* =====================================================
+   SWITCH CAMERA
+   Untuk iPhone / iPad / Android
+===================================================== */
+
+async function switchCamera() {
+
+    if (cameraSwitchBusy) {
+        return;
+    }
+
+
+    if (!availableCameras.length) {
+
+        await loadCameraDevices();
+    }
+
+
+    if (!availableCameras.length) {
+
+        return;
+    }
+
+
+    let currentIndex =
+        availableCameras.findIndex(
+            camera =>
+                camera.deviceId ===
+                selectedCameraId
+        );
+
+
+    if (currentIndex < 0) {
+
+        currentIndex = 0;
+    }
+
+
+    const nextIndex =
+        (
+            currentIndex + 1
+        ) %
+        availableCameras.length;
+
+
+    const nextCamera =
+        availableCameras[
+            nextIndex
+        ];
+
+
+    if (!nextCamera) {
+
+        return;
+    }
+
+
+    const select =
+        document.getElementById(
+            'camera-select'
+        );
+
+
+    if (select) {
+
+        select.value =
+            nextCamera.deviceId;
+    }
+
+
+    await selectCamera(
+        nextCamera.deviceId
+    );
+}
+
+
+/* =====================================================
+   CAMERA SELECTOR EVENT
+===================================================== */
+
+function initCameraSelector() {
+
+    const select =
+        document.getElementById(
+            'camera-select'
+        );
+
+
+    if (!select) {
+
+        return;
+    }
+
+
+    if (
+        select.dataset.cameraReady ===
+        'true'
+    ) {
+
+        return;
+    }
+
+
+    select.dataset.cameraReady =
+        'true';
+
+
+    select.addEventListener(
+        'change',
+        async function () {
+
+            await selectCamera(
+                this.value
+            );
+        }
+    );
+
+
+    /*
+     * Muat daftar jika permission
+     * sebelumnya sudah diberikan.
+     */
+
+    loadCameraDevices();
+}
+
+
+/* =====================================================
+   CAMERA DEVICE CHANGE
+===================================================== */
+
+if (
+    navigator.mediaDevices &&
+    navigator.mediaDevices.addEventListener
+) {
+
+    navigator.mediaDevices.addEventListener(
+        'devicechange',
+        async () => {
+
+            await loadCameraDevices();
+        }
+    );
+}
+
+
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+
+        initCameraSelector();
+    }
+);
 
 /* =====================================================
    MIRROR
@@ -3366,8 +3396,6 @@ async function retakePhoto(
     captureFrame(
         index
     );
-
-    requestAnimationFrame(() => syncCameraPreviewToHole(index));
 
 
     slots.forEach(
@@ -3556,9 +3584,6 @@ function captureFrame(
     renderSlot(
         index
     );
-
-    // Bila slot berikutnya memiliki rasio berbeda, preview ikut berubah otomatis.
-    requestAnimationFrame(() => syncCameraPreviewToHole(index + 1));
 
 }
 
@@ -4082,7 +4107,6 @@ window.addEventListener(
         ) {
 
             buildFramePreview();
-            requestAnimationFrame(() => syncCameraPreviewToHole(0));
 
         }
 
@@ -4272,8 +4296,9 @@ function refreshStickerPanels(){
 
 /* Result page wording and consistent visual hierarchy. */
 function applyProfessionalCopy(){
-    const title=document.querySelector('#result-screen .actions-main-heading');
-    if(title)title.textContent='Hasil Foto Siap';
+    const title=document.querySelector('#result-screen .actions-main-heading');if(title)title.textContent='Hasil Foto Siap';
+    const edit=document.querySelector('#result-screen .quick-edit-heading');if(edit)edit.textContent='Edit Foto & Stiker';
+    const sub=document.querySelector('#result-screen .quick-edit-sub');if(sub)sub.textContent='Sesuaikan posisi, ukuran, rotasi, dan tampilan sebelum menyimpan hasil.';
 }
 
 window.addEventListener('load',()=>{
@@ -4283,376 +4308,89 @@ window.addEventListener('load',()=>{
 });
 </script>
 <script>
-/* =====================================================
-   FINAL EDITOR PATCH — ROBUST PHOTO + STICKER BOUNDING BOX
-   - Sticker selection is explicit.
-   - Rotate / delete / resize handles are clickable.
-   - Handles stay inside the canvas area.
-   - Pointer/touch/mouse all use the same editor.
-===================================================== */
-(function(){
-    function ensureTransform(i){
-        if(!photoTransforms[i]) photoTransforms[i]={scale:1,x:0,y:0,rotation:0};
-        return photoTransforms[i];
-    }
-
-    function stickerVisualBounds(st){
-        const b=stickerBounds(st);
-        const pad=10;
-        return {x:b.x-pad,y:b.y-pad,w:b.w+pad*2,h:b.h+pad*2};
-    }
-
-    function editorControlPoints(b){
-        /* All controls are INSIDE the bounding box so they cannot be clipped
-           and are easy to hit on desktop and touch screens. */
-        return {
-            rotate:{x:b.x+24,y:b.y+24},
-            delete:{x:b.x+b.w-24,y:b.y+24},
-            resize:{x:b.x+b.w-24,y:b.y+b.h-24}
-        };
-    }
-
-    function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
-
-    function hitControl(p,b){
-        if(!b) return null;
-        const c=editorControlPoints(b),r=30;
-        if(distance(p,c.rotate)<=r) return 'rotate';
-        if(distance(p,c.delete)<=r) return 'delete';
-        if(distance(p,c.resize)<=r) return 'resize';
-        return null;
-    }
-
-    function editorBoundsForPhoto(i){
-        const h=frameHoles[i];
-        return h ? {x:h.x,y:h.y,w:h.w,h:h.h} : null;
-    }
-    function editorBoundsForSticker(st){return stickerVisualBounds(st)}
-
-    function editorHit(p){
-        /* Controls must be checked before normal object bounds. */
-        for(let i=stickers.length-1;i>=0;i--){
-            const b=editorBoundsForSticker(stickers[i]);
-            if(!b) continue;
-            if(hitControl(p,b)) return {type:'sticker',index:i,b,control:hitControl(p,b)};
-            if(p.x>=b.x-8&&p.x<=b.x+b.w+8&&p.y>=b.y-8&&p.y<=b.y+b.h+8)
-                return {type:'sticker',index:i,b,control:null};
-        }
-        for(let i=frameHoles.length-1;i>=0;i--){
-            if(!capturedImages[i]) continue;
-            const b=editorBoundsForPhoto(i);
-            if(!b) continue;
-            if(hitControl(p,b)) return {type:'photo',index:i,b,control:hitControl(p,b)};
-            if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)
-                return {type:'photo',index:i,b,control:null};
-        }
-        return null;
-    }
-
-    function drawEditorOverlay(ctx){
-        let b=null;
-        if(selectedEditorType==='sticker' && stickers[selectedEditorIndex]) b=editorBoundsForSticker(stickers[selectedEditorIndex]);
-        if(selectedEditorType==='photo' && capturedImages[selectedEditorIndex]) b=editorBoundsForPhoto(selectedEditorIndex);
-        if(!b) return;
-
-        const c=editorControlPoints(b);
+/* FINAL ROTATION / MOVE / DELETE / RESIZE IMPLEMENTATION */
+window.drawImageIntoHole=function(ctx,image,target,transform={scale:1,x:0,y:0,rotation:0}){
+    const imageRatio=image.width/image.height,targetRatio=target.w/target.h;
+    let baseW=image.width,baseH=image.height,sourceX=0,sourceY=0;
+    if(imageRatio>targetRatio){baseW=image.height*targetRatio;sourceX=(image.width-baseW)/2}
+    else{baseH=image.width/targetRatio;sourceY=(image.height-baseH)/2}
+    const scale=Math.max(.35,Math.min(4,transform.scale||1));
+    const cropW=baseW/scale,cropH=baseH/scale;
+    const maxX=Math.max(0,(baseW-cropW)/2),maxY=Math.max(0,(baseH-cropH)/2);
+    const panX=Math.max(-1,Math.min(1,(transform.x||0)/100))*maxX;
+    const panY=Math.max(-1,Math.min(1,(transform.y||0)/100))*maxY;
+    const sx=sourceX+(baseW-cropW)/2+panX,sy=sourceY+(baseH-cropH)/2+panY;
+    ctx.save();
+    ctx.beginPath();ctx.rect(target.x,target.y,target.w,target.h);ctx.clip();
+    ctx.translate(target.x+target.w/2,target.y+target.h/2);
+    ctx.rotate((transform.rotation||0)*Math.PI/180);
+    ctx.drawImage(image,sx,sy,cropW,cropH,-target.w/2,-target.h/2,target.w,target.h);
+    ctx.restore();
+};
+window.drawStickers=function(ctx,showSelection=false){
+    stickers.forEach((st,i)=>{
         ctx.save();
-
-        /* Bounding box */
-        ctx.lineWidth=4;
-        ctx.strokeStyle='#0878e8';
-        ctx.setLineDash([10,6]);
-        ctx.strokeRect(b.x,b.y,b.w,b.h);
-        ctx.setLineDash([]);
-
-        /* Corner anchors */
-        const corners=[
-            [b.x,b.y],[b.x+b.w,b.y],[b.x,b.y+b.h],[b.x+b.w,b.y+b.h]
-        ];
-        ctx.fillStyle='#fff';
-        ctx.strokeStyle='#0878e8';
-        ctx.lineWidth=3;
-        corners.forEach(([x,y])=>{
-            ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.fill();ctx.stroke();
-        });
-
-        /* Controls */
-        const controls=[
-            {p:c.rotate,label:'↻',title:'Putar'},
-            {p:c.delete,label:'×',title:'Hapus'},
-            {p:c.resize,label:'↘',title:'Ukuran'}
-        ];
-        controls.forEach(item=>{
-            ctx.beginPath();
-            ctx.fillStyle='#fff';
-            ctx.strokeStyle='#0878e8';
-            ctx.lineWidth=3;
-            ctx.arc(item.p.x,item.p.y,20,0,Math.PI*2);
-            ctx.fill();ctx.stroke();
-            ctx.fillStyle='#0878e8';
-            ctx.font='bold 20px Arial';
-            ctx.textAlign='center';ctx.textBaseline='middle';
-            ctx.fillText(item.label,item.p.x,item.p.y+1);
-        });
-
-        /* Small label makes the active object obvious. */
-        ctx.font='bold 16px Arial';
-        ctx.textAlign='left';ctx.textBaseline='bottom';
-        const label=selectedEditorType==='sticker'?'STIKER':'FOTO '+(selectedEditorIndex+1);
-        const lw=ctx.measureText(label).width+16;
-        ctx.fillStyle='rgba(8,120,232,.92)';
-        ctx.fillRect(b.x,b.y-28,lw,26);
-        ctx.fillStyle='#fff';ctx.fillText(label,b.x+8,b.y-7);
+        const b=stickerBounds(st);
+        ctx.translate(st.x,st.y);
+        ctx.rotate((st.rotation||0)*Math.PI/180);
+        if(st.type==='image'&&st.img){
+            const w=st.size,h=st.size*(st.img.height/st.img.width);ctx.drawImage(st.img,-w/2,-h/2,w,h);
+        }else{
+            ctx.font=`${st.size}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=5;ctx.fillText(st.text,0,0);
+        }
         ctx.restore();
-    }
+    });
+    if(showSelection)drawEditorOverlay(ctx);
+};
 
-    window.drawEditorOverlay=drawEditorOverlay;
-    window.editorHit=editorHit;
-    window.controlHit=hitControl;
-    window.editorBoundsForSticker=editorBoundsForSticker;
-    window.editorBoundsForPhoto=editorBoundsForPhoto;
-
-    /* Ensure every new sticker becomes the active editor object. */
-    const oldAddSticker=window.addSticker;
-    if(typeof oldAddSticker==='function'){
-        window.addSticker=function(text){
-            oldAddSticker(text);
-            selectedStickerIndex=stickers.length-1;
-            selectedEditorType='sticker';
-            selectedEditorIndex=selectedStickerIndex;
-            renderStickerEditor();
-            scheduleEditorDraw();
-        };
-    }
-
-    /* Rebuild editor listener once, avoiding all previous duplicate listeners. */
-    function installEditor(){
-        const c=document.getElementById('result-canvas');
-        if(!c || c.dataset.finalEditorInstalled==='1') return;
-        c.dataset.finalEditorInstalled='1';
-        c.style.touchAction='none';
-        c.style.cursor='default';
-
-        const finish=()=>{editorMode=null;editorStart=null;c.classList.remove('dragging')};
-
-        c.addEventListener('pointerdown',e=>{
-            const p=editorPoint(c,e),hit=editorHit(p);
-            if(!hit) return;
-
-            selectedEditorType=hit.type;
-            selectedEditorIndex=hit.index;
-            if(hit.type==='sticker') selectedStickerIndex=hit.index;
-            if(hit.type==='photo') selectedPhotoIndex=hit.index;
-
-            /* Control actions */
-            if(hit.control==='delete'){
-                if(hit.type==='sticker'){
-                    deleteStickerAt(hit.index);
-                    selectedEditorType=stickers.length?'sticker':'photo';
-                    selectedEditorIndex=stickers.length?selectedStickerIndex:selectedPhotoIndex;
-                }else{
-                    capturedImages[hit.index]=null;
-                    photoTransforms[hit.index]={scale:1,x:0,y:0,rotation:0};
-                    if(typeof renderSlot==='function') renderSlot(hit.index);
-                }
-                scheduleEditorDraw();
-                e.preventDefault();
-                return;
-            }
-
-            if(hit.control==='rotate'){
-                if(hit.type==='sticker'){
-                    const st=stickers[hit.index];st.rotation=(st.rotation||0)+15;
-                }else{
-                    const t=ensureTransform(hit.index);t.rotation=(t.rotation||0)+15;
-                }
-                scheduleEditorDraw();
-                e.preventDefault();
-                return;
-            }
-
-            /* Resize handle */
-            if(hit.control==='resize'){
-                editorMode='resize';
-                editorStart={p,b:hit.b,type:hit.type,index:hit.index,
-                    baseSize:hit.type==='sticker'?stickers[hit.index].size:ensureTransform(hit.index).scale};
-            }else{
-                editorMode='move';
-                editorStart={p,b:hit.b,type:hit.type,index:hit.index,
-                    ox:hit.type==='sticker'?stickers[hit.index].x:ensureTransform(hit.index).x,
-                    oy:hit.type==='sticker'?stickers[hit.index].y:ensureTransform(hit.index).y};
-            }
-            try{c.setPointerCapture(e.pointerId)}catch(_){ }
-            c.classList.add('dragging');
-            scheduleEditorDraw();
-            e.preventDefault();
-        },{passive:false});
-
-        c.addEventListener('pointermove',e=>{
-            if(!editorMode||!editorStart) return;
-            const p=editorPoint(c,e),d=editorStart;
-            if(d.type==='sticker'){
-                const st=stickers[d.index];if(!st)return;
-                if(editorMode==='move'){
-                    st.x=d.ox+(p.x-d.p.x);st.y=d.oy+(p.y-d.p.y);
-                }else{
-                    const startDist=Math.hypot(d.p.x-(d.b.x+d.b.w),d.p.y-(d.b.y+d.b.h));
-                    const nowDist=Math.hypot(p.x-(d.b.x+d.b.w),p.y-(d.b.y+d.b.h));
-                    st.size=Math.max(30,Math.min(600,d.baseSize+(nowDist-startDist)));
-                }
-            }else{
-                const t=ensureTransform(d.index),h=frameHoles[d.index];
-                if(editorMode==='move' && h){
-                    t.x=Math.max(-100,Math.min(100,d.ox+(p.x-d.p.x)/h.w*100));
-                    t.y=Math.max(-100,Math.min(100,d.oy+(p.y-d.p.y)/h.h*100));
-                }else if(editorMode==='resize'){
-                    t.scale=Math.max(.35,Math.min(4,d.baseSize+(p.x-d.p.x)/Math.max(100,d.b.w)));
-                }
-            }
-            scheduleEditorDraw();
-            e.preventDefault();
-        },{passive:false});
-
-        c.addEventListener('pointerup',finish);
-        c.addEventListener('pointercancel',finish);
-        c.addEventListener('lostpointercapture',finish);
-
-        c.addEventListener('wheel',e=>{
-            const hit=editorHit(editorPoint(c,e));
-            if(!hit)return;
-            e.preventDefault();
-            if(hit.type==='sticker'){
-                stickers[hit.index].size=Math.max(30,Math.min(600,stickers[hit.index].size+(e.deltaY<0?10:-10)));
-            }else{
-                const t=ensureTransform(hit.index);
-                t.scale=Math.max(.35,Math.min(4,t.scale+(e.deltaY<0?.08:-.08)));
-            }
-            selectedEditorType=hit.type;selectedEditorIndex=hit.index;
-            if(hit.type==='sticker')selectedStickerIndex=hit.index;
-            scheduleEditorDraw();
-        },{passive:false});
-    }
-
-    window.initPreviewEditorDrag=installEditor;
-
-    /* Force a redraw after any editor-related UI action. */
-    window.refreshEditorSelection=function(type,index){
-        selectedEditorType=type;selectedEditorIndex=index;
-        if(type==='sticker')selectedStickerIndex=index;
-        if(type==='photo')selectedPhotoIndex=index;
+/* Replace editor pointer behavior with correct percentage-based photo movement. */
+const oldInitEditor=initPreviewEditorDrag;
+initPreviewEditorDrag=function(){
+    const c=document.getElementById('result-canvas');if(!c||c.dataset.boundingEditorV2==='1')return;
+    c.dataset.boundingEditorV2='1';c.style.touchAction='none';
+    c.addEventListener('pointerdown',e=>{
+        const p=editorPoint(c,e),hit=editorHit(p);if(!hit)return;
+        selectedEditorType=hit.type;selectedEditorIndex=hit.index;
+        selectedPhotoIndex=hit.type==='photo'?hit.index:selectedPhotoIndex;
+        selectedStickerIndex=hit.type==='sticker'?hit.index:selectedStickerIndex;
+        const controls=controlHit(p,hit.b);
+        if(controls.delete){
+            if(hit.type==='sticker')deleteStickerAt(hit.index);
+            else {capturedImages[hit.index]=null;photoTransforms[hit.index]={scale:1,x:0,y:0,rotation:0};renderSlot(hit.index)}
+            scheduleEditorDraw();return;
+        }
+        if(controls.rotate){
+            if(hit.type==='sticker')stickers[hit.index].rotation=(stickers[hit.index].rotation||0)+15;
+            else {const t=photoTransforms[hit.index]||(photoTransforms[hit.index]={scale:1,x:0,y:0,rotation:0});t.rotation=(t.rotation||0)+15}
+            scheduleEditorDraw();return;
+        }
+        editorMode=controls.resize?'resize':'move';
+        editorStart={p,b,type:hit.type,index:hit.index,baseSize:hit.type==='sticker'?stickers[hit.index].size:((photoTransforms[hit.index]||{scale:1}).scale||1),ox:hit.type==='sticker'?stickers[hit.index].x:((photoTransforms[hit.index]||{x:0}).x||0),oy:hit.type==='sticker'?stickers[hit.index].y:((photoTransforms[hit.index]||{y:0}).y||0)};
+        c.setPointerCapture(e.pointerId);c.classList.add('dragging');scheduleEditorDraw();
+    });
+    c.addEventListener('pointermove',e=>{
+        if(!editorMode||!editorStart)return;const p=editorPoint(c,e),d=editorStart;
+        if(d.type==='sticker'){
+            const st=stickers[d.index];if(!st)return;
+            if(editorMode==='move'){st.x=d.ox+p.x-d.p.x;st.y=d.oy+p.y-d.p.y}
+            else {const delta=(p.x-d.p.x+p.y-d.p.y)/2;st.size=Math.max(30,Math.min(600,d.baseSize+delta))}
+        }else{
+            const t=photoTransforms[d.index]||(photoTransforms[d.index]={scale:1,x:0,y:0,rotation:0});
+            if(editorMode==='move'){
+                const hole=frameHoles[d.index];
+                if(hole){t.x=Math.max(-100,Math.min(100,d.ox+(p.x-d.p.x)/hole.w*100));t.y=Math.max(-100,Math.min(100,d.oy+(p.y-d.p.y)/hole.h*100))}
+            }else{t.scale=Math.max(.35,Math.min(4,d.baseSize+(p.x-d.p.x)/Math.max(100,d.b.w)))}
+        }
         scheduleEditorDraw();
-    };
-
-    /* Existing renderer calls drawStickers(..., true), so preserve it and add overlay. */
-    window.drawStickers=function(ctx,showSelection=false){
-        stickers.forEach(st=>{
-            ctx.save();
-            ctx.translate(st.x,st.y);
-            ctx.rotate((st.rotation||0)*Math.PI/180);
-            if(st.type==='image'&&st.img){
-                const w=st.size,h=st.size*(st.img.height/st.img.width);
-                ctx.drawImage(st.img,-w/2,-h/2,w,h);
-            }else{
-                ctx.font=`${st.size}px Arial`;
-                ctx.textAlign='center';ctx.textBaseline='middle';
-                ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=5;
-                ctx.fillText(st.text,0,0);
-            }
-            ctx.restore();
-        });
-        if(showSelection) drawEditorOverlay(ctx);
-    };
-
-    /* Make sticker list selection update the same canvas selection. */
-    const oldRenderStickerEditor=window.renderStickerEditor;
-    if(typeof oldRenderStickerEditor==='function'){
-        window.renderStickerEditor=function(){
-            oldRenderStickerEditor();
-            const st=stickers[selectedStickerIndex];
-            if(st){selectedEditorType='sticker';selectedEditorIndex=selectedStickerIndex;}
-        };
-    }
-
-    window.addEventListener('load',()=>setTimeout(installEditor,50));
-})();
-</script>
-
-<script>
-/* CAMERA LIFECYCLE PATCH
-   Memastikan preview tetap hidup setelah resize/fullscreen/tab kembali aktif.
-*/
-(function () {
-    let lastCameraWidth = 0;
-    let lastCameraHeight = 0;
-
-    function cameraIsActive() {
-        const screen = document.getElementById('camera-screen');
-        return !!(screen && screen.classList.contains('active'));
-    }
-
-    function ensureCameraPreview() {
-        const video = document.getElementById('camera-feed');
-        if (!cameraIsActive() || !video) return;
-
-        if (!stream || !stream.active) {
-            initCamera(true);
-            return;
-        }
-
-        if (video.srcObject !== stream) {
-            video.srcObject = stream;
-        }
-
-        if (video.paused) {
-            video.play().catch(() => {});
-        }
-
-        if (video.videoWidth !== lastCameraWidth || video.videoHeight !== lastCameraHeight) {
-            lastCameraWidth = video.videoWidth;
-            lastCameraHeight = video.videoHeight;
-            requestAnimationFrame(() => {
-                buildFramePreview();
-                syncCameraPreviewToHole(0);
-            });
-        }
-    }
-
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            setTimeout(ensureCameraPreview, 150);
-        }
     });
-
-    window.addEventListener('pageshow', () => {
-        setTimeout(ensureCameraPreview, 150);
-    });
-
-    window.addEventListener('resize', () => {
-        if (cameraIsActive()) {
-            setTimeout(ensureCameraPreview, 100);
-        }
-    });
-
-    document.addEventListener('fullscreenchange', () => {
-        if (cameraIsActive()) {
-            setTimeout(ensureCameraPreview, 250);
-        }
-    });
-
-    document.addEventListener('webkitfullscreenchange', () => {
-        if (cameraIsActive()) {
-            setTimeout(ensureCameraPreview, 250);
-        }
-    });
-})();
-
-window.addEventListener('resize', () => {
-    const screen = document.getElementById('camera-screen');
-    if (screen && screen.classList.contains('active')) {
-        requestAnimationFrame(() => syncCameraPreviewToHole(0));
-    }
-});
-
+    ['pointerup','pointercancel','pointerleave'].forEach(ev=>c.addEventListener(ev,()=>{editorMode=null;editorStart=null;c.classList.remove('dragging')}));
+    c.addEventListener('wheel',e=>{
+        e.preventDefault();const hit=editorHit(editorPoint(c,e));if(!hit)return;
+        if(hit.type==='sticker')stickers[hit.index].size=Math.max(30,Math.min(600,stickers[hit.index].size+(e.deltaY<0?10:-10)));
+        else {const t=photoTransforms[hit.index]||(photoTransforms[hit.index]={scale:1,x:0,y:0,rotation:0});t.scale=Math.max(.35,Math.min(4,t.scale+(e.deltaY<0?.08:-.08)))}
+        selectedEditorType=hit.type;selectedEditorIndex=hit.index;scheduleEditorDraw();
+    },{passive:false});
+};
 </script>
 </body>
 </html>
