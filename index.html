@@ -385,7 +385,7 @@
             flex: 1;
             position: relative;
             width: 100%;
-            padding: 0 40px;
+            padding: 0 60px;
         }
 
         .frame-scroll-btn {
@@ -414,11 +414,11 @@
         }
 
         .frame-scroll-btn.left {
-            left: 10px;
+            left: 15px;
         }
 
         .frame-scroll-btn.right {
-            right: 10px;
+            right: 15px;
         }
 
         .frame-grid {
@@ -774,7 +774,7 @@
 
 
         /* =====================================================
-            PREVIEW SCREEN (BEBAS KEDIP-KEDIP DENGAN GPU TRANSFORM)
+            PREVIEW SCREEN
         ===================================================== */
 
         #preview-screen {
@@ -812,82 +812,21 @@
             align-items: center;
             max-width: 480px;
             width: 100%;
-            height: 72vh;
+            height: 100%;
             position: relative;
-            overflow: hidden;
-            user-select: none;
         }
 
         #result-canvas {
-            width: 100%;
-            height: 100%;
+            width: 100% !important;
+            height: auto !important;
+            max-height: 72vh;
             object-fit: contain;
             border-radius: 10px;
             display: block;
         }
-
-        #sticker-layer {
-            position: absolute;
-            inset: 15px;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .draggable-sticker {
-            position: absolute;
-            font-size: 36px;
-            cursor: grab;
-            pointer-events: auto;
-            display: inline-block;
-            padding: 4px;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            will-change: transform; /* Mencegah kedip-kedip saat digeser */
-        }
-
-        .draggable-sticker:active {
-            cursor: grabbing;
-        }
-
-        .sticker-controls {
-            position: absolute;
-            top: -22px;
-            right: -22px;
-            display: none;
-            gap: 4px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 2px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            z-index: 10;
-        }
-
-        .draggable-sticker.selected .sticker-controls {
-            display: flex;
-        }
-
-        .sticker-ctrl-btn {
-            background: #f0f4f8;
-            border: none;
-            border-radius: 4px;
-            width: 20px;
-            height: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--black);
-            padding: 0;
-        }
-
-        .sticker-ctrl-btn.delete {
-            background: var(--danger);
-            color: white;
-        }
+        #result-canvas {cursor:grab;touch-action:none}
+        #result-canvas.dragging {cursor:grabbing}
+        .photo-editor-panel,.sticker-editor-panel{border:1px solid var(--border);border-radius:14px;padding:14px;background:#f9fcff}.editor-row{display:flex;align-items:center;gap:8px;margin:8px 0}.editor-row label{width:82px;font-size:12px;font-weight:600}.editor-row input[type=range]{flex:1}.editor-value{width:44px;text-align:right;font-size:11px;color:#666}.photo-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px;margin-bottom:10px}.photo-select-btn,.sticker-select-btn{border:1px solid var(--border);background:#fff;border-radius:9px;padding:7px 5px;cursor:pointer;font-size:11px}.photo-select-btn.active,.sticker-select-btn.active{border-color:var(--blue);background:#eaf5ff;color:var(--blue);font-weight:700}.sticker-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.sticker-editor-help{font-size:11px;color:#666;margin:6px 0 0}@media(max-width:600px){.preview-custom-right{padding:14px}.preview-custom-wrapper{gap:14px}}
 
         .preview-custom-right {
             display: flex;
@@ -1260,7 +1199,18 @@
             100% { transform: rotate(360deg); }
         }
 
-    </style>
+    
+.preview-custom-left{overflow:hidden}
+#result-canvas{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.sticker-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sticker-chip{display:inline-flex;align-items:center;gap:5px;border:2px solid #1976d2;background:#fff;border-radius:10px;padding:4px 5px 4px 8px;cursor:pointer;user-select:none}
+.sticker-chip.active{background:#eaf5ff;box-shadow:0 0 0 1px #1976d2 inset}
+.sticker-chip-delete{border:0;background:transparent;color:#1976d2;font-size:16px;font-weight:700;line-height:1;cursor:pointer;padding:1px 3px}
+.sticker-chip-delete:hover{color:#d32f2f}
+<style>
+#google-drive-stickers{grid-template-columns:repeat(4,1fr);max-height:190px;overflow-y:auto;padding-right:2px}
+#google-drive-stickers .sticker-item-btn img{pointer-events:none}
+</style></style>
 </head>
 
 
@@ -1362,7 +1312,7 @@
         </p>
 
         <!-- Tombol Tambah Frame di Sudut Kanan Atas -->
-        <div class="add-frame-top-right">
+        <div class="add-frame-top-right" id="add-frame-container" style="display: none;">
             <input type="file" id="custom-frame-input" accept="image/png, image/jpeg" style="display: none;" onchange="handleCustomFrameUpload(this)">
             <button class="outline" onclick="document.getElementById('custom-frame-input').click()">
                 + Tambah Frame
@@ -1540,48 +1490,29 @@
     class="screen"
 >
     <h2>
-        Preview & Atur Foto
+        Edit Foto & Atur Posisi
     </h2>
 
     <div class="preview-custom-wrapper">
         
-        <!-- Sisi Kiri: Hasil Foto Frame & Layer Stiker Interaktif Bebas Kedip -->
-        <div class="preview-custom-left" id="preview-container-box">
+        <!-- Sisi Kiri: Hasil Foto Frame -->
+        <div class="preview-custom-left">
             <canvas id="result-canvas"></canvas>
-            <div id="sticker-layer"></div>
             <div id="loading-overlay">
                 <div class="spinner"></div>
                 <p style="margin-top:10px; font-weight:bold;">Memproses...</p>
             </div>
         </div>
 
-        <!-- Sisi Kanan: Panel Filter & Pilihan Stiker -->
+        <!-- Sisi Kanan: Panel Edit Foto & Stiker -->
         <div class="preview-custom-right">
-            <div>
-                <div class="sticker-category-title" style="margin-bottom:10px;">Filter Warna</div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="outline" style="padding: 8px 16px; font-size:12px;" onclick="applyFilter('none')">Original</button>
-                    <button class="outline" style="padding: 8px 16px; font-size:12px;" onclick="applyFilter('grayscale(100%)')">Hitam Putih</button>
-                    <button class="outline" style="padding: 8px 16px; font-size:12px;" onclick="applyFilter('sepia(100%)')">Retro</button>
-                </div>
-            </div>
-
-            <hr style="border:0; border-top:1px solid var(--border); margin:4px 0;">
-
-            <div>
-                <div class="sticker-category-title">Tambah Stiker / Emotikon (Klik untuk Tambah)</div>
-                <div class="sticker-grid">
-                    <button class="sticker-item-btn" onclick="addInteractiveSticker('❤️')">❤️</button>
-                    <button class="sticker-item-btn" onclick="addInteractiveSticker('⭐')">⭐</button>
-                    <button class="sticker-item-btn" onclick="addInteractiveSticker('🔥')">🔥</button>
-                    <button class="sticker-item-btn" onclick="addInteractiveSticker('👑')">👑</button>
-                    <button class="sticker-item-btn" onclick="addInteractiveSticker('✨')">✨</button>
-                    <button class="sticker-item-btn" onclick="addInteractiveSticker('🎉')">🎉</button>
-                    <button class="sticker-item-btn" onclick="addInteractiveSticker('😎')">😎</button>
-                    <button class="sticker-item-btn" onclick="addInteractiveSticker('🌸')">🌸</button>
-                </div>
-                <p style="font-size: 11px; color: var(--gray); margin-top: 5px;">*Klik stiker untuk memperbesar (+), memperkecil (-), atau menghapusnya (×).</p>
-            </div>
+            <div class="sticker-category-title">Edit Foto</div>
+            <div class="photo-editor-panel"><div id="photo-editor-selector" class="photo-selector"></div><p class="sticker-editor-help">Pilih foto, lalu <b>tarik langsung</b> pada preview untuk menggeser. Gunakan <b>scroll mouse</b> atau <b>pinch dua jari</b> untuk zoom. Tidak perlu slider.</p><button class="outline" style="width:100%;margin-top:6px" onclick="resetSelectedPhotoTransform()">Reset Posisi Foto</button></div>
+            <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
+            <div class="sticker-category-title">Stiker & Posisi</div><div class="sticker-grid"><button class="sticker-item-btn" onclick="addSticker('❤️')">❤️</button><button class="sticker-item-btn" onclick="addSticker('⭐')">⭐</button><button class="sticker-item-btn" onclick="addSticker('🔥')">🔥</button><button class="sticker-item-btn" onclick="addSticker('👑')">👑</button><button class="sticker-item-btn" onclick="addSticker('✨')">✨</button><button class="sticker-item-btn" onclick="addSticker('🎉')">🎉</button><button class="sticker-item-btn" onclick="addSticker('😎')">😎</button><button class="sticker-item-btn" onclick="addSticker('🌸')">🌸</button></div><div id="custom-sticker-admin" style="display:none;margin-bottom:12px"><input type="file" id="custom-sticker-input" accept="image/png" style="display:none" onchange="handleCustomStickerUpload(this)"><button class="outline" style="width:100%" onclick="document.getElementById('custom-sticker-input').click()">+ Tambah Stiker PNG</button></div><div class="sticker-category-title" style="margin-top:10px">Stiker Tersimpan</div><div id="google-drive-stickers" class="sticker-grid"></div>
+            <div id="sticker-editor-panel" class="sticker-editor-panel" style="display:none;"><div id="sticker-selector" class="sticker-list"></div><div class="editor-row"><label>Ukuran</label><input id="sticker-size" type="range" min="30" max="400" value="90" oninput="updateStickerTransform('size',this.value)"><span id="sticker-size-value" class="editor-value">90</span></div><p class="sticker-editor-help">Pilih stiker. Tarik langsung untuk mengatur posisi dan gunakan scroll/pinch untuk memperbesar atau memperkecil.</p></div>
+            <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
+            <div class="sticker-category-title">Filter Warna</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('none')">Original</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('grayscale(100%)')">Hitam Putih</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('sepia(100%)')">Retro</button></div>
         </div>
 
     </div>
@@ -1662,7 +1593,7 @@
             <div class="result-card-edit">
                 <div>
                     <div class="quick-edit-label">Quick Edit</div>
-                    <div class="quick-edit-heading">Mau menambahkan sesuatu?</div>
+                    <div class="quick-edit-heading">Atur Foto & Stiker</div>
                     <p class="quick-edit-sub">Kamu bisa kasih filter, sticker, atau atur foto dulu.</p>
                 </div>
                 <button class="btn-edit-custom" onclick="nav('preview-screen')">
@@ -1716,6 +1647,7 @@ let capturedImages = [];
 let finalFrameImageObj = null;
 
 let currentCanvasFilter = 'none';
+let photoTransforms = []; let selectedPhotoIndex = 0; let stickers = []; let selectedStickerIndex = -1; let editorDrag = null; let googleDriveStickers = [];
 
 let isTakingPhoto = false;
 
@@ -1761,45 +1693,22 @@ function nav(screenId) {
 ===================================================== */
 
 function continueFromName() {
-
-    const input =
-        document.getElementById(
-            'session-name'
-        );
-
-    const error =
-        document.getElementById(
-            'name-error'
-        );
-
-
-    const value =
-        input.value.trim();
-
-
+    const input = document.getElementById('session-name');
+    const error = document.getElementById('name-error');
+    const value = input.value.trim();
     if (!value) {
-
-        error.style.display =
-            'block';
-
+        error.textContent = 'Silakan masukkan nama terlebih dahulu.';
+        error.style.display = 'block';
         input.focus();
-
         return;
-
     }
-
-
-    error.style.display =
-        'none';
-
-
+    error.style.display = 'none';
     sessionName = value;
-
-
-    nav(
-        'frame-screen'
-    );
-
+    const addFrameContainer = document.getElementById('add-frame-container');
+    if (addFrameContainer) {
+        addFrameContainer.style.display = value.toLowerCase() === 'cekrek' ? 'block' : 'none';
+    }
+    nav('frame-screen');
 }
 
 
@@ -2293,66 +2202,87 @@ async function selectFrame(
 
 
 /* =====================================================
-   CUSTOM FRAME UPLOAD, LOCALSTORAGE, & SCROLL HANDLERS
+   CUSTOM FRAME UPLOAD KE GOOGLE DRIVE
 ===================================================== */
-
-function scrollFrames(distance) {
-    const frameList = document.getElementById('frame-list');
-    frameList.scrollBy({ left: distance, behavior: 'smooth' });
+async function handleCustomFrameUpload(input) {
+    if (!sessionName || sessionName.trim().toLowerCase() !== 'cekrek') {
+        input.value = '';
+        return;
+    }
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (!file.type.startsWith('image/')) {
+        alert('File harus berupa gambar PNG atau JPG.');
+        input.value = '';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const response = await fetch('/upload-frame', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({adminName: sessionName, frameName: file.name, frameData: e.target.result})
+            });
+            const result = await response.json();
+            if (!response.ok || !result.success || !result.frame_url) {
+                throw new Error(result.message || 'Gagal menyimpan frame ke Google Drive.');
+            }
+            await loadFramesFromGoogleDrive();
+        } catch (err) {
+            console.error('Error upload frame:', err);
+            alert('Gagal mengunggah frame: ' + err.message);
+        } finally {
+            input.value = '';
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
-function saveCustomFrameToStorage(dataUrl) {
-    let savedFrames = JSON.parse(localStorage.getItem('custom_frames') || '[]');
-    savedFrames.push(dataUrl);
-    localStorage.setItem('custom_frames', JSON.stringify(savedFrames));
-}
-
-function loadCustomFramesFromStorage() {
-    let savedFrames = JSON.parse(localStorage.getItem('custom_frames') || '[]');
-    const frameList = document.getElementById('frame-list');
-
-    savedFrames.forEach(dataUrl => {
-        const newFrameItem = document.createElement('div');
-        newFrameItem.className = 'frame-item';
-        newFrameItem.style.backgroundImage = `url('${dataUrl}')`;
-        newFrameItem.style.backgroundSize = 'cover';
-        newFrameItem.style.backgroundPosition = 'center';
-        
-        newFrameItem.onclick = function() {
-            selectFrame(this, dataUrl);
-        };
-
-        frameList.appendChild(newFrameItem);
-    });
-}
-
-function handleCustomFrameUpload(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const dataUrl = e.target.result;
-            saveCustomFrameToStorage(dataUrl);
-
-            const frameList = document.getElementById('frame-list');
-            const newFrameItem = document.createElement('div');
-            newFrameItem.className = 'frame-item';
-            newFrameItem.style.backgroundImage = `url('${dataUrl}')`;
-            newFrameItem.style.backgroundSize = 'cover';
-            newFrameItem.style.backgroundPosition = 'center';
-            
-            newFrameItem.onclick = function() {
-                selectFrame(this, dataUrl);
+/* =====================================================
+   LOAD FRAME DARI GOOGLE DRIVE
+===================================================== */
+async function loadFramesFromGoogleDrive() {
+    try {
+        const response = await fetch('/get-frames');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const result = await response.json();
+        if (!result.success || !Array.isArray(result.frames)) {
+            throw new Error(result.message || 'Gagal memuat frame.');
+        }
+        const frameList = document.getElementById('frame-list');
+        if (!frameList) return;
+        frameList.querySelectorAll('.google-drive-frame').forEach(el => el.remove());
+        result.frames.forEach(frame => {
+            if (!frame.url) return;
+            const frameItem = document.createElement('div');
+            frameItem.className = 'frame-item google-drive-frame';
+            frameItem.style.backgroundImage = `url("${frame.url}")`;
+            frameItem.style.backgroundSize = 'cover';
+            frameItem.style.backgroundPosition = 'center';
+            frameItem.title = frame.name || 'Frame';
+            frameItem.onclick = function() {
+                selectFrame(this, frame.url);
             };
-
-            frameList.appendChild(newFrameItem);
-            selectFrame(newFrameItem, dataUrl);
-        };
-        reader.readAsDataURL(input.files[0]);
+            frameList.appendChild(frameItem);
+        });
+    } catch (error) {
+        console.error('Gagal memuat frame dari Google Drive:', error);
     }
 }
 
+/* =====================================================
+   SCROLL FRAME - KIRI / KANAN SIMETRIS
+===================================================== */
+function scrollFrames(amount) {
+    const frameList = document.getElementById('frame-list');
+    if (!frameList) return;
+    frameList.scrollBy({left: amount, behavior: 'smooth'});
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-    loadCustomFramesFromStorage();
+    loadFramesFromGoogleDrive();
+    loadStickersFromGoogleDrive();
 });
 
 
@@ -2492,9 +2422,10 @@ function buildFramePreview() {
         );
 
 
-    slots.innerHTML =
-        '';
-
+    slots.innerHTML = '';
+    photoTransforms = frameHoles.map((_,i) => photoTransforms[i] || {scale:1,x:0,y:0});
+    selectedPhotoIndex = Math.min(selectedPhotoIndex, Math.max(0, frameHoles.length-1));
+    renderPhotoEditorControls();
 
     frameHoles.forEach(
         (
@@ -2759,88 +2690,89 @@ function renderSlot(index) {
    DRAW IMAGE INTO HOLE
 ===================================================== */
 
-function drawImageIntoHole(
-    ctx,
-    image,
-    target
-) {
-
-    const imageRatio =
-        image.width /
-        image.height;
-
-
-    const targetRatio =
-        target.w /
-        target.h;
-
-
-    let sourceWidth =
-        image.width;
-
-
-    let sourceHeight =
-        image.height;
-
-
-    let sourceX = 0;
-
-
-    let sourceY = 0;
-
-
-    if (
-        imageRatio >
-        targetRatio
-    ) {
-
-        sourceWidth =
-            image.height *
-            targetRatio;
-
-
-        sourceX =
-            (
-                image.width -
-                sourceWidth
-            ) / 2;
-
-    } else {
-
-        sourceHeight =
-            image.width /
-            targetRatio;
-
-
-        sourceY =
-            (
-                image.height -
-                sourceHeight
-            ) / 2;
-
-    }
-
-
-    ctx.drawImage(
-
-        image,
-
-        sourceX,
-        sourceY,
-
-        sourceWidth,
-        sourceHeight,
-
-        target.x,
-        target.y,
-
-        target.w,
-        target.h
-
-    );
-
+const editorImageCache={};let editorDrawRAF=0;let editorPointers=new Map();let editorPinchStart=null;
+function getEditorImage(source){if(editorImageCache[source])return Promise.resolve(editorImageCache[source]);return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{editorImageCache[source]=img;resolve(img)};img.onerror=reject;img.src=source})}
+function drawImageIntoHole(ctx,image,target,transform={scale:1,x:0,y:0}){const imageRatio=image.width/image.height,targetRatio=target.w/target.h;let baseW=image.width,baseH=image.height,sourceX=0,sourceY=0;if(imageRatio>targetRatio){baseW=image.height*targetRatio;sourceX=(image.width-baseW)/2}else{baseH=image.width/targetRatio;sourceY=(image.height-baseH)/2}const scale=Math.max(.35,Math.min(4,transform.scale||1)),cropW=baseW/scale,cropH=baseH/scale,maxX=Math.max(0,(baseW-cropW)/2),maxY=Math.max(0,(baseH-cropH)/2),panX=Math.max(-1,Math.min(1,(transform.x||0)/100))*maxX,panY=Math.max(-1,Math.min(1,(transform.y||0)/100))*maxY,sx=sourceX+(baseW-cropW)/2+panX,sy=sourceY+(baseH-cropH)/2+panY;ctx.save();ctx.beginPath();ctx.rect(target.x,target.y,target.w,target.h);ctx.clip();ctx.drawImage(image,sx,sy,cropW,cropH,target.x,target.y,target.w,target.h);ctx.restore()}
+function renderPhotoEditorControls(){const box=document.getElementById('photo-editor-selector');if(!box)return;box.innerHTML='';frameHoles.forEach((_,i)=>{const b=document.createElement('button');b.className='photo-select-btn'+(i===selectedPhotoIndex?' active':'');b.textContent=`Foto ${i+1}`;b.onclick=()=>selectPhotoForEdit(i);box.appendChild(b)});updatePhotoEditorInputs()}
+function selectPhotoForEdit(i){selectedPhotoIndex=i;renderPhotoEditorControls();scheduleEditorDraw()}
+function updatePhotoEditorInputs(){}
+function updatePhotoTransform(type,value){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};const v=Number(value);if(type==='zoom')photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,v/100));else photoTransforms[selectedPhotoIndex][type]=v;scheduleEditorDraw()}
+function resetSelectedPhotoTransform(){photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};scheduleEditorDraw()}
+function addSticker(text){stickers.push({type:'text',text,x:finalFrameImageObj?finalFrameImageObj.width/2:0,y:finalFrameImageObj?finalFrameImageObj.height/2:0,size:90});selectedStickerIndex=stickers.length-1;renderStickerEditor();scheduleEditorDraw()}
+async function handleCustomStickerUpload(input){
+    if(!sessionName||sessionName.trim().toLowerCase()!=='cekrek'){input.value='';return}
+    const file=input.files&&input.files[0];
+    if(!file||file.type!=='image/png'){alert('Pilih file PNG transparan.');input.value='';return}
+    const reader=new FileReader();
+    reader.onload=async e=>{
+        try{
+            const response=await fetch('/upload-sticker',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminName:sessionName,stickerName:file.name,stickerData:e.target.result})});
+            const result=await response.json();
+            if(!response.ok||!result.success||!result.sticker_url)throw new Error(result.message||'Gagal menyimpan stiker ke Google Drive.');
+            await loadStickersFromGoogleDrive();
+            await addImageSticker(result.sticker_url,file.name);
+        }catch(err){
+            console.error('Error upload sticker:',err);
+            alert('Gagal mengunggah stiker: '+err.message);
+        }finally{input.value='';}
+    };
+    reader.readAsDataURL(file);
+}
+async function addImageSticker(url,name='Stiker PNG'){
+    return new Promise((resolve,reject)=>{
+        const img=new Image();
+        img.onload=()=>{
+            const size=Math.min(220,Math.max(80,Math.round(Math.min(img.width,img.height)*0.35)));
+            stickers.push({type:'image',src:url,img,name,x:finalFrameImageObj?finalFrameImageObj.width/2:0,y:finalFrameImageObj?finalFrameImageObj.height/2:0,size});
+            selectedStickerIndex=stickers.length-1;
+            renderStickerEditor();
+            scheduleEditorDraw();
+            resolve();
+        };
+        img.onerror=()=>reject(new Error('Stiker tidak dapat dimuat dari Google Drive.'));
+        img.src=url;
+    });
+}
+async function loadStickersFromGoogleDrive(){
+    try{
+        const response=await fetch('/get-stickers');
+        if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        const result=await response.json();
+        if(!result.success||!Array.isArray(result.stickers))throw new Error(result.message||'Gagal memuat stiker.');
+        googleDriveStickers=result.stickers;
+        const container=document.getElementById('google-drive-stickers');
+        if(!container)return;
+        container.innerHTML='';
+        googleDriveStickers.forEach(sticker=>{
+            const button=document.createElement('button');
+            button.className='sticker-item-btn';
+            button.type='button';
+            button.title=sticker.name||'Stiker PNG';
+            const img=document.createElement('img');
+            img.src=sticker.url;
+            img.alt=sticker.name||'Stiker PNG';
+            img.style.width='55px';
+            img.style.height='55px';
+            img.style.objectFit='contain';
+            img.loading='lazy';
+            button.appendChild(img);
+            button.onclick=()=>addImageSticker(sticker.url,sticker.name);
+            container.appendChild(button);
+        });
+    }catch(error){console.error('Gagal memuat stiker dari Google Drive:',error);}
 }
 
+function renderStickerEditor(){const p=document.getElementById('sticker-editor-panel'),b=document.getElementById('sticker-selector');if(!p||!b)return;p.style.display=stickers.length?'block':'none';b.innerHTML='';stickers.forEach((st,i)=>{const wrap=document.createElement('div');wrap.className='sticker-chip'+(i===selectedStickerIndex?' active':'');const btn=document.createElement('button');btn.className='sticker-chip';btn.style.border='0';btn.style.padding='0';btn.textContent=st.type==='image'?'🖼️':st.text;btn.onclick=()=>{selectedStickerIndex=i;renderStickerEditor();scheduleEditorDraw()};const del=document.createElement('button');del.className='sticker-chip-delete';del.textContent='×';del.title='Hapus stiker';del.onclick=e=>{e.stopPropagation();deleteStickerAt(i)};wrap.appendChild(btn);wrap.appendChild(del);b.appendChild(wrap)});updateStickerInputs()}
+function updateStickerInputs(){const st=stickers[selectedStickerIndex];if(!st)return;const i=document.getElementById('sticker-size'),v=document.getElementById('sticker-size-value');if(i)i.value=Math.round(st.size);if(v)v.textContent=Math.round(st.size)}
+function updateStickerTransform(type,value){const st=stickers[selectedStickerIndex];if(!st)return;st[type]=Number(value);const v=document.getElementById(`sticker-${type}-value`);if(v)v.textContent=Math.round(st[type]);scheduleEditorDraw()}
+function deleteStickerAt(i){stickers.splice(i,1);selectedStickerIndex=stickers.length?Math.min(i,stickers.length-1):-1;renderStickerEditor();scheduleEditorDraw()}
+function deleteSelectedSticker(){if(selectedStickerIndex>=0)deleteStickerAt(selectedStickerIndex)}
+function drawStickers(ctx,showSelection=false){stickers.forEach((st,i)=>{ctx.save();if(st.type==='image'&&st.img){const w=st.size,h=st.size*(st.img.height/st.img.width);ctx.drawImage(st.img,st.x-w/2,st.y-h/2,w,h);if(showSelection&&i===selectedStickerIndex){ctx.strokeStyle='#1976d2';ctx.lineWidth=3;ctx.strokeRect(st.x-w/2-8,st.y-h/2-8,w+16,h+16)}}else{ctx.font=`${st.size}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=5;ctx.fillText(st.text,st.x,st.y);if(showSelection&&i===selectedStickerIndex){const w=ctx.measureText(st.text).width;ctx.shadowBlur=0;ctx.strokeStyle='#1976d2';ctx.lineWidth=3;ctx.strokeRect(st.x-w/2-8,st.y-st.size/2-8,w+16,st.size+16)}}ctx.restore()})}
+function stickerBounds(st){if(st.type==='image'&&st.img){const w=st.size,h=st.size*(st.img.height/st.img.width);return{x:st.x-w/2,y:st.y-h/2,w,h}}return{x:st.x-st.size/2,y:st.y-st.size/2,w:st.size,h:st.size}}
+function pointInSticker(st,p){const b=stickerBounds(st);return p.x>=b.x-15&&p.x<=b.x+b.w+15&&p.y>=b.y-15&&p.y<=b.y+b.h+15}
+function scheduleEditorDraw(){if(editorDrawRAF)return;editorDrawRAF=requestAnimationFrame(()=>{editorDrawRAF=0;drawCanvas(true,'result-canvas')})}
+function editorPoint(c,e){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)}}
+function initPreviewEditorDrag(){const c=document.getElementById('result-canvas');if(!c||c.dataset.editorReady)return;c.dataset.editorReady='1';c.style.touchAction='none';c.addEventListener('pointerdown',e=>{const p=editorPoint(c,e);editorPointers.set(e.pointerId,p);if(editorPointers.size===2){editorDrag=null;const a=[...editorPointers.values()];editorPinchStart={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),scale:photoTransforms[selectedPhotoIndex]?.scale||1};return}if(selectedStickerIndex>=0&&stickers[selectedStickerIndex]&&pointInSticker(stickers[selectedStickerIndex],p)){const st=stickers[selectedStickerIndex];editorDrag={type:'sticker',sx:p.x,sy:p.y,ox:st.x,oy:st.y,os:st.size};c.setPointerCapture(e.pointerId);c.classList.add('dragging');return}if(frameHoles[selectedPhotoIndex]&&capturedImages[selectedPhotoIndex]){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};editorDrag={type:'photo',sx:p.x,sy:p.y,ox:photoTransforms[selectedPhotoIndex].x,oy:photoTransforms[selectedPhotoIndex].y};c.setPointerCapture(e.pointerId);c.classList.add('dragging')}});c.addEventListener('pointermove',e=>{const p=editorPoint(c,e);if(editorPointers.has(e.pointerId))editorPointers.set(e.pointerId,p);if(editorPointers.size===2){const a=[...editorPointers.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(editorPinchStart){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,editorPinchStart.scale*(d/editorPinchStart.distance)));scheduleEditorDraw()}return}if(!editorDrag)return;const dx=p.x-editorDrag.sx,dy=p.y-editorDrag.sy;if(editorDrag.type==='sticker'){const st=stickers[selectedStickerIndex];st.x=Math.max(0,Math.min(c.width,editorDrag.ox+dx));st.y=Math.max(0,Math.min(c.height,editorDrag.oy+dy));}else{const t=photoTransforms[selectedPhotoIndex];t.x=Math.max(-100,Math.min(100,editorDrag.ox+dx*100/c.width));t.y=Math.max(-100,Math.min(100,editorDrag.oy+dy*100/c.height));}scheduleEditorDraw()});const end=e=>{editorPointers.delete(e.pointerId);if(editorPointers.size<2)editorPinchStart=null;editorDrag=null;c.classList.remove('dragging')};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('wheel',e=>{if(!frameHoles[selectedPhotoIndex]||!capturedImages[selectedPhotoIndex])return;e.preventDefault();if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,photoTransforms[selectedPhotoIndex].scale*(e.deltaY<0?1.08:.925)));scheduleEditorDraw()},{passive:false})}
 
 /* =====================================================
    MIRROR
@@ -3169,10 +3101,14 @@ function captureFrame(
 
 
 /* =====================================================
-   LOAD PREVIEW & INTERAKTIF STIKER BEBAS KEDIP-KEDIP
+   LOAD PREVIEW
 ===================================================== */
 
+function updateStickerAdminAccess(){const el=document.getElementById('custom-sticker-admin');if(el)el.style.display=sessionName&&sessionName.trim().toLowerCase()==='cekrek'?'block':'none'}
 function loadPreview() {
+
+    updateStickerAdminAccess();
+    loadStickersFromGoogleDrive();
 
     if (stream) {
 
@@ -3204,102 +3140,6 @@ function loadPreview() {
     );
 
 }
-
-function addInteractiveSticker(emoji) {
-    const layer = document.getElementById('sticker-layer');
-    if (!layer) return;
-
-    const sticker = document.createElement('div');
-    sticker.className = 'draggable-sticker';
-    sticker.innerText = emoji;
-    
-    let posX = layer.clientWidth / 2 - 20;
-    let posY = layer.clientHeight / 2 - 20;
-    let currentScale = 1;
-
-    sticker.style.transform = `translate3d(${posX}px, ${posY}px, 0px) scale(${currentScale})`;
-
-    const controls = document.createElement('div');
-    controls.className = 'sticker-controls';
-    
-    const btnZoomIn = document.createElement('button');
-    btnZoomIn.className = 'sticker-ctrl-btn';
-    btnZoomIn.innerText = '+';
-    btnZoomIn.onclick = (e) => {
-        e.stopPropagation();
-        currentScale += 0.2;
-        sticker.style.transform = `translate3d(${posX}px, ${posY}px, 0px) scale(${currentScale})`;
-    };
-
-    const btnZoomOut = document.createElement('button');
-    btnZoomOut.className = 'sticker-ctrl-btn';
-    btnZoomOut.innerText = '-';
-    btnZoomOut.onclick = (e) => {
-        e.stopPropagation();
-        if (currentScale > 0.4) currentScale -= 0.2;
-        sticker.style.transform = `translate3d(${posX}px, ${posY}px, 0px) scale(${currentScale})`;
-    };
-
-    const btnDelete = document.createElement('button');
-    btnDelete.className = 'sticker-ctrl-btn delete';
-    btnDelete.innerText = '×';
-    btnDelete.onclick = (e) => {
-        e.stopPropagation();
-        sticker.remove();
-    };
-
-    controls.appendChild(btnZoomIn);
-    controls.appendChild(btnZoomOut);
-    controls.appendChild(btnDelete);
-    sticker.appendChild(controls);
-
-    sticker.onclick = (e) => {
-        e.stopPropagation();
-        document.querySelectorAll('.draggable-sticker').forEach(s => s.classList.remove('selected'));
-        sticker.classList.add('selected');
-    };
-
-    let isDragging = false;
-    let startX, startY;
-
-    sticker.onpointerdown = (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        sticker.setPointerCapture(e.pointerId);
-        
-        document.querySelectorAll('.draggable-sticker').forEach(s => s.classList.remove('selected'));
-        sticker.classList.add('selected');
-    };
-
-    sticker.onpointermove = (e) => {
-        if (!isDragging) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        
-        posX += dx;
-        posY += dy;
-        startX = e.clientX;
-        startY = e.clientY;
-
-        sticker.style.transform = `translate3d(${posX}px, ${posY}px, 0px) scale(${currentScale})`;
-    };
-
-    sticker.onpointerup = (e) => {
-        isDragging = false;
-        sticker.releasePointerCapture(e.pointerId);
-    };
-
-    layer.appendChild(sticker);
-    document.querySelectorAll('.draggable-sticker').forEach(s => s.classList.remove('selected'));
-    sticker.classList.add('selected');
-}
-
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.draggable-sticker')) {
-        document.querySelectorAll('.draggable-sticker').forEach(s => s.classList.remove('selected'));
-    }
-});
 
 
 /* =====================================================
@@ -3402,43 +3242,7 @@ async function drawCanvas(
                         }
 
 
-                        const image =
-                            new Image();
-
-
-                        image.onload =
-                            () => {
-
-                                const hole =
-                                    frameHoles[
-                                        index
-                                    ];
-
-
-                                if (
-                                    hole
-                                ) {
-
-                                    drawImageIntoHole(
-
-                                        ctx,
-
-                                        image,
-
-                                        hole
-
-                                    );
-
-                                }
-
-
-                                resolve();
-
-                            };
-
-
-                        image.src =
-                            source;
+                        getEditorImage(source).then(image=>{const hole=frameHoles[index];if(hole)drawImageIntoHole(ctx,image,hole,photoTransforms[index]||{scale:1,x:0,y:0});resolve()}).catch(()=>resolve());
 
                     }
                 );
@@ -3460,20 +3264,10 @@ async function drawCanvas(
             'none';
 
 
-        ctx.drawImage(
-
-            finalFrameImageObj,
-
-            0,
-            0,
-
-            canvas.width,
-            canvas.height
-
-        );
-
+        ctx.drawImage(finalFrameImageObj,0,0,canvas.width,canvas.height);
     }
-
+    drawStickers(ctx,canvasId==='result-canvas');
+    if(canvasId==='result-canvas') initPreviewEditorDrag();
 }
 
 
