@@ -2230,68 +2230,230 @@ async function selectFrame(
    CUSTOM FRAME UPLOAD KE GOOGLE DRIVE & LOCAL
 ===================================================== */
 
+/* =====================================================
+   CUSTOM FRAME - GOOGLE DRIVE
+===================================================== */
+
 async function handleCustomFrameUpload(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const reader = new FileReader();
-        
-        reader.onload = async function(e) {
-            const base64Data = e.target.result;
 
-            try {
-                // Tampilkan indikator loading sederhana jika diperlukan
-                console.log("Mengunggah frame ke Google Drive...");
+    if (!input.files || !input.files[0]) {
+        return;
+    }
 
-                const response = await fetch('/upload-frame', {
+    const file = input.files[0];
+
+    // Validasi file
+    if (!file.type.startsWith('image/')) {
+        alert('File harus berupa gambar.');
+        input.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = async function(e) {
+
+        const base64Data = e.target.result;
+
+        try {
+
+            console.log(
+                'Mengunggah frame ke Google Drive...'
+            );
+
+            const response = await fetch(
+                '/upload-frame',
+                {
                     method: 'POST',
+
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type':
+                            'application/json'
                     },
+
                     body: JSON.stringify({
                         frameName: file.name,
                         frameData: base64Data
                     })
-                });
+                }
+            );
 
-                const result = await response.json();
+            const result =
+                await response.json();
 
-                if (result.success && result.frame_url) {
-                    const frameUrl = result.frame_url;
-                    
-                    // Simpan ke localStorage juga sebagai cadangan agar langsung tampil cepat
-                    saveCustomFrameToStorage(frameUrl);
+            if (
+                !response.ok ||
+                !result.success
+            ) {
 
-                    const frameList = document.getElementById('frame-list');
-                    const newFrameItem = document.createElement('div');
-                    newFrameItem.className = 'frame-item';
-                    newFrameItem.style.backgroundImage = `url('${frameUrl}')`;
-                    newFrameItem.style.backgroundSize = 'cover';
-                    newFrameItem.style.backgroundPosition = 'center';
-                    
-                    newFrameItem.onclick = function() {
-                        selectFrame(this, frameUrl);
+                throw new Error(
+                    result.message ||
+                    'Gagal mengunggah frame'
+                );
+            }
+
+            console.log(
+                'Frame berhasil diupload:',
+                result.frame_url
+            );
+
+            // Muat ulang frame dari Google Drive
+            await loadFramesFromGoogleDrive();
+
+            alert(
+                'Frame berhasil disimpan ke Google Drive!'
+            );
+
+        } catch (error) {
+
+            console.error(
+                'Error upload frame:',
+                error
+            );
+
+            alert(
+                'Gagal mengunggah frame:\n' +
+                error.message
+            );
+
+        } finally {
+
+            input.value = '';
+
+        }
+    };
+
+    reader.readAsDataURL(file);
+}
+
+
+/* =====================================================
+   LOAD FRAME DARI GOOGLE DRIVE
+===================================================== */
+
+async function loadFramesFromGoogleDrive() {
+
+    try {
+
+        const response =
+            await fetch('/get-frames');
+
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+        const result =
+            await response.json();
+
+        if (!result.success) {
+            throw new Error(
+                result.message ||
+                'Gagal memuat frame'
+            );
+        }
+
+        const frameList =
+            document.getElementById(
+                'frame-list'
+            );
+
+        if (!frameList) {
+            console.error(
+                'frame-list tidak ditemukan'
+            );
+            return;
+        }
+
+
+        // Hapus frame Google Drive
+        // yang sebelumnya sudah dimuat
+        frameList
+            .querySelectorAll(
+                '.google-drive-frame'
+            )
+            .forEach(
+                element => element.remove()
+            );
+
+
+        // Tambahkan frame dari Google Drive
+        result.frames.forEach(
+            frame => {
+
+                const frameItem =
+                    document.createElement(
+                        'div'
+                    );
+
+                frameItem.className =
+                    'frame-item google-drive-frame';
+
+
+                frameItem.style.backgroundImage =
+                    `url("${frame.url}")`;
+
+
+                frameItem.style.backgroundSize =
+                    'cover';
+
+
+                frameItem.style.backgroundPosition =
+                    'center';
+
+
+                frameItem.title =
+                    frame.name;
+
+
+                frameItem.onclick =
+                    function() {
+
+                        selectFrame(
+                            this,
+                            frame.url
+                        );
+
                     };
 
-                    frameList.appendChild(newFrameItem);
-                    selectFrame(newFrameItem, frameUrl);
-                    alert('Frame berhasil disimpan permanen ke Google Drive!');
-                } else {
-                    alert('Gagal menyimpan frame ke Google Drive: ' + (result.message || 'Error tidak diketahui'));
-                }
-            } catch (err) {
-                console.error('Error upload frame:', err);
-                alert('Terjadi kesalahan koneksi saat mengunggah frame ke server.');
+
+                frameList.appendChild(
+                    frameItem
+                );
+
             }
-        };
-        
-        reader.readAsDataURL(file);
+        );
+
+
+        console.log(
+            `${result.frames.length} frame dari Google Drive berhasil dimuat`
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            'Gagal memuat frame Google Drive:',
+            error
+        );
+
     }
 }
 
-// Muat frame tersimpan otomatis saat halaman pertama kali dimuat
-window.addEventListener('DOMContentLoaded', () => {
-    loadCustomFramesFromStorage();
-});
+
+/* =====================================================
+   LOAD FRAME SAAT WEBSITE DIBUKA
+===================================================== */
+
+window.addEventListener(
+    'DOMContentLoaded',
+    function() {
+
+        loadFramesFromGoogleDrive();
+
+    }
+);
 
 
 /* =====================================================
