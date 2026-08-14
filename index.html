@@ -1228,7 +1228,13 @@
 .sticker-scroll-box{max-height:180px;overflow-y:auto;overflow-x:hidden;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:4px;align-content:start;overscroll-behavior:contain;}
 .sticker-scroll-box::-webkit-scrollbar{width:6px}.sticker-scroll-box::-webkit-scrollbar-thumb{background:#bbb;border-radius:8px}
 #sticker-editor-panel{display:none!important}
-</style></head>
+</style>
+<style>
+.switch{position:relative;width:46px;height:26px;display:inline-block;flex:0 0 auto}.switch input{opacity:0;width:0;height:0}.switch-slider{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;cursor:pointer;transition:.2s}.switch-slider:before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,.2);transition:.2s}.switch input:checked+.switch-slider{background:var(--blue)}.switch input:checked+.switch-slider:before{transform:translateX(20px)}
+.filters-carousel{justify-content:flex-start;overflow-x:auto;scrollbar-width:thin}.filter-thumb-item{flex:0 0 58px;opacity:.72;border:2px solid transparent;border-radius:10px}.filter-thumb-item.active{opacity:1;border-color:var(--blue);background:#eaf4ff}.filter-thumb-placeholder{position:relative;overflow:hidden;background:linear-gradient(135deg,#ddd,#fff)}.filter-bw{filter:grayscale(1);background:linear-gradient(135deg,#111,#eee)}.filter-retro{filter:sepia(.9) saturate(1.3);background:linear-gradient(135deg,#b5651d,#f2c078)}.filter-vintage{filter:sepia(.35) contrast(.9) brightness(1.05);background:linear-gradient(135deg,#caa27c,#eee)}.filter-warm{filter:saturate(1.25) sepia(.15);background:linear-gradient(135deg,#ff9b5e,#ffe1b5)}.filter-cool{filter:saturate(.9) hue-rotate(12deg);background:linear-gradient(135deg,#75b7e8,#d9f0ff)}.filter-vivid{filter:saturate(1.8) contrast(1.08);background:linear-gradient(135deg,#ff3d71,#4bc0ff)}.filter-fade{filter:contrast(.82) brightness(1.12) saturate(.7);background:linear-gradient(135deg,#eee,#cdd)}.filter-noir{filter:grayscale(1) contrast(1.45);background:linear-gradient(135deg,#000,#aaa)}.filter-dreamy{filter:brightness(1.08) saturate(.8) contrast(.9);background:linear-gradient(135deg,#ffcce8,#d8f2ff)}.filter-dramatic{filter:contrast(1.35) saturate(1.15);background:linear-gradient(135deg,#222,#d33)}.filter-fisheye{background:radial-gradient(circle,#ddd 35%,#777 100%);border-radius:50%}
+#camera-feed.filter-fisheye{border-radius:50%;transform:scale(.92) !important;object-fit:cover;box-shadow:0 0 0 9999px #000}
+</style>
+</head>
 
 
 <body>
@@ -1418,7 +1424,7 @@
 
             <div class="setting-toggle-row">
                 <span class="setting-label" style="margin:0;">🪞 Mirror</span>
-                <input type="checkbox" id="mirror-toggle" checked onchange="toggleMirrorCheckbox(this)" style="width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer;">
+                <label class="switch"><input type="checkbox" id="mirror-toggle" checked onchange="toggleMirrorCheckbox(this)"><span class="switch-slider"></span></label>
             </div>
 
             <button
@@ -1449,19 +1455,19 @@
                 <div id="flash" class="flash"></div>
             </div>
 
-            <div class="filters-carousel">
-                <button class="filter-thumb-item" onclick="applyFilter('none')">
-                    <div class="filter-thumb-placeholder" style="background:#ddd;"></div>
-                    <span>Original</span>
-                </button>
-                <button class="filter-thumb-item" onclick="applyFilter('grayscale(100%)')">
-                    <div class="filter-thumb-placeholder" style="background:#666;"></div>
-                    <span>B & W</span>
-                </button>
-                <button class="filter-thumb-item" onclick="applyFilter('sepia(100%)')">
-                    <div class="filter-thumb-placeholder" style="background:#b5651d;"></div>
-                    <span>Retro</span>
-                </button>
+            <div class="filters-carousel" id="camera-filters">
+                <button class="filter-thumb-item active" onclick="applyFilterPreset('none')"><div class="filter-thumb-placeholder filter-original"></div><span>Original</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('bw')"><div class="filter-thumb-placeholder filter-bw"></div><span>B&W</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('retro')"><div class="filter-thumb-placeholder filter-retro"></div><span>Retro</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('vintage')"><div class="filter-thumb-placeholder filter-vintage"></div><span>Vintage</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('warm')"><div class="filter-thumb-placeholder filter-warm"></div><span>Warm</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('cool')"><div class="filter-thumb-placeholder filter-cool"></div><span>Cool</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('vivid')"><div class="filter-thumb-placeholder filter-vivid"></div><span>Vivid</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('fade')"><div class="filter-thumb-placeholder filter-fade"></div><span>Fade</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('noir')"><div class="filter-thumb-placeholder filter-noir"></div><span>Noir</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('dreamy')"><div class="filter-thumb-placeholder filter-dreamy"></div><span>Dreamy</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('dramatic')"><div class="filter-thumb-placeholder filter-dramatic"></div><span>Dramatic</span></button>
+                <button class="filter-thumb-item" onclick="applyFilterPreset('fisheye')"><div class="filter-thumb-placeholder filter-fisheye"></div><span>Fish Eye</span></button>
             </div>
         </div>
 
@@ -1667,6 +1673,8 @@ let capturedImages = [];
 let finalFrameImageObj = null;
 
 let currentCanvasFilter = 'none';
+let currentFilterKey = 'none';
+let captureDelay = 3;
 let photoTransforms = []; let selectedPhotoIndex = 0; let stickers = []; let selectedStickerIndex = -1; let editorDrag = null; let googleDriveStickers = [];
 let editorSelection = null; // {type:'photo'|'sticker', index:number}
 let editorResize = null;
@@ -2832,14 +2840,43 @@ function toggleMirror() {
 
 function toggleMirrorCheckbox(checkbox) {
     isMirrored = checkbox.checked;
-    document.getElementById('camera-feed').style.transform = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+    updateCameraPreviewFilter();
 }
 
 function setDelay(seconds) {
-    document.querySelectorAll('.camera-settings-panel .setting-buttons button').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
+    captureDelay = Number(seconds) || 3;
+    document.querySelectorAll('.camera-settings-panel .setting-buttons button').forEach(btn => btn.classList.remove('active'));
+    const buttons = document.querySelectorAll('.camera-settings-panel .setting-buttons button');
+    buttons.forEach(btn => { if (btn.textContent.trim() === `${captureDelay}s`) btn.classList.add('active'); });
+}
+
+const FILTER_PRESETS = {
+    none:{css:'none'}, bw:{css:'grayscale(1) contrast(1.05)'}, retro:{css:'sepia(.8) saturate(1.35) contrast(1.05)'},
+    vintage:{css:'sepia(.3) saturate(.85) contrast(.92) brightness(1.06)'}, warm:{css:'sepia(.16) saturate(1.35) contrast(1.04) brightness(1.04)'},
+    cool:{css:'saturate(.9) hue-rotate(12deg) contrast(1.03)'}, vivid:{css:'saturate(1.75) contrast(1.1)'},
+    fade:{css:'contrast(.82) brightness(1.12) saturate(.7)'}, noir:{css:'grayscale(1) contrast(1.45)'},
+    dreamy:{css:'brightness(1.08) saturate(.8) contrast(.9)'}, dramatic:{css:'contrast(1.4) saturate(1.15)'}, fisheye:{css:'none'}
+};
+
+function applyFilterPreset(key){
+    currentFilterKey=key;
+    currentCanvasFilter=FILTER_PRESETS[key]?.css || 'none';
+    document.querySelectorAll('#camera-filters .filter-thumb-item').forEach(b=>b.classList.remove('active'));
+    const buttons=[...document.querySelectorAll('#camera-filters .filter-thumb-item')];
+    const keys=Object.keys(FILTER_PRESETS); const idx=keys.indexOf(key); if(buttons[idx]) buttons[idx].classList.add('active');
+    updateCameraPreviewFilter();
+    drawCanvas(true,'result-canvas'); drawCanvas(true,'final-preview-canvas');
+}
+function applyFilter(filterCss){
+    const key=Object.keys(FILTER_PRESETS).find(k=>FILTER_PRESETS[k].css===filterCss)||'none';
+    applyFilterPreset(key);
+}
+function updateCameraPreviewFilter(){
+    const video=document.getElementById('camera-feed'); if(!video)return;
+    const mirror=isMirrored?'scaleX(-1)':'scaleX(1)';
+    if(currentFilterKey==='fisheye') video.style.transform=mirror+' scale(.92)';
+    else video.style.transform=mirror;
+    video.style.filter=currentCanvasFilter;
 }
 
 
@@ -2976,7 +3013,7 @@ function runCountdown() {
     return new Promise(
         resolve => {
 
-            let count = 3;
+            let count = Math.max(1, captureDelay);
 
 
             const countdown =
@@ -3042,7 +3079,7 @@ function runCountdown() {
                         }
 
                     },
-                    700
+                    1000
                 );
 
         }
@@ -3093,7 +3130,6 @@ function captureFrame(
         canvas.getContext(
             '2d'
         );
-
 
     if (
         isMirrored
