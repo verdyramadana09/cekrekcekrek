@@ -1387,6 +1387,12 @@
 #sticker-selector{max-height:110px;overflow-y:auto;overflow-x:hidden}
 @media(max-width:700px){.screen:not(#start-screen)::before{inset:6px;border-radius:22px}.filters-carousel{justify-content:flex-start}.filter-thumb-item{min-width:54px}.camera-settings-panel{height:auto}}
 </style>
+
+<style>
+#result-canvas{overflow:visible !important;position:relative;z-index:2;touch-action:none;-webkit-user-select:none;user-select:none;}
+.preview-custom-left{overflow:visible !important;}
+#result-canvas.dragging{cursor:grabbing !important;}
+</style>
 </head>
 
 
@@ -3076,7 +3082,7 @@ function selectPhotoForEdit(i){selectedPhotoIndex=i;renderPhotoEditorControls();
 function updatePhotoEditorInputs(){}
 function updatePhotoTransform(type,value){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};const v=Number(value);if(type==='zoom')photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,v/100));else photoTransforms[selectedPhotoIndex][type]=v;scheduleEditorDraw()}
 function resetSelectedPhotoTransform(){photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};scheduleEditorDraw()}
-function addSticker(text){stickers.push({type:'text',text,x:finalFrameImageObj?finalFrameImageObj.width/2:0,y:finalFrameImageObj?finalFrameImageObj.height/2:0,size:90});selectedStickerIndex=stickers.length-1;renderStickerEditor();scheduleEditorDraw()}
+function addSticker(text){stickers.push({type:'text',text,x:finalFrameImageObj?finalFrameImageObj.width/2:0,y:finalFrameImageObj?finalFrameImageObj.height/2:0,size:90,rotation:0});selectedStickerIndex=stickers.length-1;selectedEditorType='sticker';selectedEditorIndex=selectedStickerIndex;renderStickerEditor();scheduleEditorDraw()}
 async function handleCustomStickerUpload(input){
     if(!sessionName||sessionName.trim().toLowerCase()!=='cekrek'){input.value='';return}
     const file=input.files&&input.files[0];
@@ -4204,89 +4210,298 @@ window.addEventListener('load',()=>{
 });
 </script>
 <script>
-/* FINAL ROTATION / MOVE / DELETE / RESIZE IMPLEMENTATION */
-window.drawImageIntoHole=function(ctx,image,target,transform={scale:1,x:0,y:0,rotation:0}){
-    const imageRatio=image.width/image.height,targetRatio=target.w/target.h;
-    let baseW=image.width,baseH=image.height,sourceX=0,sourceY=0;
-    if(imageRatio>targetRatio){baseW=image.height*targetRatio;sourceX=(image.width-baseW)/2}
-    else{baseH=image.width/targetRatio;sourceY=(image.height-baseH)/2}
-    const scale=Math.max(.35,Math.min(4,transform.scale||1));
-    const cropW=baseW/scale,cropH=baseH/scale;
-    const maxX=Math.max(0,(baseW-cropW)/2),maxY=Math.max(0,(baseH-cropH)/2);
-    const panX=Math.max(-1,Math.min(1,(transform.x||0)/100))*maxX;
-    const panY=Math.max(-1,Math.min(1,(transform.y||0)/100))*maxY;
-    const sx=sourceX+(baseW-cropW)/2+panX,sy=sourceY+(baseH-cropH)/2+panY;
-    ctx.save();
-    ctx.beginPath();ctx.rect(target.x,target.y,target.w,target.h);ctx.clip();
-    ctx.translate(target.x+target.w/2,target.y+target.h/2);
-    ctx.rotate((transform.rotation||0)*Math.PI/180);
-    ctx.drawImage(image,sx,sy,cropW,cropH,-target.w/2,-target.h/2,target.w,target.h);
-    ctx.restore();
-};
-window.drawStickers=function(ctx,showSelection=false){
-    stickers.forEach((st,i)=>{
-        ctx.save();
-        const b=stickerBounds(st);
-        ctx.translate(st.x,st.y);
-        ctx.rotate((st.rotation||0)*Math.PI/180);
-        if(st.type==='image'&&st.img){
-            const w=st.size,h=st.size*(st.img.height/st.img.width);ctx.drawImage(st.img,-w/2,-h/2,w,h);
-        }else{
-            ctx.font=`${st.size}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=5;ctx.fillText(st.text,0,0);
-        }
-        ctx.restore();
-    });
-    if(showSelection)drawEditorOverlay(ctx);
-};
+/* =====================================================
+   FINAL EDITOR PATCH — ROBUST PHOTO + STICKER BOUNDING BOX
+   - Sticker selection is explicit.
+   - Rotate / delete / resize handles are clickable.
+   - Handles stay inside the canvas area.
+   - Pointer/touch/mouse all use the same editor.
+===================================================== */
+(function(){
+    function ensureTransform(i){
+        if(!photoTransforms[i]) photoTransforms[i]={scale:1,x:0,y:0,rotation:0};
+        return photoTransforms[i];
+    }
 
-/* Replace editor pointer behavior with correct percentage-based photo movement. */
-const oldInitEditor=initPreviewEditorDrag;
-initPreviewEditorDrag=function(){
-    const c=document.getElementById('result-canvas');if(!c||c.dataset.boundingEditorV2==='1')return;
-    c.dataset.boundingEditorV2='1';c.style.touchAction='none';
-    c.addEventListener('pointerdown',e=>{
-        const p=editorPoint(c,e),hit=editorHit(p);if(!hit)return;
-        selectedEditorType=hit.type;selectedEditorIndex=hit.index;
-        selectedPhotoIndex=hit.type==='photo'?hit.index:selectedPhotoIndex;
-        selectedStickerIndex=hit.type==='sticker'?hit.index:selectedStickerIndex;
-        const controls=controlHit(p,hit.b);
-        if(controls.delete){
-            if(hit.type==='sticker')deleteStickerAt(hit.index);
-            else {capturedImages[hit.index]=null;photoTransforms[hit.index]={scale:1,x:0,y:0,rotation:0};renderSlot(hit.index)}
-            scheduleEditorDraw();return;
+    function stickerVisualBounds(st){
+        const b=stickerBounds(st);
+        const pad=10;
+        return {x:b.x-pad,y:b.y-pad,w:b.w+pad*2,h:b.h+pad*2};
+    }
+
+    function editorControlPoints(b){
+        /* All controls are INSIDE the bounding box so they cannot be clipped
+           and are easy to hit on desktop and touch screens. */
+        return {
+            rotate:{x:b.x+24,y:b.y+24},
+            delete:{x:b.x+b.w-24,y:b.y+24},
+            resize:{x:b.x+b.w-24,y:b.y+b.h-24}
+        };
+    }
+
+    function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+
+    function hitControl(p,b){
+        if(!b) return null;
+        const c=editorControlPoints(b),r=30;
+        if(distance(p,c.rotate)<=r) return 'rotate';
+        if(distance(p,c.delete)<=r) return 'delete';
+        if(distance(p,c.resize)<=r) return 'resize';
+        return null;
+    }
+
+    function editorBoundsForPhoto(i){
+        const h=frameHoles[i];
+        return h ? {x:h.x,y:h.y,w:h.w,h:h.h} : null;
+    }
+    function editorBoundsForSticker(st){return stickerVisualBounds(st)}
+
+    function editorHit(p){
+        /* Controls must be checked before normal object bounds. */
+        for(let i=stickers.length-1;i>=0;i--){
+            const b=editorBoundsForSticker(stickers[i]);
+            if(!b) continue;
+            if(hitControl(p,b)) return {type:'sticker',index:i,b,control:hitControl(p,b)};
+            if(p.x>=b.x-8&&p.x<=b.x+b.w+8&&p.y>=b.y-8&&p.y<=b.y+b.h+8)
+                return {type:'sticker',index:i,b,control:null};
         }
-        if(controls.rotate){
-            if(hit.type==='sticker')stickers[hit.index].rotation=(stickers[hit.index].rotation||0)+15;
-            else {const t=photoTransforms[hit.index]||(photoTransforms[hit.index]={scale:1,x:0,y:0,rotation:0});t.rotation=(t.rotation||0)+15}
-            scheduleEditorDraw();return;
+        for(let i=frameHoles.length-1;i>=0;i--){
+            if(!capturedImages[i]) continue;
+            const b=editorBoundsForPhoto(i);
+            if(!b) continue;
+            if(hitControl(p,b)) return {type:'photo',index:i,b,control:hitControl(p,b)};
+            if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)
+                return {type:'photo',index:i,b,control:null};
         }
-        editorMode=controls.resize?'resize':'move';
-        editorStart={p,b,type:hit.type,index:hit.index,baseSize:hit.type==='sticker'?stickers[hit.index].size:((photoTransforms[hit.index]||{scale:1}).scale||1),ox:hit.type==='sticker'?stickers[hit.index].x:((photoTransforms[hit.index]||{x:0}).x||0),oy:hit.type==='sticker'?stickers[hit.index].y:((photoTransforms[hit.index]||{y:0}).y||0)};
-        c.setPointerCapture(e.pointerId);c.classList.add('dragging');scheduleEditorDraw();
-    });
-    c.addEventListener('pointermove',e=>{
-        if(!editorMode||!editorStart)return;const p=editorPoint(c,e),d=editorStart;
-        if(d.type==='sticker'){
-            const st=stickers[d.index];if(!st)return;
-            if(editorMode==='move'){st.x=d.ox+p.x-d.p.x;st.y=d.oy+p.y-d.p.y}
-            else {const delta=(p.x-d.p.x+p.y-d.p.y)/2;st.size=Math.max(30,Math.min(600,d.baseSize+delta))}
-        }else{
-            const t=photoTransforms[d.index]||(photoTransforms[d.index]={scale:1,x:0,y:0,rotation:0});
-            if(editorMode==='move'){
-                const hole=frameHoles[d.index];
-                if(hole){t.x=Math.max(-100,Math.min(100,d.ox+(p.x-d.p.x)/hole.w*100));t.y=Math.max(-100,Math.min(100,d.oy+(p.y-d.p.y)/hole.h*100))}
-            }else{t.scale=Math.max(.35,Math.min(4,d.baseSize+(p.x-d.p.x)/Math.max(100,d.b.w)))}
-        }
+        return null;
+    }
+
+    function drawEditorOverlay(ctx){
+        let b=null;
+        if(selectedEditorType==='sticker' && stickers[selectedEditorIndex]) b=editorBoundsForSticker(stickers[selectedEditorIndex]);
+        if(selectedEditorType==='photo' && capturedImages[selectedEditorIndex]) b=editorBoundsForPhoto(selectedEditorIndex);
+        if(!b) return;
+
+        const c=editorControlPoints(b);
+        ctx.save();
+
+        /* Bounding box */
+        ctx.lineWidth=4;
+        ctx.strokeStyle='#0878e8';
+        ctx.setLineDash([10,6]);
+        ctx.strokeRect(b.x,b.y,b.w,b.h);
+        ctx.setLineDash([]);
+
+        /* Corner anchors */
+        const corners=[
+            [b.x,b.y],[b.x+b.w,b.y],[b.x,b.y+b.h],[b.x+b.w,b.y+b.h]
+        ];
+        ctx.fillStyle='#fff';
+        ctx.strokeStyle='#0878e8';
+        ctx.lineWidth=3;
+        corners.forEach(([x,y])=>{
+            ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.fill();ctx.stroke();
+        });
+
+        /* Controls */
+        const controls=[
+            {p:c.rotate,label:'↻',title:'Putar'},
+            {p:c.delete,label:'×',title:'Hapus'},
+            {p:c.resize,label:'↘',title:'Ukuran'}
+        ];
+        controls.forEach(item=>{
+            ctx.beginPath();
+            ctx.fillStyle='#fff';
+            ctx.strokeStyle='#0878e8';
+            ctx.lineWidth=3;
+            ctx.arc(item.p.x,item.p.y,20,0,Math.PI*2);
+            ctx.fill();ctx.stroke();
+            ctx.fillStyle='#0878e8';
+            ctx.font='bold 20px Arial';
+            ctx.textAlign='center';ctx.textBaseline='middle';
+            ctx.fillText(item.label,item.p.x,item.p.y+1);
+        });
+
+        /* Small label makes the active object obvious. */
+        ctx.font='bold 16px Arial';
+        ctx.textAlign='left';ctx.textBaseline='bottom';
+        const label=selectedEditorType==='sticker'?'STIKER':'FOTO '+(selectedEditorIndex+1);
+        const lw=ctx.measureText(label).width+16;
+        ctx.fillStyle='rgba(8,120,232,.92)';
+        ctx.fillRect(b.x,b.y-28,lw,26);
+        ctx.fillStyle='#fff';ctx.fillText(label,b.x+8,b.y-7);
+        ctx.restore();
+    }
+
+    window.drawEditorOverlay=drawEditorOverlay;
+    window.editorHit=editorHit;
+    window.controlHit=hitControl;
+    window.editorBoundsForSticker=editorBoundsForSticker;
+    window.editorBoundsForPhoto=editorBoundsForPhoto;
+
+    /* Ensure every new sticker becomes the active editor object. */
+    const oldAddSticker=window.addSticker;
+    if(typeof oldAddSticker==='function'){
+        window.addSticker=function(text){
+            oldAddSticker(text);
+            selectedStickerIndex=stickers.length-1;
+            selectedEditorType='sticker';
+            selectedEditorIndex=selectedStickerIndex;
+            renderStickerEditor();
+            scheduleEditorDraw();
+        };
+    }
+
+    /* Rebuild editor listener once, avoiding all previous duplicate listeners. */
+    function installEditor(){
+        const c=document.getElementById('result-canvas');
+        if(!c || c.dataset.finalEditorInstalled==='1') return;
+        c.dataset.finalEditorInstalled='1';
+        c.style.touchAction='none';
+        c.style.cursor='default';
+
+        const finish=()=>{editorMode=null;editorStart=null;c.classList.remove('dragging')};
+
+        c.addEventListener('pointerdown',e=>{
+            const p=editorPoint(c,e),hit=editorHit(p);
+            if(!hit) return;
+
+            selectedEditorType=hit.type;
+            selectedEditorIndex=hit.index;
+            if(hit.type==='sticker') selectedStickerIndex=hit.index;
+            if(hit.type==='photo') selectedPhotoIndex=hit.index;
+
+            /* Control actions */
+            if(hit.control==='delete'){
+                if(hit.type==='sticker'){
+                    deleteStickerAt(hit.index);
+                    selectedEditorType=stickers.length?'sticker':'photo';
+                    selectedEditorIndex=stickers.length?selectedStickerIndex:selectedPhotoIndex;
+                }else{
+                    capturedImages[hit.index]=null;
+                    photoTransforms[hit.index]={scale:1,x:0,y:0,rotation:0};
+                    if(typeof renderSlot==='function') renderSlot(hit.index);
+                }
+                scheduleEditorDraw();
+                e.preventDefault();
+                return;
+            }
+
+            if(hit.control==='rotate'){
+                if(hit.type==='sticker'){
+                    const st=stickers[hit.index];st.rotation=(st.rotation||0)+15;
+                }else{
+                    const t=ensureTransform(hit.index);t.rotation=(t.rotation||0)+15;
+                }
+                scheduleEditorDraw();
+                e.preventDefault();
+                return;
+            }
+
+            /* Resize handle */
+            if(hit.control==='resize'){
+                editorMode='resize';
+                editorStart={p,b:hit.b,type:hit.type,index:hit.index,
+                    baseSize:hit.type==='sticker'?stickers[hit.index].size:ensureTransform(hit.index).scale};
+            }else{
+                editorMode='move';
+                editorStart={p,b:hit.b,type:hit.type,index:hit.index,
+                    ox:hit.type==='sticker'?stickers[hit.index].x:ensureTransform(hit.index).x,
+                    oy:hit.type==='sticker'?stickers[hit.index].y:ensureTransform(hit.index).y};
+            }
+            try{c.setPointerCapture(e.pointerId)}catch(_){ }
+            c.classList.add('dragging');
+            scheduleEditorDraw();
+            e.preventDefault();
+        },{passive:false});
+
+        c.addEventListener('pointermove',e=>{
+            if(!editorMode||!editorStart) return;
+            const p=editorPoint(c,e),d=editorStart;
+            if(d.type==='sticker'){
+                const st=stickers[d.index];if(!st)return;
+                if(editorMode==='move'){
+                    st.x=d.ox+(p.x-d.p.x);st.y=d.oy+(p.y-d.p.y);
+                }else{
+                    const startDist=Math.hypot(d.p.x-(d.b.x+d.b.w),d.p.y-(d.b.y+d.b.h));
+                    const nowDist=Math.hypot(p.x-(d.b.x+d.b.w),p.y-(d.b.y+d.b.h));
+                    st.size=Math.max(30,Math.min(600,d.baseSize+(nowDist-startDist)));
+                }
+            }else{
+                const t=ensureTransform(d.index),h=frameHoles[d.index];
+                if(editorMode==='move' && h){
+                    t.x=Math.max(-100,Math.min(100,d.ox+(p.x-d.p.x)/h.w*100));
+                    t.y=Math.max(-100,Math.min(100,d.oy+(p.y-d.p.y)/h.h*100));
+                }else if(editorMode==='resize'){
+                    t.scale=Math.max(.35,Math.min(4,d.baseSize+(p.x-d.p.x)/Math.max(100,d.b.w)));
+                }
+            }
+            scheduleEditorDraw();
+            e.preventDefault();
+        },{passive:false});
+
+        c.addEventListener('pointerup',finish);
+        c.addEventListener('pointercancel',finish);
+        c.addEventListener('lostpointercapture',finish);
+
+        c.addEventListener('wheel',e=>{
+            const hit=editorHit(editorPoint(c,e));
+            if(!hit)return;
+            e.preventDefault();
+            if(hit.type==='sticker'){
+                stickers[hit.index].size=Math.max(30,Math.min(600,stickers[hit.index].size+(e.deltaY<0?10:-10)));
+            }else{
+                const t=ensureTransform(hit.index);
+                t.scale=Math.max(.35,Math.min(4,t.scale+(e.deltaY<0?.08:-.08)));
+            }
+            selectedEditorType=hit.type;selectedEditorIndex=hit.index;
+            if(hit.type==='sticker')selectedStickerIndex=hit.index;
+            scheduleEditorDraw();
+        },{passive:false});
+    }
+
+    window.initPreviewEditorDrag=installEditor;
+
+    /* Force a redraw after any editor-related UI action. */
+    window.refreshEditorSelection=function(type,index){
+        selectedEditorType=type;selectedEditorIndex=index;
+        if(type==='sticker')selectedStickerIndex=index;
+        if(type==='photo')selectedPhotoIndex=index;
         scheduleEditorDraw();
-    });
-    ['pointerup','pointercancel','pointerleave'].forEach(ev=>c.addEventListener(ev,()=>{editorMode=null;editorStart=null;c.classList.remove('dragging')}));
-    c.addEventListener('wheel',e=>{
-        e.preventDefault();const hit=editorHit(editorPoint(c,e));if(!hit)return;
-        if(hit.type==='sticker')stickers[hit.index].size=Math.max(30,Math.min(600,stickers[hit.index].size+(e.deltaY<0?10:-10)));
-        else {const t=photoTransforms[hit.index]||(photoTransforms[hit.index]={scale:1,x:0,y:0,rotation:0});t.scale=Math.max(.35,Math.min(4,t.scale+(e.deltaY<0?.08:-.08)))}
-        selectedEditorType=hit.type;selectedEditorIndex=hit.index;scheduleEditorDraw();
-    },{passive:false});
-};
+    };
+
+    /* Existing renderer calls drawStickers(..., true), so preserve it and add overlay. */
+    window.drawStickers=function(ctx,showSelection=false){
+        stickers.forEach(st=>{
+            ctx.save();
+            ctx.translate(st.x,st.y);
+            ctx.rotate((st.rotation||0)*Math.PI/180);
+            if(st.type==='image'&&st.img){
+                const w=st.size,h=st.size*(st.img.height/st.img.width);
+                ctx.drawImage(st.img,-w/2,-h/2,w,h);
+            }else{
+                ctx.font=`${st.size}px Arial`;
+                ctx.textAlign='center';ctx.textBaseline='middle';
+                ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=5;
+                ctx.fillText(st.text,0,0);
+            }
+            ctx.restore();
+        });
+        if(showSelection) drawEditorOverlay(ctx);
+    };
+
+    /* Make sticker list selection update the same canvas selection. */
+    const oldRenderStickerEditor=window.renderStickerEditor;
+    if(typeof oldRenderStickerEditor==='function'){
+        window.renderStickerEditor=function(){
+            oldRenderStickerEditor();
+            const st=stickers[selectedStickerIndex];
+            if(st){selectedEditorType='sticker';selectedEditorIndex=selectedStickerIndex;}
+        };
+    }
+
+    window.addEventListener('load',()=>setTimeout(installEditor,50));
+})();
 </script>
 
 <script>
