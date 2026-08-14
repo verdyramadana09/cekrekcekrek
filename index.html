@@ -964,7 +964,7 @@
         }
         #result-canvas {cursor:grab;touch-action:none}
         #result-canvas.dragging {cursor:grabbing}
-        .photo-editor-panel,.sticker-editor-panel{border:1px solid var(--border);border-radius:14px;padding:14px;background:#f9fcff}.editor-row{display:flex;align-items:center;gap:8px;margin:8px 0}.editor-row label{width:82px;font-size:12px;font-weight:600}.editor-row input[type=range]{flex:1}.editor-value{width:44px;text-align:right;font-size:11px;color:#666}.photo-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px;margin-bottom:10px}.photo-select-btn,.sticker-select-btn{border:1px solid var(--border);background:#fff;border-radius:9px;padding:7px 5px;cursor:pointer;font-size:11px}.photo-select-btn.active,.sticker-select-btn.active{border-color:var(--blue);background:#eaf5ff;color:var(--blue);font-weight:700}.sticker-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.sticker-editor-help{font-size:11px;color:#666;margin:6px 0 0}@media(max-width:600px){.preview-custom-right{padding:14px}.preview-custom-wrapper{gap:14px}}
+        .photo-editor-panel,.sticker-editor-panel{border:1px solid var(--border);border-radius:14px;padding:14px;background:#f9fcff}.editor-row{display:flex;align-items:center;gap:8px;margin:8px 0}.editor-row label{width:82px;font-size:12px;font-weight:600}.editor-row input[type=range]{flex:1}.editor-value{width:44px;text-align:right;font-size:11px;color:#666}.photo-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px;margin-bottom:10px}.photo-select-btn,.sticker-select-btn{border:1px solid var(--border);background:#fff;border-radius:9px;padding:7px 5px;cursor:pointer;font-size:11px}.photo-select-btn.active,.sticker-select-btn.active{border-color:var(--blue);background:#eaf5ff;color:var(--blue);font-weight:700}.sticker-list{display:none}.sticker-editor-help{font-size:11px;color:#666;margin:6px 0 0}@media(max-width:600px){.preview-custom-right{padding:14px}.preview-custom-wrapper{gap:14px}}
 
         .preview-custom-right {
             display: flex;
@@ -1340,11 +1340,8 @@
     
 .preview-custom-left{overflow:hidden}
 #result-canvas{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.sticker-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.sticker-chip{display:inline-flex;align-items:center;gap:5px;border:2px solid #1976d2;background:#fff;border-radius:10px;padding:4px 5px 4px 8px;cursor:pointer;user-select:none}
-.sticker-chip.active{background:#eaf5ff;box-shadow:0 0 0 1px #1976d2 inset}
-.sticker-chip-delete{border:0;background:transparent;color:#1976d2;font-size:16px;font-weight:700;line-height:1;cursor:pointer;padding:1px 3px}
-.sticker-chip-delete:hover{color:#d32f2f}
+.sticker-list{display:none}
+
 <style>
 #google-drive-stickers{grid-template-columns:repeat(4,1fr);max-height:190px;overflow-y:auto;padding-right:2px}
 #google-drive-stickers .sticker-item-btn img{pointer-events:none}
@@ -1712,7 +1709,7 @@
             <div class="photo-editor-panel"><div id="photo-editor-selector" class="photo-selector"></div><p class="sticker-editor-help">Pilih foto, lalu <b>tarik langsung</b> pada preview untuk menggeser. Gunakan <b>scroll mouse</b> atau <b>pinch dua jari</b> untuk zoom. Tidak perlu slider.</p><button class="outline" style="width:100%;margin-top:6px" onclick="resetSelectedPhotoTransform()">Reset Posisi Foto</button></div>
             <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
             <div class="sticker-category-title">Stiker & Posisi</div><div class="sticker-grid"><button class="sticker-item-btn" onclick="addSticker('❤️')">❤️</button><button class="sticker-item-btn" onclick="addSticker('⭐')">⭐</button><button class="sticker-item-btn" onclick="addSticker('🔥')">🔥</button><button class="sticker-item-btn" onclick="addSticker('👑')">👑</button><button class="sticker-item-btn" onclick="addSticker('✨')">✨</button><button class="sticker-item-btn" onclick="addSticker('🎉')">🎉</button><button class="sticker-item-btn" onclick="addSticker('😎')">😎</button><button class="sticker-item-btn" onclick="addSticker('🌸')">🌸</button></div><div id="custom-sticker-admin" style="display:none;margin-bottom:12px"><input type="file" id="custom-sticker-input" accept="image/png" style="display:none" onchange="handleCustomStickerUpload(this)"><button class="outline" style="width:100%" onclick="document.getElementById('custom-sticker-input').click()">+ Tambah Stiker PNG</button></div><div class="sticker-category-title" style="margin-top:10px">Stiker Tersimpan</div><div id="google-drive-stickers" class="sticker-grid"></div>
-            <div id="sticker-editor-panel" class="sticker-editor-panel" style="display:none;"><div id="sticker-selector" class="sticker-list"></div><p class="sticker-editor-help">Pilih stiker, lalu tarik langsung pada bounding box untuk menggeser. Gunakan handle ↘ untuk memperbesar atau memperkecil, ↻ untuk memutar, dan 🗑 untuk menghapus. Tidak perlu slider.</p></div>
+            <div id="sticker-editor-panel" class="sticker-editor-panel" style="display:none;"><p class="sticker-editor-help">Pilih stiker pada preview, lalu tarik langsung pada bounding box untuk menggeser. Gunakan handle ↘ untuk memperbesar atau memperkecil, ↻ untuk memutar, dan 🗑 untuk menghapus. Tidak perlu tombol tambahan di bawah.</p></div>
             <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
             <div class="sticker-category-title">Filter Warna</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('none')">Original</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('grayscale(100%)')">Hitam Putih</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('sepia(100%)')">Retro</button></div>
         </div>
@@ -3146,7 +3143,7 @@ async function loadStickersFromGoogleDrive(){
     }catch(error){console.error('Gagal memuat stiker dari Google Drive:',error);}
 }
 
-function renderStickerEditor(){const p=document.getElementById('sticker-editor-panel'),b=document.getElementById('sticker-selector');if(!p||!b)return;p.style.display=stickers.length?'block':'none';b.innerHTML='';stickers.forEach((st,i)=>{const wrap=document.createElement('div');wrap.className='sticker-chip'+(i===selectedStickerIndex?' active':'');const btn=document.createElement('button');btn.className='sticker-chip';btn.style.border='0';btn.style.padding='0';btn.textContent=st.type==='image'?'🖼️':st.text;btn.onclick=()=>{selectedStickerIndex=i;renderStickerEditor();scheduleEditorDraw()};const del=document.createElement('button');del.className='sticker-chip-delete';del.textContent='×';del.title='Hapus stiker';del.onclick=e=>{e.stopPropagation();deleteStickerAt(i)};wrap.appendChild(btn);wrap.appendChild(del);b.appendChild(wrap)});updateStickerInputs()}
+function renderStickerEditor(){const p=document.getElementById('sticker-editor-panel');if(!p)return;p.style.display=stickers.length?'block':'none';updateStickerInputs();scheduleEditorDraw()}
 function updateStickerInputs(){const st=stickers[selectedStickerIndex];if(!st)return;const i=document.getElementById('sticker-size'),v=document.getElementById('sticker-size-value');if(i)i.value=Math.round(st.size);if(v)v.textContent=Math.round(st.size)}
 function updateStickerTransform(type,value){const st=stickers[selectedStickerIndex];if(!st)return;st[type]=Number(value);const v=document.getElementById(`sticker-${type}-value`);if(v)v.textContent=Math.round(st[type]);scheduleEditorDraw()}
 function deleteStickerAt(i){stickers.splice(i,1);selectedStickerIndex=stickers.length?Math.min(i,stickers.length-1):-1;renderStickerEditor();scheduleEditorDraw()}
