@@ -1475,23 +1475,6 @@
     #result-screen .custom-result-wrapper{padding:10px 12px 20px;}
 }
 </style>
-
-<style id="export-bounding-box-protection">
-/* Bounding box is editor-only and must never be part of exported output. */
-.exporting .bounding-box,
-.exporting .resize-handle,
-.exporting .rotate-handle,
-.exporting .delete-handle,
-.exporting .sticker-controls,
-.exporting [class*="bounding-box"],
-.exporting [class*="resize-handle"],
-.exporting [class*="rotate-handle"],
-.exporting [class*="delete-handle"] {
-    display: none !important;
-    visibility: hidden !important;
-}
-</style>
-
 </head>
 
 
@@ -1936,10 +1919,12 @@ let stream = null;
 let isMirrored = true;
 
 let capturedImages = [];
+    capturedImageFilters = [];
 
 let finalFrameImageObj = null;
 
 let currentCanvasFilter = 'none';
+let capturedImageFilters = [];
 let photoTransforms = []; let selectedPhotoIndex = 0; let stickers = []; let selectedStickerIndex = -1; let editorDrag = null; let googleDriveStickers = [];
 
 let isTakingPhoto = false;
@@ -2816,6 +2801,7 @@ async function initCamera(fromRetry = false) {
         hideStatus();
 
         capturedImages = new Array(requiredPhotos);
+    capturedImageFilters = new Array(requiredPhotos).fill('none');
 
         if (nextButton) nextButton.disabled = true;
 
@@ -3547,7 +3533,6 @@ function captureFrame(
             0
         );
 
-
         ctx.scale(
             -1,
             1
@@ -3555,6 +3540,12 @@ function captureFrame(
 
     }
 
+    /*
+     * BURN THE ACTIVE CAMERA FILTER INTO THE PHOTO.
+     * CSS filter on <video> only affects the preview; it does not
+     * automatically become part of the canvas image.
+     */
+    ctx.filter = currentCanvasFilter || 'none';
 
     ctx.drawImage(
         video,
@@ -3562,12 +3553,16 @@ function captureFrame(
         0
     );
 
+    ctx.filter = 'none';
 
     capturedImages[index] =
         canvas.toDataURL(
             'image/jpeg',
             0.92
         );
+
+    capturedImageFilters[index] =
+        currentCanvasFilter || 'none';
 
 
     renderSlot(
@@ -3699,8 +3694,7 @@ async function drawCanvas(
     );
 
 
-    ctx.filter =
-        currentCanvasFilter;
+    ctx.filter = 'none';
 
 
     const photoPromises =
@@ -3722,7 +3716,16 @@ async function drawCanvas(
                         }
 
 
-                        getEditorImage(source).then(image=>{const hole=frameHoles[index];if(hole)drawImageIntoHole(ctx,image,hole,photoTransforms[index]||{scale:1,x:0,y:0});resolve()}).catch(()=>resolve());
+                        getEditorImage(source).then(image=>{
+                            const hole=frameHoles[index];
+                            if(hole){
+                                ctx.save();
+                                ctx.filter = capturedImageFilters[index] || 'none';
+                                drawImageIntoHole(ctx,image,hole,photoTransforms[index]||{scale:1,x:0,y:0});
+                                ctx.restore();
+                            }
+                            resolve();
+                        }).catch(()=>resolve());
 
                     }
                 );
@@ -3868,40 +3871,75 @@ async function processAndUploadSession() {
     );
 
 
+    /*
+     * IMPORTANT: export from final-preview-canvas.
+     * result-canvas is the interactive editor and may display the
+     * bounding box/handles. final-preview-canvas is the clean output.
+     */
     const frameImageData =
         document
             .getElementById(
-                'result-canvas'
+                'final-preview-canvas'
             )
             .toDataURL(
                 'image/png'
             );
 
 
-    const gifWidth =
-        600;
+    /* =====================================================
+       GIF — KEEP THE SAME ASPECT RATIO AS THE FRAME
+       Every image is cropped with COVER instead of being stretched.
+    ===================================================== */
 
+    const gifWidth = 600;
+    const gifRatio = finalFrameImageObj.height / finalFrameImageObj.width;
+    const gifHeight = Math.max(1, Math.round(gifWidth * gifRatio));
 
-    const gifRatio =
-        finalFrameImageObj.height /
-        finalFrameImageObj.width;
+    function normalizeGifImage(source, width, height) {
+        return new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
 
+                const sourceRatio = img.width / img.height;
+                const targetRatio = width / height;
+                let sx = 0, sy = 0, sw = img.width, sh = img.height;
 
-    const gifHeight =
-        Math.round(
-            gifWidth *
-            gifRatio
-        );
+                if (sourceRatio > targetRatio) {
+                    sw = img.height * targetRatio;
+                    sx = (img.width - sw) / 2;
+                } else if (sourceRatio < targetRatio) {
+                    sh = img.width / targetRatio;
+                    sy = (img.height - sh) / 2;
+                }
 
+                ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.92));
+            };
+            img.onerror = () => resolve(source);
+            img.src = source;
+        });
+    }
+
+    const gifSourceImages = [
+        ...capturedImages.filter(Boolean),
+        frameImageData
+    ];
+
+    const gifImages = await Promise.all(
+        gifSourceImages.map(source =>
+            normalizeGifImage(source, gifWidth, gifHeight)
+        )
+    );
 
     gifshot.createGIF(
 
         {
 
-            images: [
-                ...capturedImages,
-                frameImageData
-            ],
+            images: gifImages,
 
             interval:
                 0.6,
@@ -4671,649 +4709,5 @@ window.addEventListener('resize', () => {
 });
 
 </script>
-
-
-<script>
-/* =====================================================
-   FINAL PATCH — FILTER FOTO + GIF RASIO
-   Hanya memperbaiki hasil capture/GIF.
-   Struktur frame, editor, sticker, kamera dan upload asli
-   tetap dipertahankan.
-===================================================== */
-
-/* -----------------------------------------------------
-   CAPTURE FOTO DENGAN FILTER KAMERA
-   Filter CSS pada <video> tidak otomatis ikut masuk ke
-   canvas. Karena itu filter dibakar saat foto diambil.
------------------------------------------------------ */
-function captureFrame(index) {
-    const video = document.getElementById('camera-feed');
-
-    if (!video || !video.videoWidth || !video.videoHeight) {
-        return;
-    }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.save();
-
-    /* Filter kamera harus masuk ke file foto */
-    ctx.filter = activeCameraEffect || 'none';
-
-    /* Samakan zoom Fish Eye dengan preview kamera */
-    const useFishEyeZoom =
-        activeCameraEffectName === 'fisheye';
-
-    if (useFishEyeZoom) {
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.scale(1.08, 1.08);
-        ctx.translate(-canvas.width / 2, -canvas.height / 2);
-    }
-
-    /* Mirror tetap mengikuti setting pengguna */
-    if (isMirrored) {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-    }
-
-    ctx.drawImage(
-        video,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    ctx.restore();
-
-    capturedImages[index] = canvas.toDataURL(
-        'image/jpeg',
-        0.92
-    );
-
-    /*
-     * Filter kamera sudah tertanam di capturedImages.
-     * Jangan langsung menerapkan filter kamera kedua kali
-     * ketika drawCanvas dijalankan.
-     */
-    currentCanvasFilter = 'none';
-
-    renderSlot(index);
-
-    requestAnimationFrame(() => {
-        if (typeof syncCameraPreviewToHole === 'function') {
-            syncCameraPreviewToHole(index + 1);
-        }
-    });
-}
-
-
-/* -----------------------------------------------------
-   FILTER KAMERA
------------------------------------------------------ */
-function applyCameraEffect(
-    filterCss,
-    button,
-    effectName = 'normal'
-) {
-    activeCameraEffect = filterCss || 'none';
-    activeCameraEffectName = effectName || 'normal';
-
-    /*
-     * Jangan memasukkan filter kamera ke currentCanvasFilter.
-     * Filter kamera sudah dibakar ketika captureFrame().
-     */
-    currentCanvasFilter = 'none';
-
-    document
-        .querySelectorAll('#camera-filters .filter-thumb-item')
-        .forEach(btn => btn.classList.remove('active'));
-
-    if (button) {
-        button.classList.add('active');
-    }
-
-    const video = document.getElementById('camera-feed');
-
-    if (video) {
-        video.style.filter =
-            activeCameraEffect === 'none'
-                ? 'none'
-                : activeCameraEffect;
-
-        video.style.transform =
-            (isMirrored ? 'scaleX(-1)' : 'scaleX(1)') +
-            (activeCameraEffectName === 'fisheye'
-                ? ' scale(1.08)'
-                : '');
-    }
-}
-
-
-/* -----------------------------------------------------
-   FILTER HASIL / EDITOR
-   API lama tetap berfungsi.
------------------------------------------------------ */
-function applyFilter(filterCss) {
-    currentCanvasFilter = filterCss || 'none';
-
-    drawCanvas(true, 'result-canvas');
-    drawCanvas(true, 'final-preview-canvas');
-}
-
-
-/* -----------------------------------------------------
-   DRAW CANVAS
-
-   capturedImages sudah membawa filter kamera.
-   currentCanvasFilter hanya dipakai untuk filter hasil
-   yang sengaja dipilih setelah foto diambil.
------------------------------------------------------ */
-async function drawCanvas(
-    withFrame = true,
-    canvasId = 'result-canvas'
-) {
-    if (!finalFrameImageObj) {
-        return;
-    }
-
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = finalFrameImageObj.width;
-    canvas.height = finalFrameImageObj.height;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const photoPromises = capturedImages.map((source, index) => {
-        return new Promise(resolve => {
-            if (!source) {
-                resolve();
-                return;
-            }
-
-            getEditorImage(source)
-                .then(image => {
-                    const hole = frameHoles[index];
-
-                    if (!hole) {
-                        resolve();
-                        return;
-                    }
-
-                    ctx.save();
-
-                    /* Filter hasil/editor, bukan filter kamera */
-                    ctx.filter = currentCanvasFilter || 'none';
-
-                    drawImageIntoHole(
-                        ctx,
-                        image,
-                        hole,
-                        photoTransforms[index] || {
-                            scale: 1,
-                            x: 0,
-                            y: 0
-                        }
-                    );
-
-                    ctx.restore();
-                    resolve();
-                })
-                .catch(() => resolve());
-        });
-    });
-
-    await Promise.all(photoPromises);
-
-    if (withFrame) {
-        ctx.save();
-        ctx.filter = 'none';
-        ctx.drawImage(
-            finalFrameImageObj,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-        ctx.restore();
-    }
-
-    drawStickers(
-        ctx,
-        canvasId === 'result-canvas'
-    );
-
-    if (canvasId === 'result-canvas') {
-        initPreviewEditorDrag();
-    }
-}
-
-
-/* -----------------------------------------------------
-   BANTUAN LOAD IMAGE UNTUK GIF
------------------------------------------------------ */
-function loadImageForGif(source) {
-    return new Promise((resolve, reject) => {
-        if (!source) {
-            reject(new Error('Sumber gambar kosong.'));
-            return;
-        }
-
-        const img = new Image();
-
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(
-            new Error('Gagal memuat gambar GIF.')
-        );
-
-        img.src = source;
-    });
-}
-
-
-/* -----------------------------------------------------
-   NORMALISASI FOTO UNTUK GIF
-
-   INI YANG MEMPERBAIKI GIF "GEPENG".
-
-   gifshot sebelumnya menerima foto kamera 16:9 secara
-   langsung tetapi dipaksa ke gifWidth x gifHeight yang
-   mengikuti rasio frame. Akibatnya foto diregangkan.
-
-   Sekarang setiap foto dibuat menjadi canvas dengan rasio
-   yang SAMA dengan frame terlebih dahulu.
-
-   object-fit: cover versi Canvas -> foto memenuhi area
-   tanpa distorsi. Bagian yang kelebihan akan dipotong.
------------------------------------------------------ */
-async function normalizeImageForGif(
-    source,
-    targetWidth,
-    targetHeight
-) {
-    const image = await loadImageForGif(source);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        throw new Error('Canvas GIF tidak tersedia.');
-    }
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(
-        0,
-        0,
-        targetWidth,
-        targetHeight
-    );
-
-    const sourceWidth = image.naturalWidth || image.width;
-    const sourceHeight = image.naturalHeight || image.height;
-
-    if (!sourceWidth || !sourceHeight) {
-        throw new Error('Ukuran gambar GIF tidak valid.');
-    }
-
-    /*
-     * COVER:
-     * target ratio dan foto ratio disamakan tanpa membuat
-     * objek terlihat gepeng/tertarik.
-     */
-    const scale = Math.max(
-        targetWidth / sourceWidth,
-        targetHeight / sourceHeight
-    );
-
-    const drawWidth = sourceWidth * scale;
-    const drawHeight = sourceHeight * scale;
-
-    const drawX =
-        (targetWidth - drawWidth) / 2;
-
-    const drawY =
-        (targetHeight - drawHeight) / 2;
-
-    ctx.drawImage(
-        image,
-        drawX,
-        drawY,
-        drawWidth,
-        drawHeight
-    );
-
-    return canvas.toDataURL(
-        'image/jpeg',
-        0.92
-    );
-}
-
-
-/* -----------------------------------------------------
-   PROCESS + UPLOAD SESSION
-
-   Struktur endpoint tetap sama.
-   Yang berubah hanya input GIF agar semua frame memiliki
-   rasio yang sama.
------------------------------------------------------ */
-async function processAndUploadSession() {
-    nav('result-screen');
-
-    await drawCanvas(
-        true,
-        'final-preview-canvas'
-    );
-
-    await drawCanvas(
-        true,
-        'result-canvas'
-    );
-
-    const resultCanvas =
-        document.getElementById('result-canvas');
-
-    if (!resultCanvas) {
-        return;
-    }
-
-    const frameImageData =
-        resultCanvas.toDataURL('image/png');
-
-    /*
-     * GIF mengikuti rasio FRAME, bukan rasio kamera.
-     */
-    const gifWidth = 600;
-
-    const frameWidth =
-        finalFrameImageObj.width || 1;
-
-    const frameHeight =
-        finalFrameImageObj.height || 1;
-
-    const gifHeight = Math.max(
-        1,
-        Math.round(
-            gifWidth *
-            (frameHeight / frameWidth)
-        )
-    );
-
-    try {
-        /*
-         * Ubah semua foto satuan menjadi frame dengan rasio
-         * GIF yang sama. Tidak ada lagi gambar yang gepeng.
-         */
-        const normalizedGifImages = [];
-
-        for (const image of capturedImages) {
-            if (!image) continue;
-
-            try {
-                const normalized =
-                    await normalizeImageForGif(
-                        image,
-                        gifWidth,
-                        gifHeight
-                    );
-
-                normalizedGifImages.push(
-                    normalized
-                );
-            } catch (error) {
-                console.warn(
-                    'Foto GIF dilewati:',
-                    error
-                );
-            }
-        }
-
-        /*
-         * Frame hasil akhir sudah memiliki rasio frame yang benar.
-         * Masukkan setelah foto-foto satuan seperti perilaku asli.
-         */
-        normalizedGifImages.push(
-            await normalizeImageForGif(
-                frameImageData,
-                gifWidth,
-                gifHeight
-            )
-        );
-
-        if (!normalizedGifImages.length) {
-            throw new Error(
-                'Tidak ada gambar untuk dibuat GIF.'
-            );
-        }
-
-        gifshot.createGIF(
-            {
-                images: normalizedGifImages,
-                interval: 0.6,
-                gifWidth: gifWidth,
-                gifHeight: gifHeight,
-                numFrames: normalizedGifImages.length
-            },
-            async function(obj) {
-                let gifData = '';
-
-                if (!obj.error) {
-                    gifData = obj.image || '';
-                }
-
-                try {
-                    const response = await fetch(
-                        '/upload-session',
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type':
-                                    'application/json'
-                            },
-                            body: JSON.stringify({
-                                sessionName:
-                                    sanitizeFileName(
-                                        sessionName
-                                    ),
-                                date:
-                                    getDateString(),
-                                frameImage:
-                                    frameImageData,
-                                individualImages:
-                                    capturedImages,
-                                gifImage:
-                                    gifData
-                            })
-                        }
-                    );
-
-                    const result =
-                        await response.json();
-
-                    if (result.success) {
-                        const qrContainer =
-                            document.getElementById(
-                                'qrcode-container'
-                            );
-
-                        if (qrContainer) {
-                            qrContainer.innerHTML = '';
-
-                            new QRCode(
-                                qrContainer,
-                                {
-                                    text:
-                                        result.folder_link,
-                                    width: 140,
-                                    height: 140,
-                                    colorDark: '#0d47a1',
-                                    colorLight: '#ffffff',
-                                    correctLevel:
-                                        QRCode.CorrectLevel.H
-                                }
-                            );
-                        }
-
-                        const qrStatus =
-                            document.getElementById(
-                                'qr-status-text'
-                            );
-
-                        if (qrStatus) {
-                            qrStatus.innerText =
-                                'Scan untuk membuka hasil foto.';
-                        }
-                    } else {
-                        const qrStatus =
-                            document.getElementById(
-                                'qr-status-text'
-                            );
-
-                        if (qrStatus) {
-                            qrStatus.innerText =
-                                'Gagal memuat barcode.';
-                        }
-                    }
-                } catch (error) {
-                    console.error(
-                        'Error upload session:',
-                        error
-                    );
-
-                    const qrContainer =
-                        document.getElementById(
-                            'qrcode-container'
-                        );
-
-                    if (qrContainer) {
-                        qrContainer.innerHTML = '';
-
-                        new QRCode(
-                            qrContainer,
-                            {
-                                text:
-                                    'https://instagram.com/vrdyrmdhn',
-                                width: 140,
-                                height: 140,
-                                colorDark: '#0d47a1',
-                                colorLight: '#ffffff',
-                                correctLevel:
-                                    QRCode.CorrectLevel.H
-                            }
-                        );
-                    }
-
-                    const qrStatus =
-                        document.getElementById(
-                            'qr-status-text'
-                        );
-
-                    if (qrStatus) {
-                        qrStatus.innerText =
-                            'Scan untuk membuka link.';
-                    }
-                }
-            }
-        );
-    } catch (error) {
-        console.error(
-            'Gagal membuat GIF:',
-            error
-        );
-
-        const qrStatus =
-            document.getElementById(
-                'qr-status-text'
-            );
-
-        if (qrStatus) {
-            qrStatus.innerText =
-                'Gagal membuat GIF. Hasil foto tetap tersedia.';
-        }
-    }
-}
-</script>
-
-<script id="export-bounding-box-guard">
-/*
- * EXPORT GUARD
- * Bounding boxes/handles are editor UI only.
- * They are hidden while an export is performed and restored afterwards.
- */
-(function () {
-    const EDITOR_ONLY_SELECTORS = [
-        '.bounding-box',
-        '.resize-handle',
-        '.rotate-handle',
-        '.delete-handle',
-        '.sticker-controls',
-        '[class*="bounding-box"]',
-        '[class*="resize-handle"]',
-        '[class*="rotate-handle"]',
-        '[class*="delete-handle"]'
-    ];
-
-    function getEditorOnlyElements() {
-        const selector = EDITOR_ONLY_SELECTORS.join(',');
-        return Array.from(document.querySelectorAll(selector));
-    }
-
-    window.beginCleanExport = function () {
-        const elements = getEditorOnlyElements();
-
-        const states = elements.map(el => ({
-            el,
-            display: el.style.display,
-            visibility: el.style.visibility
-        }));
-
-        document.documentElement.classList.add('exporting');
-        document.body.classList.add('exporting');
-
-        elements.forEach(el => {
-            el.style.setProperty('display', 'none', 'important');
-            el.style.setProperty('visibility', 'hidden', 'important');
-        });
-
-        return function endCleanExport() {
-            states.forEach(({ el, display, visibility }) => {
-                el.style.display = display;
-                el.style.visibility = visibility;
-            });
-
-            document.documentElement.classList.remove('exporting');
-            document.body.classList.remove('exporting');
-        };
-    };
-
-    /*
-     * Safe wrapper for DOM-based export functions.
-     * Canvas-based exports should not draw the bounding-box DOM in the first place.
-     */
-    window.withCleanExport = async function (callback) {
-        const restore = window.beginCleanExport();
-
-        try {
-            return await callback();
-        } finally {
-            restore();
-        }
-    };
-})();
-</script>
-
 </body>
 </html>
