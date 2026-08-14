@@ -750,7 +750,7 @@
 
 
         /* =====================================================
-            PREVIEW SCREEN (FIXED LEFT-RIGHT LAYOUT UNTUK STIKER/EMOT)
+            PREVIEW SCREEN
         ===================================================== */
 
         #preview-screen {
@@ -849,7 +849,7 @@
 
 
         /* =====================================================
-            RESULT SCREEN (CUSTOM REFERENCE LAYOUT)
+            RESULT SCREEN (CUSTOM REFERENCE LAYOUT WITH BARCODE)
         ===================================================== */
 
         #result-screen {
@@ -975,25 +975,31 @@
             color: #707070;
         }
 
-        .share-banner-box {
+        /* Barcode Section Box */
+        .barcode-section-box {
             background: #f4ecff;
             border: 1px solid #d2b4de;
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 16px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
 
-        .share-banner-title {
+        .barcode-section-title {
             color: #8e44ad;
             font-size: 13px;
             font-weight: 700;
-            margin-bottom: 3px;
+            margin: 0;
         }
 
-        .share-banner-desc {
-            font-size: 11px;
-            color: #555;
-            margin: 0;
+        #qrcode-container {
+            padding: 8px;
+            background: white;
+            border-radius: 8px;
+            display: inline-block;
         }
 
         .result-card-edit {
@@ -1422,7 +1428,7 @@
 
 
 <!-- =====================================================
-    PREVIEW SCREEN (FIXED DENGAN LAYOUT KIRI PREVIEW, KANAN STIKER/EMOT)
+    PREVIEW SCREEN
 ===================================================== -->
 
 <div
@@ -1494,7 +1500,7 @@
 
 
 <!-- =====================================================
-    RESULT SCREEN
+    RESULT SCREEN (DENGAN BARCODE, NAMA VRDYRMDHN, DAN FITUR DOWNLOAD)
 ===================================================== -->
 
 <div
@@ -1511,7 +1517,7 @@
         <!-- Right Side: Action Cards Column -->
         <div class="custom-result-right">
             
-            <!-- Card 1: Follow Us / Social Links -->
+            <!-- Card 1: Social Links dengan nama vrdyrmdhn -->
             <div class="result-card-social">
                 <div class="social-card-title">Follow Us!</div>
                 <div class="social-row-items">
@@ -1520,7 +1526,7 @@
                             <div class="social-icon-badge">♪</div>
                             <div class="social-text-group">
                                 <div>Follow on TikTok</div>
-                                <div>@jepro.com</div>
+                                <div>@vrdyrmdhn</div>
                             </div>
                         </div>
                         <span style="color:#aaa; font-size:12px;">›</span>
@@ -1530,15 +1536,20 @@
                             <div class="social-icon-badge ig">📷</div>
                             <div class="social-text-group">
                                 <div>Follow on Instagram</div>
-                                <div>@jepro.digital</div>
+                                <div>@vrdyrmdhn</div>
                             </div>
                         </div>
                         <span style="color:#aaa; font-size:12px;">›</span>
                     </div>
                 </div>
-                <div class="share-banner-box">
-                    <div class="share-banner-title">✨ Share Your Creation!</div>
-                    <p class="share-banner-desc">Post your photo strip on Instagram Story and tag @jepro.digital to get featured!</p>
+                
+                <!-- Barcode / QR Code Section -->
+                <div class="barcode-section-box">
+                    <div class="barcode-section-title">📱 Scan Barcode untuk Hasil Foto</div>
+                    <div id="qrcode-container">
+                        <div class="spinner" style="margin:10px auto; width:30px; height:30px;"></div>
+                    </div>
+                    <p id="qr-status-text" style="font-size:11px; color:#666; margin:0;">Memproses...</p>
                 </div>
             </div>
 
@@ -1575,12 +1586,6 @@
         </div>
 
     </div>
-</div>
-
-<!-- Hidden result elements required for core logic processing -->
-<div style="display:none;">
-    <div id="qrcode-container"></div>
-    <p id="qr-status-text"></p>
 </div>
 
 
@@ -3528,10 +3533,10 @@ async function processAndUploadSession() {
                                 result.folder_link,
 
                             width:
-                                170,
+                                140,
 
                             height:
-                                170,
+                                140,
 
                             colorDark:
                                 '#0d47a1',
@@ -3564,7 +3569,7 @@ async function processAndUploadSession() {
                             'qr-status-text'
                         )
                         .innerText =
-                        'Gagal membuat hasil foto.';
+                        'Gagal memuat barcode.';
 
                 }
 
@@ -3575,6 +3580,23 @@ async function processAndUploadSession() {
                     'Error:',
                     error
                 );
+
+                const qrContainer =
+                    document.getElementById(
+                        'qrcode-container'
+                    );
+
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: 'https://instagram.com/vrdyrmdhn',
+                    width: 140,
+                    height: 140,
+                    colorDark: '#0d47a1',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                document.getElementById('qr-status-text').innerText = 'Scan untuk membuka link.';
 
             }
 
