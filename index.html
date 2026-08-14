@@ -1,15 +1,23 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Photobooth Web</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
+
         :root {
             --bg-color: #F5F5F7;
             --primary: #000000;
@@ -107,6 +115,77 @@
             border: 2px solid var(--primary);
         }
 
+        /* =====================================================
+           INPUT NAMA
+        ===================================================== */
+
+        .name-container {
+            flex: 1;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            width: 100%;
+        }
+
+        .name-box {
+            width: min(600px, 90vw);
+
+            background: white;
+
+            border-radius: 20px;
+
+            padding: 35px;
+
+            box-shadow:
+                0 10px 35px rgba(0, 0, 0, 0.08);
+
+            text-align: center;
+        }
+
+        .name-box h1 {
+            margin-bottom: 10px;
+        }
+
+        .name-box p {
+            margin-bottom: 25px;
+        }
+
+        #guest-name {
+            width: 100%;
+
+            padding: 16px 20px;
+
+            border: 2px solid #ddd;
+
+            border-radius: 14px;
+
+            outline: none;
+
+            font-size: 18px;
+
+            text-align: center;
+
+            transition:
+                border-color 0.2s;
+        }
+
+        #guest-name:focus {
+            border-color: #000;
+        }
+
+        .name-preview {
+            margin-top: 15px;
+
+            font-size: 12px;
+
+            color: #777;
+        }
+
+        .name-preview strong {
+            color: #000;
+        }
 
         /* =====================================================
            PILIH FRAME
@@ -140,17 +219,16 @@
         .frame-item {
             flex: 0 0 auto;
 
-            /*
-             * Frame dibuat besar.
-             * Kurang lebih setengah tinggi layar laptop.
-             */
             width: min(390px, 32vw);
+
             height: min(560px, 50vh);
 
             background-color: #ddd;
 
             background-repeat: no-repeat;
+
             background-position: center;
+
             background-size: cover;
 
             border-radius: 16px;
@@ -175,15 +253,9 @@
 
             transform: scale(1.05);
 
-            /*
-             * Tidak ada shadow hitam.
-             */
             box-shadow: none;
         }
 
-        /*
-         * CHECKLIST PUTIH DI TENGAH
-         */
         .frame-item.selected::after {
             content: "✓";
 
@@ -192,7 +264,8 @@
             top: 50%;
             left: 50%;
 
-            transform: translate(-50%, -50%);
+            transform:
+                translate(-50%, -50%);
 
             color: white;
 
@@ -202,10 +275,6 @@
 
             line-height: 1;
 
-            /*
-             * Sedikit text shadow supaya tetap
-             * terlihat di frame terang maupun gelap.
-             */
             text-shadow:
                 0 2px 6px rgba(0, 0, 0, 0.35);
 
@@ -213,7 +282,6 @@
 
             z-index: 100;
         }
-
 
         /* =====================================================
            CAMERA
@@ -262,7 +330,6 @@
             background: #000;
         }
 
-
         /* =====================================================
            COUNTDOWN
         ===================================================== */
@@ -273,7 +340,8 @@
             top: 50%;
             left: 50%;
 
-            transform: translate(-50%, -50%);
+            transform:
+                translate(-50%, -50%);
 
             font-size: 80px;
 
@@ -308,7 +376,6 @@
                 opacity 0.1s;
         }
 
-
         /* =====================================================
            PREVIEW FRAME DI SAMPING KAMERA
         ===================================================== */
@@ -333,9 +400,6 @@
             overflow: hidden;
         }
 
-        /*
-         * Area preview frame.
-         */
         .frame-preview-container {
             position: relative;
 
@@ -345,15 +409,12 @@
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
             overflow: hidden;
         }
 
-        /*
-         * Frame asli.
-         * Frame TIDAK berada di atas kamera utama.
-         */
         #camera-side-frame {
             position: absolute;
 
@@ -366,9 +427,6 @@
             z-index: 30;
         }
 
-        /*
-         * Container untuk slot foto.
-         */
         #photo-slots {
             position: absolute;
 
@@ -376,7 +434,6 @@
 
             pointer-events: none;
         }
-
 
         /* =====================================================
            SLOT FOTO
@@ -416,9 +473,6 @@
             display: block;
         }
 
-        /*
-         * Nomor foto.
-         */
         .slot-number {
             position: absolute;
 
@@ -449,9 +503,6 @@
             pointer-events: none;
         }
 
-        /*
-         * Teks sebelum foto diambil.
-         */
         .slot-empty {
             position: absolute;
 
@@ -478,9 +529,6 @@
             pointer-events: none;
         }
 
-        /*
-         * Label Ambil Ulang.
-         */
         .retake-label {
             position: absolute;
 
@@ -515,7 +563,6 @@
         .photo-slot:hover .retake-label {
             opacity: 1;
         }
-
 
         /* =====================================================
            PREVIEW EDIT
@@ -575,7 +622,6 @@
             overflow-y: auto;
         }
 
-
         /* =====================================================
            RESULT
         ===================================================== */
@@ -615,6 +661,7 @@
             flex-direction: column;
 
             align-items: center;
+
             justify-content: center;
 
             background: white;
@@ -627,7 +674,6 @@
 
             text-align: center;
         }
-
 
         /* =====================================================
            LOADING
@@ -670,6 +716,7 @@
         }
 
         @keyframes spin {
+
             0% {
                 transform: rotate(0deg);
             }
@@ -677,8 +724,8 @@
             100% {
                 transform: rotate(360deg);
             }
-        }
 
+        }
 
         /* =====================================================
            RESPONSIVE
@@ -712,9 +759,15 @@
             .result-container {
                 flex-direction: column;
             }
+
+            .name-box {
+                padding: 25px 20px;
+            }
+
         }
 
     </style>
+
 </head>
 
 <body>
@@ -752,9 +805,73 @@
     <div class="bottom-actions">
 
         <button
-            onclick="nav('frame-screen')"
+            onclick="nav('name-screen')"
         >
             Mulai Sesi
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     INPUT NAMA SCREEN
+===================================================== -->
+
+<div
+    id="name-screen"
+    class="screen"
+>
+
+    <div class="name-container">
+
+        <div class="name-box">
+
+            <h1>
+                Siapa Nama Anda?
+            </h1>
+
+            <p>
+                Masukkan nama sebelum memulai sesi foto.
+            </p>
+
+            <input
+                type="text"
+                id="guest-name"
+                placeholder="Contoh: Budi Otomo"
+                maxlength="50"
+                autocomplete="off"
+            >
+
+            <div class="name-preview">
+
+                Nama folder:
+
+                <strong id="folder-preview">
+                    -
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="bottom-actions">
+
+        <button
+            class="outline"
+            onclick="nav('start-screen')"
+        >
+            Kembali
+        </button>
+
+        <button
+            id="btn-name-continue"
+            onclick="continueToFrame()"
+        >
+            Lanjut Pilih Frame
         </button>
 
     </div>
@@ -780,12 +897,6 @@
         id="frame-list"
     >
 
-        <!--
-            Frame default.
-            Tambahkan frame lainnya di sini
-            jika diperlukan.
-        -->
-
         <div
             class="frame-item"
 
@@ -807,8 +918,14 @@
 
     </div>
 
-
     <div class="bottom-actions">
+
+        <button
+            class="outline"
+            onclick="nav('name-screen')"
+        >
+            Kembali
+        </button>
 
         <button
             id="btn-continue-camera"
@@ -846,7 +963,19 @@
     >
 
         <h2 style="margin:0;">
+
             Kamera
+
+            <span
+                id="camera-name-display"
+                style="
+                    font-size:13px;
+                    color:#777;
+                    font-weight:normal;
+                    margin-left:8px;
+                "
+            ></span>
+
         </h2>
 
         <button
@@ -866,13 +995,9 @@
 
     </div>
 
-
     <div class="camera-container">
 
-
-        <!-- =================================================
-             KAMERA LIVE
-        ================================================= -->
+        <!-- KAMERA LIVE -->
 
         <div
             class="video-wrapper"
@@ -897,10 +1022,7 @@
 
         </div>
 
-
-        <!-- =================================================
-             FRAME + HASIL FOTO
-        ================================================= -->
+        <!-- FRAME + HASIL FOTO -->
 
         <div class="preview-wrapper">
 
@@ -910,12 +1032,13 @@
             >
 
                 <!-- SLOT FOTO -->
+
                 <div
                     id="photo-slots"
                 ></div>
 
-
                 <!-- FRAME ASLI -->
+
                 <img
                     id="camera-side-frame"
                     src=""
@@ -927,7 +1050,6 @@
         </div>
 
     </div>
-
 
     <div class="bottom-actions">
 
@@ -968,7 +1090,6 @@
         Preview & Edit
     </h2>
 
-
     <div class="editor-container">
 
         <div class="canvas-area">
@@ -976,7 +1097,6 @@
             <canvas
                 id="result-canvas"
             ></canvas>
-
 
             <div id="loading-overlay">
 
@@ -995,13 +1115,41 @@
 
         </div>
 
-
         <div class="tools-area">
 
             <h3 style="margin-top:0;">
-                Filter Warna
+                Informasi Sesi
             </h3>
 
+            <div
+                style="
+                    background:#f5f5f5;
+                    padding:12px;
+                    border-radius:10px;
+                    margin-bottom:20px;
+                    font-size:13px;
+                "
+            >
+
+                <div>
+                    Nama:
+                    <strong id="preview-name">
+                        -
+                    </strong>
+                </div>
+
+                <div style="margin-top:5px;">
+                    Folder:
+                    <strong id="preview-folder">
+                        -
+                    </strong>
+                </div>
+
+            </div>
+
+            <h3>
+                Filter Warna
+            </h3>
 
             <div
                 style="
@@ -1021,7 +1169,6 @@
                     Original
                 </button>
 
-
                 <button
                     class="outline"
                     onclick="
@@ -1032,7 +1179,6 @@
                 >
                     Hitam Putih
                 </button>
-
 
                 <button
                     class="outline"
@@ -1050,7 +1196,6 @@
         </div>
 
     </div>
-
 
     <div class="bottom-actions">
 
@@ -1080,7 +1225,6 @@
         Sesi Selesai
     </h2>
 
-
     <div class="result-container">
 
         <div class="result-left">
@@ -1095,13 +1239,19 @@
 
         </div>
 
-
         <div class="result-right">
 
             <h3 style="margin-top:0;">
-                Scan untuk Unduh Folder Sesi
+
+                <span id="result-name">
+                    Foto
+                </span>
+
             </h3>
 
+            <p>
+                Scan untuk unduh foto
+            </p>
 
             <div
                 id="qrcode-container"
@@ -1117,7 +1267,6 @@
 
             </div>
 
-
             <p
                 id="qr-status-text"
                 style="
@@ -1126,9 +1275,8 @@
                     margin-bottom:15px;
                 "
             >
-                Mengunggah file ke Drive...
+                Loading...
             </p>
-
 
             <div
                 style="
@@ -1145,14 +1293,12 @@
                     ⬇️ Unduh Foto Frame
                 </button>
 
-
                 <button
                     class="outline"
                     onclick="downloadTanpaFrame()"
                 >
                     🖼️ Unduh Foto Satuan
                 </button>
-
 
                 <button
                     class="outline"
@@ -1178,7 +1324,6 @@
 
 <script>
 
-
 /* =====================================================
    NAVIGATION
 ===================================================== */
@@ -1189,18 +1334,18 @@ function nav(screenId) {
         .querySelectorAll('.screen')
         .forEach(
             screen => {
+
                 screen.classList.remove(
                     'active'
                 );
+
             }
         );
-
 
     const target =
         document.getElementById(
             screenId
         );
-
 
     if (target) {
 
@@ -1236,6 +1381,272 @@ let currentCanvasFilter = 'none';
 let isTakingPhoto = false;
 
 
+/*
+ * DATA NAMA SESI
+ */
+
+let sessionName = '';
+
+let sessionFolderName = '';
+
+let sessionFilePrefix = '';
+
+
+/* =====================================================
+   FORMAT NAMA
+===================================================== */
+
+/*
+ * Membersihkan nama agar aman digunakan
+ * sebagai nama folder/file.
+ */
+
+function sanitizeName(name) {
+
+    return name
+        .trim()
+        .replace(/[<>:"/\\|?*]+/g, '')
+        .replace(/\s+/g, '_')
+        .replace(/_+/g, '_');
+
+}
+
+
+/*
+ * Nama bulan Indonesia.
+ */
+
+function getIndonesianMonth(month) {
+
+    const months = [
+        'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember'
+    ];
+
+    return months[month];
+
+}
+
+
+/*
+ * Membuat nama folder.
+ *
+ * Contoh:
+ *
+ * Budi_Otomo_14_Agustus_2026
+ */
+
+function createFolderName(name) {
+
+    const now = new Date();
+
+    const day =
+        String(
+            now.getDate()
+        ).padStart(
+            2,
+            '0'
+        );
+
+    const month =
+        getIndonesianMonth(
+            now.getMonth()
+        );
+
+    const year =
+        now.getFullYear();
+
+    return (
+        sanitizeName(name) +
+        '_' +
+        day +
+        '_' +
+        month +
+        '_' +
+        year
+    );
+
+}
+
+
+/*
+ * Prefix nama file.
+ *
+ * Contoh:
+ *
+ * Budi_Otomo
+ */
+
+function createFilePrefix(name) {
+
+    return sanitizeName(name);
+
+}
+
+
+/* =====================================================
+   CONTINUE INPUT NAMA
+===================================================== */
+
+function continueToFrame() {
+
+    const input =
+        document.getElementById(
+            'guest-name'
+        );
+
+    const name =
+        input.value.trim();
+
+    if (!name) {
+
+        alert(
+            'Silakan masukkan nama terlebih dahulu.'
+        );
+
+        input.focus();
+
+        return;
+
+    }
+
+
+    sessionName = name;
+
+    sessionFolderName =
+        createFolderName(
+            sessionName
+        );
+
+    sessionFilePrefix =
+        createFilePrefix(
+            sessionName
+        );
+
+
+    /*
+     * Update preview.
+     */
+
+    document
+        .getElementById(
+            'folder-preview'
+        )
+        .innerText =
+        sessionFolderName;
+
+
+    document
+        .getElementById(
+            'preview-name'
+        )
+        .innerText =
+        sessionName;
+
+
+    document
+        .getElementById(
+            'preview-folder'
+        )
+        .innerText =
+        sessionFolderName;
+
+
+    document
+        .getElementById(
+            'camera-name-display'
+        )
+        .innerText =
+        `• ${sessionName}`;
+
+
+    document
+        .getElementById(
+            'result-name'
+        )
+        .innerText =
+        sessionName;
+
+
+    nav(
+        'frame-screen'
+    );
+
+}
+
+
+/* =====================================================
+   INPUT NAMA PREVIEW REALTIME
+===================================================== */
+
+document
+    .getElementById(
+        'guest-name'
+    )
+    .addEventListener(
+        'input',
+        function() {
+
+            const name =
+                this.value.trim();
+
+            const preview =
+                document.getElementById(
+                    'folder-preview'
+                );
+
+            if (!name) {
+
+                preview.innerText =
+                    '-';
+
+                return;
+
+            }
+
+            preview.innerText =
+                createFolderName(
+                    name
+                );
+
+        }
+    );
+
+
+/*
+ * Enter = lanjut.
+ */
+
+document
+    .getElementById(
+        'guest-name'
+    )
+    .addEventListener(
+        'keydown',
+        function(event) {
+
+            if (
+                event.key === 'Enter'
+            ) {
+
+                continueToFrame();
+
+            }
+
+        }
+    );
+
+
 /* =====================================================
    DETECT TRANSPARENT FRAME HOLES
 ===================================================== */
@@ -1250,18 +1661,15 @@ async function detectFrameHoles(
             const img =
                 new Image();
 
-
             img.onload = () => {
 
                 finalFrameImageObj =
                     img;
 
-
                 const canvas =
                     document.createElement(
                         'canvas'
                     );
-
 
                 const ctx =
                     canvas.getContext(
@@ -1272,29 +1680,23 @@ async function detectFrameHoles(
                         }
                     );
 
-
                 const width =
                     img.width;
-
 
                 const height =
                     img.height;
 
-
                 canvas.width =
                     width;
 
-
                 canvas.height =
                     height;
-
 
                 ctx.drawImage(
                     img,
                     0,
                     0
                 );
-
 
                 const imageData =
                     ctx.getImageData(
@@ -1304,19 +1706,15 @@ async function detectFrameHoles(
                         height
                     );
 
-
                 const data =
                     imageData.data;
-
 
                 const visited =
                     new Uint8Array(
                         width * height
                     );
 
-
                 const holes = [];
-
 
                 for (
                     let y = 0;
@@ -1333,12 +1731,6 @@ async function detectFrameHoles(
                         const index =
                             y * width + x;
 
-
-                        /*
-                         * Alpha < 10
-                         * berarti transparan.
-                         */
-
                         if (
                             data[
                                 index * 4 + 3
@@ -1352,10 +1744,8 @@ async function detectFrameHoles(
                             let minY = y;
                             let maxY = y;
 
-
                             const stack =
                                 [index];
-
 
                             while (
                                 stack.length > 0
@@ -1364,23 +1754,19 @@ async function detectFrameHoles(
                                 const idx =
                                     stack.pop();
 
-
                                 if (
                                     visited[idx]
                                 ) {
                                     continue;
                                 }
 
-
                                 const px =
                                     idx % width;
-
 
                                 const py =
                                     Math.floor(
                                         idx / width
                                     );
-
 
                                 if (
                                     data[
@@ -1390,10 +1776,8 @@ async function detectFrameHoles(
                                     continue;
                                 }
 
-
                                 visited[idx] =
                                     1;
-
 
                                 if (
                                     px < minX
@@ -1401,13 +1785,11 @@ async function detectFrameHoles(
                                     minX = px;
                                 }
 
-
                                 if (
                                     px > maxX
                                 ) {
                                     maxX = px;
                                 }
-
 
                                 if (
                                     py < minY
@@ -1415,13 +1797,11 @@ async function detectFrameHoles(
                                     minY = py;
                                 }
 
-
                                 if (
                                     py > maxY
                                 ) {
                                     maxY = py;
                                 }
-
 
                                 if (
                                     px + 1 < width
@@ -1431,7 +1811,6 @@ async function detectFrameHoles(
                                     );
                                 }
 
-
                                 if (
                                     px - 1 >= 0
                                 ) {
@@ -1440,7 +1819,6 @@ async function detectFrameHoles(
                                     );
                                 }
 
-
                                 if (
                                     py + 1 < height
                                 ) {
@@ -1448,7 +1826,6 @@ async function detectFrameHoles(
                                         idx + width
                                     );
                                 }
-
 
                                 if (
                                     py - 1 >= 0
@@ -1459,11 +1836,6 @@ async function detectFrameHoles(
                                 }
 
                             }
-
-
-                            /*
-                             * Abaikan lubang kecil.
-                             */
 
                             if (
                                 maxX - minX > 80 &&
@@ -1494,12 +1866,6 @@ async function detectFrameHoles(
 
                 }
 
-
-                /*
-                 * Urutkan berdasarkan
-                 * posisi Y kemudian X.
-                 */
-
                 holes.sort(
                     (a, b) => {
 
@@ -1515,7 +1881,6 @@ async function detectFrameHoles(
 
                         }
 
-
                         return (
                             a.y - b.y
                         );
@@ -1523,13 +1888,11 @@ async function detectFrameHoles(
                     }
                 );
 
-
                 resolve(
                     holes
                 );
 
             };
-
 
             img.onerror = () => {
 
@@ -1538,7 +1901,6 @@ async function detectFrameHoles(
                 );
 
             };
-
 
             img.src =
                 imgSrc;
@@ -1572,29 +1934,23 @@ async function selectFrame(
             }
         );
 
-
     element.classList.add(
         'selected'
     );
 
-
     selectedFramePath =
         framePath;
-
 
     const button =
         document.getElementById(
             'btn-continue-camera'
         );
 
-
     button.disabled =
         true;
 
-
     button.innerText =
         'Memindai Frame...';
-
 
     try {
 
@@ -1603,10 +1959,8 @@ async function selectFrame(
                 framePath
             );
 
-
         requiredPhotos =
             frameHoles.length;
-
 
         if (
             requiredPhotos === 0
@@ -1615,35 +1969,28 @@ async function selectFrame(
             button.disabled =
                 true;
 
-
             button.innerText =
                 'Pilih Frame Dulu';
-
 
             alert(
                 'Frame tidak mempunyai lubang transparan.'
             );
 
-
             return;
 
         }
 
-
         button.disabled =
             false;
 
-
         button.innerText =
             `Lanjut (${requiredPhotos} Foto)`;
-
 
     } catch(error) {
 
         console.error(
             error
         );
-
 
         alert(
             error
@@ -1662,10 +2009,6 @@ async function initCamera() {
 
     try {
 
-        /*
-         * Matikan stream sebelumnya.
-         */
-
         if (stream) {
 
             stream
@@ -1677,7 +2020,6 @@ async function initCamera() {
                 );
 
         }
-
 
         stream =
             await navigator
@@ -1701,30 +2043,18 @@ async function initCamera() {
 
                 });
 
-
         const video =
             document.getElementById(
                 'camera-feed'
             );
 
-
         video.srcObject =
             stream;
-
-
-        /*
-         * Reset foto.
-         */
 
         capturedImages =
             new Array(
                 requiredPhotos
             );
-
-
-        /*
-         * Reset tombol.
-         */
 
         document
             .getElementById(
@@ -1732,17 +2062,11 @@ async function initCamera() {
             )
             .disabled = false;
 
-
         document
             .getElementById(
                 'btn-next-preview'
             )
             .disabled = true;
-
-
-        /*
-         * Tunggu video siap.
-         */
 
         await new Promise(
             resolve => {
@@ -1765,20 +2089,13 @@ async function initCamera() {
             }
         );
 
-
-        /*
-         * Buat preview frame.
-         */
-
         buildFramePreview();
-
 
     } catch(error) {
 
         console.error(
             error
         );
-
 
         alert(
             'Izin kamera diperlukan.'
@@ -1801,62 +2118,43 @@ function buildFramePreview() {
         return;
     }
 
-
     const container =
         document.getElementById(
             'frame-preview-container'
         );
-
 
     const frame =
         document.getElementById(
             'camera-side-frame'
         );
 
-
     const slots =
         document.getElementById(
             'photo-slots'
         );
 
-
     const containerWidth =
         container.clientWidth;
-
 
     const containerHeight =
         container.clientHeight;
 
-
-    /*
-     * Ukuran frame ASLI.
-     */
-
     const frameWidth =
         finalFrameImageObj.width;
 
-
     const frameHeight =
         finalFrameImageObj.height;
-
 
     const frameRatio =
         frameWidth /
         frameHeight;
 
-
-    /*
-     * Fit frame ke panel.
-     */
-
     let displayWidth =
         containerWidth;
-
 
     let displayHeight =
         displayWidth /
         frameRatio;
-
 
     if (
         displayHeight >
@@ -1866,17 +2164,11 @@ function buildFramePreview() {
         displayHeight =
             containerHeight;
 
-
         displayWidth =
             displayHeight *
             frameRatio;
 
     }
-
-
-    /*
-     * Posisi frame di tengah.
-     */
 
     const offsetX =
         (
@@ -1884,68 +2176,41 @@ function buildFramePreview() {
             displayWidth
         ) / 2;
 
-
     const offsetY =
         (
             containerHeight -
             displayHeight
         ) / 2;
 
-
-    /*
-     * Tampilkan frame.
-     */
-
     frame.src =
         selectedFramePath;
-
 
     frame.style.width =
         displayWidth + 'px';
 
-
     frame.style.height =
         displayHeight + 'px';
-
 
     frame.style.left =
         offsetX + 'px';
 
-
     frame.style.top =
         offsetY + 'px';
-
-
-    /*
-     * Container slot
-     * harus sama persis dengan
-     * ukuran frame.
-     */
 
     slots.style.left =
         offsetX + 'px';
 
-
     slots.style.top =
         offsetY + 'px';
-
 
     slots.style.width =
         displayWidth + 'px';
 
-
     slots.style.height =
         displayHeight + 'px';
 
-
     slots.innerHTML =
         '';
-
-
-    /*
-     * Buat slot sesuai
-     * lubang frame.
-     */
 
     frameHoles.forEach(
         (
@@ -1958,14 +2223,8 @@ function buildFramePreview() {
                     'div'
                 );
 
-
             slot.className =
                 'photo-slot';
-
-
-            /*
-             * X
-             */
 
             slot.style.left =
                 (
@@ -1974,22 +2233,12 @@ function buildFramePreview() {
                     displayWidth
                 ) + 'px';
 
-
-            /*
-             * Y
-             */
-
             slot.style.top =
                 (
                     hole.y /
                     frameHeight *
                     displayHeight
                 ) + 'px';
-
-
-            /*
-             * WIDTH
-             */
 
             slot.style.width =
                 (
@@ -1998,11 +2247,6 @@ function buildFramePreview() {
                     displayWidth
                 ) + 'px';
 
-
-            /*
-             * HEIGHT
-             */
-
             slot.style.height =
                 (
                     hole.h /
@@ -2010,106 +2254,68 @@ function buildFramePreview() {
                     displayHeight
                 ) + 'px';
 
-
             slot.dataset.index =
                 index;
-
-
-            /*
-             * Canvas untuk foto.
-             */
 
             const canvas =
                 document.createElement(
                     'canvas'
                 );
 
-
             canvas.width =
                 hole.w;
-
 
             canvas.height =
                 hole.h;
 
-
             slot.appendChild(
                 canvas
             );
-
-
-            /*
-             * Nomor.
-             */
 
             const number =
                 document.createElement(
                     'div'
                 );
 
-
             number.className =
                 'slot-number';
-
 
             number.innerText =
                 index + 1;
 
-
             slot.appendChild(
                 number
             );
-
-
-            /*
-             * Status kosong.
-             */
 
             const empty =
                 document.createElement(
                     'div'
                 );
 
-
             empty.className =
                 'slot-empty';
 
-
             empty.innerHTML =
-                `Foto ${index + 1}<br>Belum diambil`;
-
+                `Foto ${index + 1}`;
 
             slot.appendChild(
                 empty
             );
-
-
-            /*
-             * Label retake.
-             */
 
             const retake =
                 document.createElement(
                     'div'
                 );
 
-
             retake.className =
                 'retake-label';
-
 
             retake.innerHTML =
                 '↻ Ambil Ulang';
 
-
             slot.appendChild(
                 retake
             );
-
-
-            /*
-             * Klik slot.
-             */
 
             slot.addEventListener(
                 'click',
@@ -2128,15 +2334,9 @@ function buildFramePreview() {
                 }
             );
 
-
             slots.appendChild(
                 slot
             );
-
-
-            /*
-             * Render status awal.
-             */
 
             renderSlot(
                 index
@@ -2159,27 +2359,22 @@ function renderSlot(index) {
             '.photo-slot'
         );
 
-
     const slot =
         slots[index];
-
 
     if (!slot) {
         return;
     }
-
 
     const canvas =
         slot.querySelector(
             'canvas'
         );
 
-
     const ctx =
         canvas.getContext(
             '2d'
         );
-
 
     ctx.clearRect(
         0,
@@ -2188,16 +2383,10 @@ function renderSlot(index) {
         canvas.height
     );
 
-
     const empty =
         slot.querySelector(
             '.slot-empty'
         );
-
-
-    /*
-     * Belum ada foto.
-     */
 
     if (
         !capturedImages[index]
@@ -2206,14 +2395,12 @@ function renderSlot(index) {
         ctx.fillStyle =
             '#222';
 
-
         ctx.fillRect(
             0,
             0,
             canvas.width,
             canvas.height
         );
-
 
         if (empty) {
 
@@ -2222,15 +2409,9 @@ function renderSlot(index) {
 
         }
 
-
         return;
 
     }
-
-
-    /*
-     * Sudah ada foto.
-     */
 
     if (empty) {
 
@@ -2239,10 +2420,8 @@ function renderSlot(index) {
 
     }
 
-
     const image =
         new Image();
-
 
     image.onload =
         () => {
@@ -2255,21 +2434,14 @@ function renderSlot(index) {
 
                 {
                     x: 0,
-
                     y: 0,
-
-                    w:
-                        canvas.width,
-
-                    h:
-                        canvas.height
-
+                    w: canvas.width,
+                    h: canvas.height
                 }
 
             );
 
         };
-
 
     image.src =
         capturedImages[index];
@@ -2291,29 +2463,19 @@ function drawImageIntoHole(
         image.width /
         image.height;
 
-
     const targetRatio =
         target.w /
         target.h;
 
-
     let sourceWidth =
         image.width;
-
 
     let sourceHeight =
         image.height;
 
-
     let sourceX = 0;
 
-
     let sourceY = 0;
-
-
-    /*
-     * Crop horizontal.
-     */
 
     if (
         imageRatio >
@@ -2324,26 +2486,17 @@ function drawImageIntoHole(
             image.height *
             targetRatio;
 
-
         sourceX =
             (
                 image.width -
                 sourceWidth
             ) / 2;
 
-    }
-
-
-    /*
-     * Crop vertical.
-     */
-
-    else {
+    } else {
 
         sourceHeight =
             image.width /
             targetRatio;
-
 
         sourceY =
             (
@@ -2352,7 +2505,6 @@ function drawImageIntoHole(
             ) / 2;
 
     }
-
 
     ctx.drawImage(
 
@@ -2384,12 +2536,12 @@ function toggleMirror() {
     isMirrored =
         !isMirrored;
 
-
     document
         .getElementById(
             'camera-feed'
         )
         .style.transform =
+
         isMirrored
             ? 'scaleX(-1)'
             : 'scaleX(1)';
@@ -2409,21 +2561,14 @@ async function takePhotos() {
         return;
     }
 
-
     isTakingPhoto =
         true;
-
 
     document
         .getElementById(
             'btn-take'
         )
         .disabled = true;
-
-
-    /*
-     * Ambil foto satu per satu.
-     */
 
     for (
         let i = 0;
@@ -2433,24 +2578,20 @@ async function takePhotos() {
 
         await runCountdown();
 
-
         captureFrame(
             i
         );
 
     }
 
-
     isTakingPhoto =
         false;
-
 
     document
         .getElementById(
             'btn-take'
         )
         .disabled = false;
-
 
     document
         .getElementById(
@@ -2476,21 +2617,13 @@ async function retakePhoto(
         return;
     }
 
-
     isTakingPhoto =
         true;
-
-
-    /*
-     * Disable sementara
-     * slot lain.
-     */
 
     const slots =
         document.querySelectorAll(
             '.photo-slot'
         );
-
 
     slots.forEach(
         slot => {
@@ -2501,27 +2634,11 @@ async function retakePhoto(
         }
     );
 
-
-    /*
-     * Countdown.
-     */
-
     await runCountdown();
-
-
-    /*
-     * Ambil ulang hanya
-     * index yang dipilih.
-     */
 
     captureFrame(
         index
     );
-
-
-    /*
-     * Aktifkan kembali.
-     */
 
     slots.forEach(
         slot => {
@@ -2532,10 +2649,8 @@ async function retakePhoto(
         }
     );
 
-
     isTakingPhoto =
         false;
-
 
     document
         .getElementById(
@@ -2557,23 +2672,19 @@ function runCountdown() {
 
             let count = 3;
 
-
             const countdown =
                 document.getElementById(
                     'countdown'
                 );
 
-
             countdown.innerText =
                 count;
-
 
             const interval =
                 setInterval(
                     () => {
 
                         count--;
-
 
                         if (
                             count > 0
@@ -2588,25 +2699,17 @@ function runCountdown() {
                                 interval
                             );
 
-
                             countdown.innerText =
                                 '';
-
-
-                            /*
-                             * Flash.
-                             */
 
                             const flash =
                                 document.getElementById(
                                     'flash'
                                 );
 
-
                             flash.classList.add(
                                 'active'
                             );
-
 
                             setTimeout(
                                 () => {
@@ -2618,7 +2721,6 @@ function runCountdown() {
                                 },
                                 120
                             );
-
 
                             resolve();
 
@@ -2647,7 +2749,6 @@ function captureFrame(
             'camera-feed'
         );
 
-
     if (
         !video.videoWidth ||
         !video.videoHeight
@@ -2657,31 +2758,21 @@ function captureFrame(
 
     }
 
-
     const canvas =
         document.createElement(
             'canvas'
         );
 
-
     canvas.width =
         video.videoWidth;
 
-
     canvas.height =
         video.videoHeight;
-
 
     const ctx =
         canvas.getContext(
             '2d'
         );
-
-
-    /*
-     * Mirror sama seperti
-     * tampilan kamera.
-     */
 
     if (
         isMirrored
@@ -2692,7 +2783,6 @@ function captureFrame(
             0
         );
 
-
         ctx.scale(
             -1,
             1
@@ -2700,24 +2790,17 @@ function captureFrame(
 
     }
 
-
     ctx.drawImage(
         video,
         0,
         0
     );
 
-
     capturedImages[index] =
         canvas.toDataURL(
             'image/jpeg',
             0.92
         );
-
-
-    /*
-     * Update slot.
-     */
 
     renderSlot(
         index
@@ -2732,10 +2815,6 @@ function captureFrame(
 
 function loadPreview() {
 
-    /*
-     * Matikan kamera.
-     */
-
     if (stream) {
 
         stream
@@ -2748,12 +2827,10 @@ function loadPreview() {
                 }
             );
 
-
         stream =
             null;
 
     }
-
 
     drawCanvas(
         true,
@@ -2773,7 +2850,6 @@ function applyFilter(
 
     currentCanvasFilter =
         filterCss;
-
 
     drawCanvas(
         true,
@@ -2800,34 +2876,24 @@ async function drawCanvas(
 
     }
 
-
     const canvas =
         document.getElementById(
             canvasId
         );
-
 
     const ctx =
         canvas.getContext(
             '2d'
         );
 
-
     canvas.width =
         finalFrameImageObj.width;
-
 
     canvas.height =
         finalFrameImageObj.height;
 
-
-    /*
-     * Background.
-     */
-
     ctx.fillStyle =
         '#FFFFFF';
-
 
     ctx.fillRect(
         0,
@@ -2836,14 +2902,8 @@ async function drawCanvas(
         canvas.height
     );
 
-
-    /*
-     * Filter.
-     */
-
     ctx.filter =
         currentCanvasFilter;
-
 
     const photoPromises =
         capturedImages.map(
@@ -2865,10 +2925,8 @@ async function drawCanvas(
 
                         }
 
-
                         const image =
                             new Image();
-
 
                         image.onload =
                             () => {
@@ -2877,7 +2935,6 @@ async function drawCanvas(
                                     frameHoles[
                                         index
                                     ];
-
 
                                 if (
                                     hole
@@ -2895,11 +2952,9 @@ async function drawCanvas(
 
                                 }
 
-
                                 resolve();
 
                             };
-
 
                         image.src =
                             source;
@@ -2910,16 +2965,9 @@ async function drawCanvas(
             }
         );
 
-
     await Promise.all(
         photoPromises
     );
-
-
-    /*
-     * Frame diletakkan
-     * paling akhir.
-     */
 
     if (
         withFrame
@@ -2927,7 +2975,6 @@ async function drawCanvas(
 
         ctx.filter =
             'none';
-
 
         ctx.drawImage(
 
@@ -2957,10 +3004,8 @@ function downloadImage() {
             'a'
         );
 
-
     link.download =
-        `photobooth_frame_${Date.now()}.png`;
-
+        `${sessionFilePrefix}_Foto_Frame.png`;
 
     link.href =
         document
@@ -2970,7 +3015,6 @@ function downloadImage() {
             .toDataURL(
                 'image/png'
             );
-
 
     link.click();
 
@@ -2997,20 +3041,16 @@ function downloadTanpaFrame() {
 
             }
 
-
             const link =
                 document.createElement(
                     'a'
                 );
 
-
             link.download =
-                `foto_satuan_${index + 1}_${Date.now()}.png`;
-
+                `${sessionFilePrefix}_Foto_${index + 1}.jpg`;
 
             link.href =
                 image;
-
 
             link.click();
 
@@ -3026,13 +3066,34 @@ function downloadTanpaFrame() {
 
 async function processAndUploadSession() {
 
+    /*
+     * Pastikan nama tersedia.
+     */
+
+    if (
+        !sessionName
+    ) {
+
+        alert(
+            'Nama sesi belum diisi.'
+        );
+
+        nav(
+            'name-screen'
+        );
+
+        return;
+
+    }
+
+
     nav(
         'result-screen'
     );
 
 
     /*
-     * Buat preview final.
+     * Preview final.
      */
 
     await drawCanvas(
@@ -3097,7 +3158,6 @@ async function processAndUploadSession() {
             let gifData =
                 '';
 
-
             if (
                 !obj.error
             ) {
@@ -3107,11 +3167,16 @@ async function processAndUploadSession() {
 
             }
 
-
             try {
 
                 /*
                  * Upload ke server.
+                 *
+                 * TAMBAHAN:
+                 *
+                 * sessionName
+                 * folderName
+                 * fileNamePrefix
                  */
 
                 const response =
@@ -3128,6 +3193,23 @@ async function processAndUploadSession() {
 
                             body:
                                 JSON.stringify({
+
+                                    /*
+                                     * DATA NAMA
+                                     */
+
+                                    sessionName:
+                                        sessionName,
+
+                                    folderName:
+                                        sessionFolderName,
+
+                                    fileNamePrefix:
+                                        sessionFilePrefix,
+
+                                    /*
+                                     * DATA FOTO
+                                     */
 
                                     frameImage:
                                         frameImageData,
@@ -3157,14 +3239,9 @@ async function processAndUploadSession() {
                             'qrcode-container'
                         );
 
-
                     qrContainer.innerHTML =
                         '';
 
-
-                    /*
-                     * QR CODE.
-                     */
 
                     new QRCode(
                         qrContainer,
@@ -3199,8 +3276,7 @@ async function processAndUploadSession() {
                             'qr-status-text'
                         )
                         .innerText =
-                        'Scan untuk unduh folder sesi!';
-
+                        `Folder ${sessionFolderName} siap diunduh.`;
 
                 } else {
 
@@ -3217,7 +3293,6 @@ async function processAndUploadSession() {
                     'Error:',
                     error
                 );
-
 
                 alert(
                     'Gagal menghubungi server Node.js.'
@@ -3245,17 +3320,11 @@ window.addEventListener(
                 'camera-screen'
             );
 
-
         if (
             cameraScreen.classList.contains(
                 'active'
             )
         ) {
-
-            /*
-             * Hitung ulang posisi
-             * lubang frame.
-             */
 
             buildFramePreview();
 
@@ -3267,4 +3336,5 @@ window.addEventListener(
 </script>
 
 </body>
+
 </html>
