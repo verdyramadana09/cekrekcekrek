@@ -534,7 +534,7 @@
         @media (max-width: 600px) {
             .screen { padding: 12px; }
             .camera-screen-layout { min-height: calc(100dvh - 24px); }
-            .video-wrapper { min-height: 0; aspect-ratio: 3 / 4; border-radius: 14px; }
+            .video-wrapper { min-height: 0; border-radius: 14px; }
             .camera-settings-panel, .camera-right-panel { padding: 12px; }
         }
 
@@ -553,7 +553,7 @@
             .camera-center-area { order: 1; min-height: 58vh; }
             .camera-settings-panel { order: 2; height: auto; }
             .camera-right-panel { order: 3; height: auto; max-height: 280px; }
-            .video-wrapper { min-height: 52vh; }
+            .video-wrapper { min-height: 0; }
         }
 
         .camera-settings-panel {
@@ -623,8 +623,10 @@
         }
 
         .video-wrapper {
-            flex: 1;
-            background: #000;
+            flex: 0 0 auto;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background: transparent;
             border-radius: 18px;
             overflow: hidden;
             position: relative;
@@ -633,6 +635,8 @@
             align-items: center;
             box-shadow: 0 10px 35px rgba(0,0,0,0.10);
             min-height: 0;
+            max-width: 100%;
+            max-height: 100%;
         }
 
         #camera-feed {
@@ -643,7 +647,7 @@
             min-height: 0;
             object-fit: cover;
             transform: scaleX(-1);
-            background: #000;
+            background: transparent;
             opacity: 1;
             visibility: visible;
         }
@@ -1638,6 +1642,7 @@
                 <button class="filter-thumb-item" onclick="applyCameraEffect('grayscale(45%) contrast(118%) sepia(15%)', this)"><div class="filter-thumb-placeholder" style="background:#8d8d8d;"></div><span>Film</span></button>
                 <button class="filter-thumb-item" onclick="applyCameraEffect('saturate(55%) contrast(108%) brightness(103%)', this)"><div class="filter-thumb-placeholder" style="background:#b7c1c7;"></div><span>Fade</span></button>
             </div>
+        </div>
 
         <!-- RIGHT: PHOTOS THUMBNAILS & NEXT BUTTON -->
         <div class="camera-right-panel">
@@ -2478,8 +2483,61 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 /* =====================================================
-   INIT CAMERA
+   CAMERA PREVIEW MENGIKUTI LUBANG TRANSPARAN FRAME
+   Tidak menampilkan area hitam. Rasio preview mengikuti
+   slot transparan yang sedang akan dipotret.
 ===================================================== */
+function getNextCameraHoleIndex(preferredIndex = 0) {
+    if (!Array.isArray(frameHoles) || !frameHoles.length) return -1;
+    const start = Math.max(0, Math.min(preferredIndex, frameHoles.length - 1));
+    for (let i = start; i < frameHoles.length; i++) {
+        if (!capturedImages[i]) return i;
+    }
+    return start;
+}
+
+function syncCameraPreviewToHole(preferredIndex = 0) {
+    const wrapper = document.getElementById('video-wrapper');
+    const center = document.querySelector('.camera-center-area');
+    const filters = document.getElementById('camera-filters');
+    if (!wrapper || !center || !Array.isArray(frameHoles) || !frameHoles.length) return;
+
+    const index = getNextCameraHoleIndex(preferredIndex);
+    const hole = frameHoles[index];
+    if (!hole || !hole.w || !hole.h) return;
+
+    const ratio = hole.w / hole.h;
+    const gap = parseFloat(getComputedStyle(center).gap) || 10;
+    const filterHeight = filters ? filters.getBoundingClientRect().height : 0;
+    const availableWidth = Math.max(120, center.clientWidth);
+    const availableHeight = Math.max(120, center.clientHeight - filterHeight - gap);
+
+    // Hitung ukuran maksimum yang tetap mempertahankan rasio lubang frame.
+    let width = availableWidth;
+    let height = width / ratio;
+    if (height > availableHeight) {
+        height = availableHeight;
+        width = height * ratio;
+    }
+
+    width = Math.max(1, Math.min(width, availableWidth));
+    height = Math.max(1, Math.min(height, availableHeight));
+
+    wrapper.style.width = `${Math.floor(width)}px`;
+    wrapper.style.height = `${Math.floor(height)}px`;
+    wrapper.style.aspectRatio = `${hole.w} / ${hole.h}`;
+    wrapper.style.marginInline = 'auto';
+    wrapper.style.background = 'transparent';
+    wrapper.dataset.holeIndex = String(index);
+
+    const video = document.getElementById('camera-feed');
+    if (video) {
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.style.background = 'transparent';
+    }
+}
 
 async function initCamera(fromRetry = false) {
     const video = document.getElementById('camera-feed');
@@ -2643,6 +2701,8 @@ async function initCamera(fromRetry = false) {
         } catch (playError) {
             console.warn('video.play() ditolak:', playError);
         }
+
+        requestAnimationFrame(() => syncCameraPreviewToHole(0));
 
         if (!video.videoWidth || !video.videoHeight) {
             throw new Error('Ukuran video kamera masih 0.');
@@ -3227,6 +3287,8 @@ async function retakePhoto(
         index
     );
 
+    requestAnimationFrame(() => syncCameraPreviewToHole(index));
+
 
     slots.forEach(
         slot => {
@@ -3414,6 +3476,9 @@ function captureFrame(
     renderSlot(
         index
     );
+
+    // Bila slot berikutnya memiliki rasio berbeda, preview ikut berubah otomatis.
+    requestAnimationFrame(() => syncCameraPreviewToHole(index + 1));
 
 }
 
@@ -3937,6 +4002,7 @@ window.addEventListener(
         ) {
 
             buildFramePreview();
+            requestAnimationFrame(() => syncCameraPreviewToHole(0));
 
         }
 
@@ -4258,6 +4324,7 @@ initPreviewEditorDrag=function(){
             lastCameraHeight = video.videoHeight;
             requestAnimationFrame(() => {
                 buildFramePreview();
+                syncCameraPreviewToHole(0);
             });
         }
     }
@@ -4290,6 +4357,14 @@ initPreviewEditorDrag=function(){
         }
     });
 })();
+
+window.addEventListener('resize', () => {
+    const screen = document.getElementById('camera-screen');
+    if (screen && screen.classList.contains('active')) {
+        requestAnimationFrame(() => syncCameraPreviewToHole(0));
+    }
+});
+
 </script>
 </body>
 </html>
