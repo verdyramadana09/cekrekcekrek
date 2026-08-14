@@ -639,9 +639,81 @@
             display: block;
             width: 100%;
             height: 100%;
+            min-width: 0;
+            min-height: 0;
             object-fit: cover;
             transform: scaleX(-1);
             background: #000;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .camera-status {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            padding: 24px;
+            text-align: center;
+            color: #fff;
+            background: rgba(0,0,0,.58);
+            z-index: 35;
+        }
+
+        .camera-status.hidden {
+            display: none;
+        }
+
+        .camera-status-icon {
+            font-size: 38px;
+            line-height: 1;
+        }
+
+        .camera-status-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .camera-status-text {
+            max-width: 430px;
+            font-size: 12px;
+            line-height: 1.55;
+            color: rgba(255,255,255,.88);
+        }
+
+        .camera-status button {
+            margin-top: 4px;
+            padding: 10px 20px;
+            font-size: 12px;
+        }
+
+        .camera-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            color: #fff;
+            background: rgba(0,0,0,.35);
+            z-index: 34;
+            pointer-events: none;
+        }
+
+        .camera-loading.hidden {
+            display: none;
+        }
+
+        .camera-loading .spinner {
+            width: 32px;
+            height: 32px;
+            border-width: 3px;
+            border-color: rgba(255,255,255,.35);
+            border-top-color: #fff;
         }
 
         .shutter-btn-absolute {
@@ -1460,7 +1532,7 @@
             disabled
             onclick="
                 nav('camera-screen');
-                initCamera();
+                requestAnimationFrame(() => initCamera());
             "
         >
             Pilih Frame Dulu
@@ -1522,8 +1594,25 @@
                 <video
                     id="camera-feed"
                     autoplay
+                    muted
                     playsinline
+                    webkit-playsinline="true"
+                    disablepictureinpicture
                 ></video>
+
+                <div id="camera-loading" class="camera-loading hidden">
+                    <div class="spinner"></div>
+                    <div style="font-size:12px;font-weight:600;">Mengaktifkan kamera...</div>
+                </div>
+
+                <div id="camera-status" class="camera-status hidden">
+                    <div class="camera-status-icon">📷</div>
+                    <div id="camera-status-title" class="camera-status-title">Kamera belum aktif</div>
+                    <div id="camera-status-text" class="camera-status-text">
+                        Izinkan akses kamera pada browser, lalu coba lagi.
+                    </div>
+                    <button type="button" class="outline" onclick="initCamera(true)">Aktifkan Kamera</button>
+                </div>
 
                 <div class="shutter-btn-absolute" onclick="takePhotos()" id="btn-take">
                     <div class="shutter-inner">
@@ -2392,116 +2481,243 @@ window.addEventListener('DOMContentLoaded', () => {
    INIT CAMERA
 ===================================================== */
 
-async function initCamera() {
+async function initCamera(fromRetry = false) {
+    const video = document.getElementById('camera-feed');
+    const status = document.getElementById('camera-status');
+    const statusTitle = document.getElementById('camera-status-title');
+    const statusText = document.getElementById('camera-status-text');
+    const loading = document.getElementById('camera-loading');
+    const takeButton = document.getElementById('btn-take');
+    const nextButton = document.getElementById('btn-next-preview');
+
+    const showStatus = (title, message) => {
+        if (statusTitle) statusTitle.textContent = title;
+        if (statusText) statusText.textContent = message;
+        if (status) status.classList.remove('hidden');
+        if (loading) loading.classList.add('hidden');
+        if (takeButton) takeButton.style.pointerEvents = 'none';
+    };
+
+    const hideStatus = () => {
+        if (status) status.classList.add('hidden');
+        if (loading) loading.classList.add('hidden');
+        if (takeButton) takeButton.style.pointerEvents = 'auto';
+    };
+
+    const stopCurrentStream = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => {
+                try { track.stop(); } catch (_) {}
+            });
+            stream = null;
+        }
+        if (video) video.srcObject = null;
+    };
+
+    if (!video) {
+        console.error('Elemen #camera-feed tidak ditemukan.');
+        return;
+    }
+
+    // Jangan meminta kamera saat halaman kamera belum benar-benar aktif.
+    const cameraScreen = document.getElementById('camera-screen');
+    if (cameraScreen && !cameraScreen.classList.contains('active')) {
+        return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showStatus(
+            'Browser tidak mendukung kamera',
+            'Gunakan Chrome, Edge, Safari, atau Firefox versi terbaru. Kamera juga membutuhkan HTTPS atau localhost.'
+        );
+        return;
+    }
+
+    // getUserMedia hanya dapat bekerja pada secure context.
+    if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        showStatus(
+            'Koneksi tidak aman',
+            'Akses kamera diblokir karena halaman tidak menggunakan HTTPS. Buka website melalui HTTPS atau localhost.'
+        );
+        return;
+    }
 
     try {
+        if (loading) loading.classList.remove('hidden');
+        if (status) status.classList.add('hidden');
+        if (takeButton) takeButton.style.pointerEvents = 'none';
 
-        if (stream) {
+        stopCurrentStream();
 
-            stream
-                .getTracks()
-                .forEach(
-                    track => {
-                        track.stop();
-                    }
-                );
+        /*
+         * Jangan memakai resolusi wajib.
+         * ideal + fallback membuat kamera lebih kompatibel dengan
+         * Android, iPhone/iPad, laptop, webcam USB, dan browser desktop.
+         */
+        const constraintSets = [
+            {
+                video: {
+                    facingMode: { ideal: 'user' },
+                    width: { ideal: 1280, min: 320 },
+                    height: { ideal: 720, min: 240 }
+                },
+                audio: false
+            },
+            {
+                video: {
+                    facingMode: 'user'
+                },
+                audio: false
+            },
+            {
+                video: true,
+                audio: false
+            }
+        ];
 
+        let lastError = null;
+
+        for (const constraints of constraintSets) {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                if (stream) break;
+            } catch (error) {
+                lastError = error;
+
+                // Constraint yang terlalu spesifik dapat gagal di perangkat tertentu.
+                if (
+                    error.name !== 'OverconstrainedError' &&
+                    error.name !== 'NotFoundError'
+                ) {
+                    break;
+                }
+            }
         }
 
+        if (!stream) {
+            throw lastError || new Error('Kamera tidak ditemukan.');
+        }
 
-        stream =
-            await navigator
-                .mediaDevices
-                .getUserMedia({
+        video.muted = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.srcObject = stream;
 
-                    video: {
-
-                        facingMode:
-                            'user',
-
-                        width: {
-                            ideal: 1280
-                        },
-
-                        height: {
-                            ideal: 720
-                        }
-
-                    }
-
-                });
-
-
-        const video =
-            document.getElementById(
-                'camera-feed'
-            );
-
-
-        video.srcObject =
-            stream;
-
-
-        capturedImages =
-            new Array(
-                requiredPhotos
-            );
-
-
-        document
-            .getElementById(
-                'btn-take'
-            )
-            .style.pointerEvents = 'auto';
-
-
-        document
-            .getElementById(
-                'btn-next-preview'
-            )
-            .disabled = true;
-
-
-        await new Promise(
-            resolve => {
-
-                if (
-                    video.readyState >= 2
-                ) {
-
-                    resolve();
-
-                } else {
-
-                    video.onloadedmetadata =
-                        () => {
-                            resolve();
-                        };
-
-                }
-
+        // Tunggu metadata agar videoWidth/videoHeight sudah tersedia.
+        await new Promise((resolve, reject) => {
+            if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+                resolve();
+                return;
             }
-        );
 
+            const timeout = setTimeout(() => {
+                cleanup();
+                reject(new Error('Kamera tidak mengirimkan metadata video.'));
+            }, 10000);
+
+            const onLoaded = () => {
+                cleanup();
+                resolve();
+            };
+
+            const onError = () => {
+                cleanup();
+                reject(new Error('Video kamera gagal dimuat.'));
+            };
+
+            function cleanup() {
+                clearTimeout(timeout);
+                video.removeEventListener('loadedmetadata', onLoaded);
+                video.removeEventListener('error', onError);
+            }
+
+            video.addEventListener('loadedmetadata', onLoaded, { once: true });
+            video.addEventListener('error', onError, { once: true });
+        });
+
+        // Beberapa browser desktop tidak otomatis memulai playback walaupun autoplay aktif.
+        try {
+            await video.play();
+        } catch (playError) {
+            console.warn('video.play() ditolak:', playError);
+        }
+
+        if (!video.videoWidth || !video.videoHeight) {
+            throw new Error('Ukuran video kamera masih 0.');
+        }
+
+        // Pastikan video tidak tertutup elemen lain.
+        video.style.display = 'block';
+        video.style.visibility = 'visible';
+        video.style.opacity = '1';
+        video.style.transform =
+            (isMirrored ? 'scaleX(-1)' : 'scaleX(1)') +
+            (activeCameraEffectName === 'fisheye' ? ' scale(1.08)' : '');
+
+        hideStatus();
+
+        capturedImages = new Array(requiredPhotos);
+
+        if (nextButton) nextButton.disabled = true;
+
+        // Tunggu satu frame browser supaya layout kamera sudah selesai.
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
         buildFramePreview();
 
+        console.log('Kamera aktif:', {
+            width: video.videoWidth,
+            height: video.videoHeight,
+            device: stream.getVideoTracks()[0]?.label || 'Unknown'
+        });
 
-    } catch(error) {
+    } catch (error) {
+        console.error('Gagal mengaktifkan kamera:', error);
+        stopCurrentStream();
 
-        console.error(
-            error
-        );
+        let title = 'Kamera tidak dapat diakses';
+        let message = 'Pastikan kamera tersedia dan izin kamera sudah diberikan.';
 
+        switch (error?.name) {
+            case 'NotAllowedError':
+            case 'PermissionDeniedError':
+                title = 'Izin kamera ditolak';
+                message = 'Klik ikon kamera di address bar browser, izinkan kamera untuk website ini, lalu tekan "Aktifkan Kamera".';
+                break;
 
-        alert(
-            'Izin kamera diperlukan.'
-        );
+            case 'NotFoundError':
+            case 'DevicesNotFoundError':
+                title = 'Kamera tidak ditemukan';
+                message = 'Pastikan webcam terpasang dan tidak sedang digunakan aplikasi lain seperti Zoom, Teams, OBS, atau aplikasi kamera.';
+                break;
 
+            case 'NotReadableError':
+            case 'TrackStartError':
+                title = 'Kamera sedang digunakan';
+                message = 'Tutup aplikasi lain yang sedang menggunakan kamera, kemudian tekan "Aktifkan Kamera" lagi.';
+                break;
+
+            case 'OverconstrainedError':
+                title = 'Konfigurasi kamera tidak cocok';
+                message = 'Browser tidak dapat menggunakan konfigurasi kamera yang dipilih. Coba aktifkan kamera kembali.';
+                break;
+
+            case 'SecurityError':
+                title = 'Akses kamera diblokir';
+                message = 'Periksa HTTPS, izin situs, dan pengaturan privasi kamera pada perangkat.';
+                break;
+
+            default:
+                message = error?.message
+                    ? `Kamera gagal dimulai: ${error.message}`
+                    : 'Pastikan kamera tersedia, izin sudah diberikan, dan website dibuka melalui HTTPS.';
+        }
+
+        showStatus(title, message);
     }
-
 }
-
 
 /* =====================================================
    BUILD FRAME PREVIEW
@@ -4005,6 +4221,75 @@ initPreviewEditorDrag=function(){
         selectedEditorType=hit.type;selectedEditorIndex=hit.index;scheduleEditorDraw();
     },{passive:false});
 };
+</script>
+
+<script>
+/* CAMERA LIFECYCLE PATCH
+   Memastikan preview tetap hidup setelah resize/fullscreen/tab kembali aktif.
+*/
+(function () {
+    let lastCameraWidth = 0;
+    let lastCameraHeight = 0;
+
+    function cameraIsActive() {
+        const screen = document.getElementById('camera-screen');
+        return !!(screen && screen.classList.contains('active'));
+    }
+
+    function ensureCameraPreview() {
+        const video = document.getElementById('camera-feed');
+        if (!cameraIsActive() || !video) return;
+
+        if (!stream || !stream.active) {
+            initCamera(true);
+            return;
+        }
+
+        if (video.srcObject !== stream) {
+            video.srcObject = stream;
+        }
+
+        if (video.paused) {
+            video.play().catch(() => {});
+        }
+
+        if (video.videoWidth !== lastCameraWidth || video.videoHeight !== lastCameraHeight) {
+            lastCameraWidth = video.videoWidth;
+            lastCameraHeight = video.videoHeight;
+            requestAnimationFrame(() => {
+                buildFramePreview();
+            });
+        }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            setTimeout(ensureCameraPreview, 150);
+        }
+    });
+
+    window.addEventListener('pageshow', () => {
+        setTimeout(ensureCameraPreview, 150);
+    });
+
+    window.addEventListener('resize', () => {
+        if (cameraIsActive()) {
+            setTimeout(ensureCameraPreview, 100);
+        }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+        if (cameraIsActive()) {
+            setTimeout(ensureCameraPreview, 250);
+        }
+    });
+
+    document.addEventListener('webkitfullscreenchange', () => {
+        if (cameraIsActive()) {
+            setTimeout(ensureCameraPreview, 250);
+        }
+    });
+})();
 </script>
 </body>
 </html>
