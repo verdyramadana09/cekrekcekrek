@@ -35,7 +35,7 @@ async function uploadBufferToDrive(buffer, fileName, mimeType, parentFolderId) {
     const uploaded = await drive.files.create({
         resource: fileMetadata,
         media: media,
-        fields: 'id, webViewLink'
+        fields: 'id, webViewLink, webContentLink'
     });
 
     await drive.permissions.create({
@@ -43,9 +43,40 @@ async function uploadBufferToDrive(buffer, fileName, mimeType, parentFolderId) {
         requestBody: { role: 'reader', type: 'anyone' },
     });
 
-    return uploaded.data.webViewLink;
+    // Mengembalikan direct webContentLink atau webViewLink agar bisa diakses langsung sebagai URL gambar
+    return uploaded.data.webContentLink || uploaded.data.webViewLink;
 }
 
+// Fungsi pembantu untuk mencari atau membuat subfolder "frame" di dalam GOOGLE_DRIVE_FOLDER_ID
+async function getOrCreateFrameFolder() {
+    try {
+        const response = await drive.files.list({
+            q: `name = 'frame' and '${GOOGLE_DRIVE_FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+            fields: 'files(id, name)'
+        });
+
+        if (response.data.files && response.data.files.length > 0) {
+            return response.data.files[0].id;
+        } else {
+            const folder = await drive.files.create({
+                resource: {
+                    name: 'frame',
+                    mimeType: 'application/vnd.google-apps.folder',
+                    parents: [GOOGLE_DRIVE_FOLDER_ID]
+                },
+                fields: 'id'
+            });
+            return folder.data.id;
+        }
+    } catch (error) {
+        console.error('Error saat mencari/membuat folder frame:', error);
+        throw error;
+    }
+}
+
+// =====================================================
+// ENDPOINT 1: UPLOAD SESSION (TETAP SEPERTI SEMULA / TIDAK DIRUBAH)
+// =====================================================
 app.post('/upload-session', async (req, res) => {
     try {
         const { frameImage, individualImages, gifImage } = req.body;
@@ -82,6 +113,56 @@ app.post('/upload-session', async (req, res) => {
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ success: false, message: 'Gagal membuat folder', error: error.message });
+    }
+});
+
+// =====================================================
+// ENDPOINT 2: UPLOAD CUSTOM FRAME KE FOLDER "frame" DI DRIVE
+// =====================================================
+app.post('/upload-frame', async (req, res) => {
+    try {
+        const { frameName, frameData } = req.body;
+        if (!frameData) {
+            return res.status(400).json({ success: false, message: 'Data frame tidak ditemukan' });
+        }
+
+        const frameFolderId = await getOrCreateFrameFolder();
+        const base64Clean = frameData.replace(/^data:image\/\w+;base64,/, "");
+        const frameBuffer = Buffer.from(base64Clean, 'base64');
+        
+        const fileName = frameName || `Custom_Frame_${Date.now()}.png`;
+        const fileUrl = await uploadBufferToDrive(frameBuffer, fileName, 'image/png', frameFolderId);
+
+        // Ubah format URL webContentLink agar dapat dirender langsung sebagai latar belakang gambar web
+        const directUrl = `https://drive.google.com/uc?export=view&id=${fileUrl.match(/id=([^&]+)/)?.[1] || ''}`;
+
+        res.json({ success: true, frame_url: directUrl });
+    } catch (error) {
+        console.error('Error upload frame:', error);
+        res.status(500).json({ success: false, message: 'Gagal mengunggah frame', error: error.message });
+    }
+});
+
+// =====================================================
+// ENDPOINT 3: AMBIL DAFTAR FRAME DARI FOLDER "frame" DI DRIVE
+// =====================================================
+app.get('/get-frames', async (req, res) => {
+    try {
+        const frameFolderId = await getOrCreateFrameFolder();
+        
+        const response = await drive.files.list({
+            q: `'${frameFolderId}' in parents and trashed = false`,
+            fields: 'files(id, name, webContentLink, webViewLink)'
+        });
+
+        const frames = response.data.files.map(file => {
+            return `https://drive.google.com/uc?export=view&id=${file.id}`;
+        });
+
+        res.json({ success: true, frames: frames });
+    } catch (error) {
+        console.error('Error get frames:', error);
+        res.status(500).json({ success: false, message: 'Gagal memuat daftar frame', error: error.message });
     }
 });
 
