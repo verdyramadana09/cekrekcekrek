@@ -1475,6 +1475,34 @@
     #result-screen .custom-result-wrapper{padding:10px 12px 20px;}
 }
 </style>
+
+<style id="upload-spinner-only-css">
+#upload-spinner-overlay{
+    position:fixed;
+    inset:0;
+    z-index:999999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,.88);
+}
+#upload-spinner-overlay.active{display:flex}
+#upload-spinner-overlay .upload-spinner-symbol{
+    font-size:64px;
+    line-height:1;
+    font-family:Arial,sans-serif;
+    color:#1976d2;
+    animation:uploadSpinnerRotate .85s linear infinite;
+    user-select:none;
+}
+@keyframes uploadSpinnerRotate{
+    from{transform:rotate(0deg)}
+    to{transform:rotate(360deg)}
+}
+/* Existing result overlay remains spinner-only if used. */
+#loading-overlay p{display:none !important}
+</style>
+
 </head>
 
 
@@ -1658,9 +1686,12 @@
 
             <div class="setting-group">
                 <div class="setting-label">📷 Camera</div>
-                <div style="background:#f8fbff; padding:8px 12px; border-radius:10px; text-align:center; font-size:12px; font-weight:600; border:1px solid var(--border);">
-                    Front Camera
-                </div>
+                <select id="camera-select" style="width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:10px; background:#f8fbff; font-size:12px; font-weight:600; outline:none;">
+                    <option value="">Memuat kamera...</option>
+                </select>
+                <button type="button" id="camera-switch-btn" class="outline" style="width:100%; padding:8px 12px; font-size:12px; margin-top:7px;" onclick="switchCamera()">
+                    🔄 Ganti Kamera
+                </button>
             </div>
 
             <div class="setting-toggle-row mirror-switch-row">
@@ -1927,6 +1958,10 @@ let capturedImageFilters = [];
 let photoTransforms = []; let selectedPhotoIndex = 0; let stickers = []; let selectedStickerIndex = -1; let editorDrag = null; let googleDriveStickers = [];
 
 let isTakingPhoto = false;
+
+let selectedCameraId = '';
+let availableCameras = [];
+let cameraSwitchBusy = false;
 
 let sessionName = '';
 
@@ -2620,7 +2655,7 @@ function syncCameraPreviewToHole(preferredIndex = 0) {
     }
 }
 
-async function initCamera(fromRetry = false) {
+async function initCamera(fromRetry = false, preferredDeviceId = '') {
     const video = document.getElementById('camera-feed');
     const status = document.getElementById('camera-status');
     const statusTitle = document.getElementById('camera-status-title');
@@ -2693,26 +2728,47 @@ async function initCamera(fromRetry = false) {
          * ideal + fallback membuat kamera lebih kompatibel dengan
          * Android, iPhone/iPad, laptop, webcam USB, dan browser desktop.
          */
-        const constraintSets = [
-            {
-                video: {
-                    facingMode: { ideal: 'user' },
-                    width: { ideal: 1280, min: 320 },
-                    height: { ideal: 720, min: 240 }
+        const constraintSets = preferredDeviceId
+            ? [
+                {
+                    video: {
+                        deviceId: { exact: preferredDeviceId },
+                        width: { ideal: 1280, min: 320 },
+                        height: { ideal: 720, min: 240 }
+                    },
+                    audio: false
                 },
-                audio: false
-            },
-            {
-                video: {
-                    facingMode: 'user'
+                {
+                    video: {
+                        deviceId: { exact: preferredDeviceId }
+                    },
+                    audio: false
                 },
-                audio: false
-            },
-            {
-                video: true,
-                audio: false
-            }
-        ];
+                {
+                    video: true,
+                    audio: false
+                }
+            ]
+            : [
+                {
+                    video: {
+                        facingMode: { ideal: 'user' },
+                        width: { ideal: 1280, min: 320 },
+                        height: { ideal: 720, min: 240 }
+                    },
+                    audio: false
+                },
+                {
+                    video: {
+                        facingMode: 'user'
+                    },
+                    audio: false
+                },
+                {
+                    video: true,
+                    audio: false
+                }
+            ];
 
         let lastError = null;
 
@@ -2743,6 +2799,15 @@ async function initCamera(fromRetry = false) {
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.srcObject = stream;
+
+        const activeTrack = stream.getVideoTracks()[0];
+        const activeSettings = activeTrack?.getSettings?.() || {};
+        if (activeSettings.deviceId) {
+            selectedCameraId = activeSettings.deviceId;
+        }
+
+        // Setelah izin kamera diberikan, label perangkat biasanya tersedia.
+        await loadCameraDevices();
 
         // Tunggu metadata agar videoWidth/videoHeight sudah tersedia.
         await new Promise((resolve, reject) => {
@@ -3851,267 +3916,187 @@ function downloadTanpaFrame() {
    PROCESS + UPLOAD
 ===================================================== */
 
+
+/* =====================================================
+   UPLOAD SPINNER — SPINNER ONLY
+===================================================== */
+function showUploadSpinner(){
+    let overlay=document.getElementById('upload-spinner-overlay');
+    if(!overlay){
+        overlay=document.createElement('div');
+        overlay.id='upload-spinner-overlay';
+        overlay.innerHTML='<div class="upload-spinner-symbol">◌</div>';
+        document.body.appendChild(overlay);
+    }
+    overlay.classList.add('active');
+}
+function hideUploadSpinner(){
+    const overlay=document.getElementById('upload-spinner-overlay');
+    if(overlay) overlay.classList.remove('active');
+}
+
+/* =====================================================
+   GIF — NATURAL PHOTO SIZE, NO CROP
+===================================================== */
+function getImageNaturalSize(source){
+    return new Promise(resolve=>{
+        const img=new Image();
+        img.onload=()=>resolve({width:img.naturalWidth||img.width,height:img.naturalHeight||img.height});
+        img.onerror=()=>resolve(null);
+        img.src=source;
+    });
+}
+
 async function processAndUploadSession() {
 
-    nav(
-        'result-screen'
-    );
-
-
-    await drawCanvas(
-        true,
-        'final-preview-canvas'
-    );
-
-
-    await drawCanvas(
-        true,
-        'result-canvas'
-    );
-
-
-    /*
-     * IMPORTANT: export from final-preview-canvas.
-     * result-canvas is the interactive editor and may display the
-     * bounding box/handles. final-preview-canvas is the clean output.
-     */
-    const frameImageData =
-        document
-            .getElementById(
-                'final-preview-canvas'
-            )
-            .toDataURL(
-                'image/png'
-            );
-
-
-    /* =====================================================
-       GIF — KEEP THE SAME ASPECT RATIO AS THE FRAME
-       Every image is cropped with COVER instead of being stretched.
-    ===================================================== */
-
-    const gifWidth = 600;
-    const gifRatio = finalFrameImageObj.height / finalFrameImageObj.width;
-    const gifHeight = Math.max(1, Math.round(gifWidth * gifRatio));
-
-    function normalizeGifImage(source, width, height) {
-        return new Promise(resolve => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-
-                const sourceRatio = img.width / img.height;
-                const targetRatio = width / height;
-                let sx = 0, sy = 0, sw = img.width, sh = img.height;
-
-                if (sourceRatio > targetRatio) {
-                    sw = img.height * targetRatio;
-                    sx = (img.width - sw) / 2;
-                } else if (sourceRatio < targetRatio) {
-                    sh = img.width / targetRatio;
-                    sy = (img.height - sh) / 2;
-                }
-
-                ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.92));
-            };
-            img.onerror = () => resolve(source);
-            img.src = source;
-        });
+    const finishButton = document.querySelector('.btn-save-print');
+    if (finishButton) {
+        finishButton.disabled = true;
+        finishButton.style.pointerEvents = 'none';
+        finishButton.style.opacity = '0.6';
     }
 
-    const gifSourceImages = [
-        ...capturedImages.filter(Boolean),
-        frameImageData
-    ];
+    showUploadSpinner();
 
-    const gifImages = await Promise.all(
-        gifSourceImages.map(source =>
-            normalizeGifImage(source, gifWidth, gifHeight)
-        )
-    );
+    try {
+        /* -------------------------------------------------
+           BUILD CLEAN FINAL OUTPUT FIRST
+           final-preview-canvas never shows editor controls.
+        ------------------------------------------------- */
+        await drawCanvas(true, 'final-preview-canvas');
+        await drawCanvas(true, 'result-canvas');
 
-    gifshot.createGIF(
+        const cleanCanvas = document.getElementById('final-preview-canvas');
+        if (!cleanCanvas) throw new Error('final-preview-canvas tidak ditemukan.');
 
-        {
+        const frameImageData = cleanCanvas.toDataURL('image/png');
 
-            images: gifImages,
+        /* -------------------------------------------------
+           GIF
+           Use exactly the natural dimensions of photo 1-4.
+           No crop, no cover, no stretching.
+           All camera captures use the same video dimensions,
+           so the GIF canvas follows the original photo size.
+        ------------------------------------------------- */
+        const gifSources = capturedImages.filter(Boolean);
 
-            interval:
-                0.6,
+        let gifData = '';
 
-            gifWidth:
-                gifWidth,
+        if (gifSources.length && typeof gifshot !== 'undefined') {
+            const firstSize = await getImageNaturalSize(gifSources[0]);
 
-            gifHeight:
-                gifHeight,
+            if (firstSize && firstSize.width && firstSize.height) {
+                const gifWidth = firstSize.width;
+                const gifHeight = firstSize.height;
 
-            numFrames:
-                capturedImages.length + 1
-
-        },
-
-        async function(obj) {
-
-            let gifData =
-                '';
-
-
-            if (
-                !obj.error
-            ) {
-
-                gifData =
-                    obj.image;
-
-            }
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        '/upload-session',
+                /*
+                 * Do NOT crop or normalize the photos.
+                 * Each frame is supplied at its original size.
+                 * gifWidth/gifHeight exactly match photo 1-4.
+                 */
+                gifData = await new Promise(resolve => {
+                    gifshot.createGIF(
                         {
-
-                            method:
-                                'POST',
-
-                            headers: {
-
-                                'Content-Type':
-                                    'application/json'
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    sessionName:
-                                        sanitizeFileName(
-                                            sessionName
-                                        ),
-
-                                    date:
-                                        getDateString(),
-
-                                    frameImage:
-                                        frameImageData,
-
-                                    individualImages:
-                                        capturedImages,
-
-                                    gifImage:
-                                        gifData
-
-                                })
-
+                            images: gifSources,
+                            interval: 0.6,
+                            gifWidth: gifWidth,
+                            gifHeight: gifHeight,
+                            numFrames: gifSources.length
+                        },
+                        obj => {
+                            if (!obj || obj.error || !obj.image) {
+                                console.error('GIF gagal dibuat:', obj && obj.error);
+                                resolve('');
+                                return;
+                            }
+                            resolve(obj.image);
                         }
                     );
-
-
-                const result =
-                    await response.json();
-
-
-                if (
-                    result.success
-                ) {
-
-                    const qrContainer =
-                        document.getElementById(
-                            'qrcode-container'
-                        );
-
-
-                    qrContainer.innerHTML =
-                        '';
-
-
-                    new QRCode(
-
-                        qrContainer,
-
-                        {
-
-                            text:
-                                result.folder_link,
-
-                            width:
-                                140,
-
-                            height:
-                                140,
-
-                            colorDark:
-                                '#0d47a1',
-
-                            colorLight:
-                                '#ffffff',
-
-                            correctLevel:
-                                QRCode
-                                    .CorrectLevel
-                                    .H
-
-                        }
-
-                    );
-
-
-                    document
-                        .getElementById(
-                            'qr-status-text'
-                        )
-                        .innerText =
-                        'Scan untuk membuka hasil foto.';
-
-
-                } else {
-
-                    document
-                        .getElementById(
-                            'qr-status-text'
-                        )
-                        .innerText =
-                        'Gagal memuat barcode.';
-
-                }
-
-
-            } catch(error) {
-
-                console.error(
-                    'Error:',
-                    error
-                );
-
-                const qrContainer =
-                    document.getElementById(
-                        'qrcode-container'
-                    );
-
-                qrContainer.innerHTML = '';
-                new QRCode(qrContainer, {
-                    text: 'https://instagram.com/vrdyrmdhn',
-                    width: 140,
-                    height: 140,
-                    colorDark: '#0d47a1',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.H
                 });
-
-                document.getElementById('qr-status-text').innerText = 'Scan untuk membuka link.';
-
             }
-
         }
 
-    );
+        /* -------------------------------------------------
+           UPLOAD — WAIT UNTIL SERVER/DRIVE FINISHES
+           Result page is NOT opened before this succeeds.
+        ------------------------------------------------- */
+        const response = await fetch('/upload-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sessionName: sanitizeFileName(sessionName),
+                date: getDateString(),
+                frameImage: frameImageData,
+                individualImages: capturedImages,
+                gifImage: gifData
+            })
+        });
 
+        if (!response.ok) {
+            throw new Error(`Upload gagal (${response.status}).`);
+        }
+
+        const result = await response.json();
+
+        if (!result || !result.success || !result.folder_link) {
+            throw new Error(
+                result && result.message
+                    ? result.message
+                    : 'Upload belum berhasil.'
+            );
+        }
+
+        /* -------------------------------------------------
+           GENERATE QR BEFORE SHOWING RESULT SCREEN
+        ------------------------------------------------- */
+        const qrContainer = document.getElementById('qrcode-container');
+        if (!qrContainer) {
+            throw new Error('qrcode-container tidak ditemukan.');
+        }
+
+        qrContainer.innerHTML = '';
+
+        new QRCode(qrContainer, {
+            text: result.folder_link,
+            width: 140,
+            height: 140,
+            colorDark: '#0d47a1',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        const qrStatus = document.getElementById('qr-status-text');
+        if (qrStatus) {
+            qrStatus.innerText = 'Scan untuk membuka hasil foto.';
+        }
+
+        /* -------------------------------------------------
+           ONLY NOW SHOW RESULT SCREEN
+        ------------------------------------------------- */
+        nav('result-screen');
+
+        await drawCanvas(true, 'final-preview-canvas');
+        await drawCanvas(true, 'result-canvas');
+
+    } catch (error) {
+        console.error('Error process/upload:', error);
+
+        alert(
+            'Foto belum berhasil diupload. Silakan coba lagi.\n\n' +
+            (error && error.message ? error.message : 'Terjadi kesalahan.')
+        );
+
+    } finally {
+        hideUploadSpinner();
+
+        if (finishButton) {
+            finishButton.disabled = false;
+            finishButton.style.pointerEvents = 'auto';
+            finishButton.style.opacity = '';
+        }
+    }
 }
 
 
@@ -4644,12 +4629,142 @@ window.addEventListener('load',()=>{
         return !!(screen && screen.classList.contains('active'));
     }
 
+
+    async function loadCameraDevices() {
+        const select = document.getElementById('camera-select');
+        if (!navigator.mediaDevices?.enumerateDevices) return [];
+
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            availableCameras = devices.filter(d => d.kind === 'videoinput');
+
+            if (!select) return availableCameras;
+
+            select.innerHTML = '';
+
+            if (!availableCameras.length) {
+                select.innerHTML = '<option value="">Kamera tidak ditemukan</option>';
+                select.disabled = true;
+                return [];
+            }
+
+            select.disabled = false;
+
+            availableCameras.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+
+                let label = (device.label || '').trim();
+                const lower = label.toLowerCase();
+
+                if (!label) {
+                    label = `Kamera ${index + 1}`;
+                } else if (lower.includes('front') || lower.includes('user') || lower.includes('facetime')) {
+                    label = 'Kamera Depan';
+                } else if (lower.includes('back') || lower.includes('rear') || lower.includes('environment')) {
+                    label = (lower.includes('wide') || lower.includes('ultra'))
+                        ? 'Kamera Belakang Wide'
+                        : 'Kamera Belakang';
+                }
+
+                option.textContent = label;
+                select.appendChild(option);
+            });
+
+            if (selectedCameraId && availableCameras.some(d => d.deviceId === selectedCameraId)) {
+                select.value = selectedCameraId;
+            } else if (availableCameras.length) {
+                selectedCameraId = availableCameras[0].deviceId;
+                select.value = selectedCameraId;
+            }
+
+            return availableCameras;
+        } catch (error) {
+            console.warn('Gagal membaca daftar kamera:', error);
+            return [];
+        }
+    }
+
+    async function selectCamera(deviceId) {
+        if (!deviceId || cameraSwitchBusy) return;
+
+        cameraSwitchBusy = true;
+
+        const select = document.getElementById('camera-select');
+        const button = document.getElementById('camera-switch-btn');
+
+        if (select) select.disabled = true;
+        if (button) {
+            button.disabled = true;
+            button.textContent = '⏳ Mengganti Kamera...';
+        }
+
+        try {
+            selectedCameraId = deviceId;
+            await initCamera(false, deviceId);
+            await loadCameraDevices();
+
+            if (select) select.value = selectedCameraId;
+        } catch (error) {
+            console.error('Gagal mengganti kamera:', error);
+        } finally {
+            cameraSwitchBusy = false;
+            if (select) select.disabled = false;
+            if (button) {
+                button.disabled = false;
+                button.textContent = '🔄 Ganti Kamera';
+            }
+        }
+    }
+
+    function switchCamera() {
+        if (!availableCameras.length) {
+            loadCameraDevices().then(() => switchCamera());
+            return;
+        }
+
+        let index = availableCameras.findIndex(
+            d => d.deviceId === selectedCameraId
+        );
+
+        if (index < 0) index = 0;
+
+        const next = availableCameras[(index + 1) % availableCameras.length];
+
+        if (next) {
+            const select = document.getElementById('camera-select');
+            if (select) select.value = next.deviceId;
+            selectCamera(next.deviceId);
+        }
+    }
+
+    function initCameraSelector() {
+        const select = document.getElementById('camera-select');
+        if (!select || select.dataset.ready === '1') return;
+
+        select.dataset.ready = '1';
+
+        select.addEventListener('change', () => {
+            selectCamera(select.value);
+        });
+
+        loadCameraDevices();
+    }
+
+    if (navigator.mediaDevices?.addEventListener) {
+        navigator.mediaDevices.addEventListener('devicechange', loadCameraDevices);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initCameraSelector();
+    });
+
     function ensureCameraPreview() {
         const video = document.getElementById('camera-feed');
         if (!cameraIsActive() || !video) return;
 
         if (!stream || !stream.active) {
-            initCamera(true);
+            initCamera(true, selectedCameraId || '');
             return;
         }
 
