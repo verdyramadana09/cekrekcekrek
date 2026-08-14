@@ -8,6 +8,7 @@ const stream = require('stream');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+
 // =====================================================
 // MIDDLEWARE
 // =====================================================
@@ -24,7 +25,7 @@ app.use(express.static(__dirname));
 
 
 // =====================================================
-// GOOGLE DRIVE CONFIGURATION
+// GOOGLE DRIVE CONFIG
 // =====================================================
 
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -32,6 +33,29 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
 const GOOGLE_DRIVE_FOLDER_ID =
     process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+
+// =====================================================
+// VALIDASI ENV
+// =====================================================
+
+if (!CLIENT_ID) {
+    console.error('❌ CLIENT_ID belum diatur di .env');
+}
+
+if (!CLIENT_SECRET) {
+    console.error('❌ CLIENT_SECRET belum diatur di .env');
+}
+
+if (!REFRESH_TOKEN) {
+    console.error('❌ REFRESH_TOKEN belum diatur di .env');
+}
+
+if (!GOOGLE_DRIVE_FOLDER_ID) {
+    console.error(
+        '❌ GOOGLE_DRIVE_FOLDER_ID belum diatur di .env'
+    );
+}
 
 
 // =====================================================
@@ -50,7 +74,7 @@ oauth2Client.setCredentials({
 
 
 // =====================================================
-// GOOGLE DRIVE
+// GOOGLE DRIVE API
 // =====================================================
 
 const drive = google.drive({
@@ -69,24 +93,28 @@ async function uploadBufferToDrive(
     mimeType,
     parentFolderId
 ) {
+
     const bufferStream =
         new stream.PassThrough();
 
     bufferStream.end(buffer);
+
 
     const fileMetadata = {
         name: fileName,
         parents: [parentFolderId]
     };
 
+
     const media = {
         mimeType: mimeType,
         body: bufferStream
     };
 
-    // Upload file
+
     const uploaded =
         await drive.files.create({
+
             resource: fileMetadata,
 
             media: media,
@@ -95,41 +123,62 @@ async function uploadBufferToDrive(
                 'id, name, mimeType, webViewLink, webContentLink',
 
             supportsAllDrives: true
+
         });
 
 
     // =================================================
-    // SET PERMISSION AGAR BISA DIBACA PUBLIK
+    // SET FILE AGAR BISA DIBACA
     // =================================================
 
-    await drive.permissions.create({
-        fileId: uploaded.data.id,
+    try {
 
-        requestBody: {
-            role: 'reader',
-            type: 'anyone'
-        },
+        await drive.permissions.create({
 
-        supportsAllDrives: true
-    });
+            fileId:
+                uploaded.data.id,
 
+            requestBody: {
 
-    // =================================================
-    // KEMBALIKAN DATA LENGKAP
-    // =================================================
+                role: 'reader',
+
+                type: 'anyone'
+
+            },
+
+            supportsAllDrives: true
+
+        });
+
+    } catch (permissionError) {
+
+        console.error(
+            'Peringatan permission Google Drive:',
+            permissionError.message
+        );
+
+        // Tidak langsung menggagalkan upload.
+        // File sudah berhasil dibuat.
+    }
+
 
     return {
-        id: uploaded.data.id,
 
-        name: uploaded.data.name,
+        id:
+            uploaded.data.id,
 
-        mimeType: uploaded.data.mimeType,
+        name:
+            uploaded.data.name,
+
+        mimeType:
+            uploaded.data.mimeType,
 
         webViewLink:
             uploaded.data.webViewLink || null,
 
         webContentLink:
             uploaded.data.webContentLink || null
+
     };
 }
 
@@ -161,6 +210,7 @@ async function getOrCreateFrameFolder() {
                 supportsAllDrives: true,
 
                 includeItemsFromAllDrives: true
+
             });
 
 
@@ -174,7 +224,7 @@ async function getOrCreateFrameFolder() {
         ) {
 
             console.log(
-                'Folder frame ditemukan:',
+                '📁 Folder frame ditemukan:',
                 response.data.files[0].id
             );
 
@@ -183,12 +233,17 @@ async function getOrCreateFrameFolder() {
 
 
         // =================================================
-        // JIKA BELUM ADA → BUAT FOLDER BARU
+        // JIKA FOLDER BELUM ADA
         // =================================================
 
         console.log(
-            'Folder frame belum ada. Membuat folder baru...'
+            '📁 Folder frame belum ada.'
         );
+
+        console.log(
+            '📁 Membuat folder frame...'
+        );
+
 
         const folder =
             await drive.files.create({
@@ -203,25 +258,30 @@ async function getOrCreateFrameFolder() {
                     parents: [
                         GOOGLE_DRIVE_FOLDER_ID
                     ]
+
                 },
 
-                fields: 'id, name',
+                fields:
+                    'id, name',
 
                 supportsAllDrives: true
+
             });
 
 
         console.log(
-            'Folder frame berhasil dibuat:',
+            '✅ Folder frame berhasil dibuat:',
             folder.data.id
         );
 
+
         return folder.data.id;
+
 
     } catch (error) {
 
         console.error(
-            'Error saat mencari/membuat folder frame:',
+            '❌ Error saat mencari/membuat folder frame:',
             error
         );
 
@@ -231,9 +291,171 @@ async function getOrCreateFrameFolder() {
 
 
 // =====================================================
-// ENDPOINT 1
+// ENDPOINT PROXY FRAME GOOGLE DRIVE
+//
+// INI BAGIAN PENTING AGAR CANVAS DI INDEX.HTML
+// BISA MEMBACA TRANSPARANSI GAMBAR FRAME.
+//
+// Browser:
+// /frame/FILE_ID
+//
+// Server:
+// Google Drive API
+//
+// Browser menerima gambar dari server sendiri.
+// =====================================================
+
+app.get(
+    '/frame/:fileId',
+    async (req, res) => {
+
+        try {
+
+            const fileId =
+                req.params.fileId;
+
+
+            // =================================================
+            // VALIDASI FILE ID
+            // =================================================
+
+            if (!fileId) {
+
+                return res
+                    .status(400)
+                    .send(
+                        'File ID tidak ditemukan'
+                    );
+            }
+
+
+            console.log(
+                '🖼️ Meminta frame:',
+                fileId
+            );
+
+
+            // =================================================
+            // AMBIL METADATA FILE
+            // =================================================
+
+            const metadata =
+                await drive.files.get({
+
+                    fileId:
+                        fileId,
+
+                    fields:
+                        'id, name, mimeType, size',
+
+                    supportsAllDrives:
+                        true
+
+                });
+
+
+            // =================================================
+            // VALIDASI MIME TYPE
+            // =================================================
+
+            const mimeType =
+                metadata.data.mimeType;
+
+
+            if (
+                !mimeType ||
+                !mimeType.startsWith('image/')
+            ) {
+
+                return res
+                    .status(400)
+                    .send(
+                        'File yang diminta bukan gambar.'
+                    );
+            }
+
+
+            // =================================================
+            // AMBIL FILE DARI GOOGLE DRIVE
+            // =================================================
+
+            const file =
+                await drive.files.get(
+
+                    {
+
+                        fileId:
+                            fileId,
+
+                        alt:
+                            'media',
+
+                        supportsAllDrives:
+                            true
+
+                    },
+
+                    {
+
+                        responseType:
+                            'stream'
+
+                    }
+
+                );
+
+
+            // =================================================
+            // HEADER RESPONSE
+            // =================================================
+
+            res.setHeader(
+                'Content-Type',
+                mimeType
+            );
+
+
+            res.setHeader(
+                'Cache-Control',
+                'public, max-age=3600'
+            );
+
+
+            // =================================================
+            // KIRIM FILE KE BROWSER
+            // =================================================
+
+            file.data.pipe(res);
+
+
+        } catch (error) {
+
+            console.error(
+                '❌ Error mengambil frame dari Google Drive:',
+                error
+            );
+
+
+            if (!res.headersSent) {
+
+                res
+                    .status(500)
+                    .send(
+                        'Gagal mengambil frame dari Google Drive'
+                    );
+
+            }
+        }
+
+    }
+);
+
+
+// =====================================================
+// ENDPOINT 1:
 // UPLOAD SESSION
-// TETAP SEPERTI SCRIPT ASLI
+//
+// BAGIAN INI DIPERTAHANKAN DARI SCRIPT ASLI
 // =====================================================
 
 app.post(
@@ -262,7 +484,8 @@ app.post(
 
                     resource: {
 
-                        name: sessionName,
+                        name:
+                            sessionName,
 
                         mimeType:
                             'application/vnd.google-apps.folder',
@@ -270,12 +493,15 @@ app.post(
                         parents: [
                             GOOGLE_DRIVE_FOLDER_ID
                         ]
+
                     },
 
                     fields:
                         'id, webViewLink',
 
-                    supportsAllDrives: true
+                    supportsAllDrives:
+                        true
+
                 });
 
 
@@ -291,15 +517,19 @@ app.post(
 
                 const frameBuffer =
                     Buffer.from(
+
                         frameImage.replace(
                             /^data:image\/\w+;base64,/,
                             ''
                         ),
+
                         'base64'
+
                     );
 
 
                 await uploadBufferToDrive(
+
                     frameBuffer,
 
                     'Hasil_Frame.png',
@@ -307,6 +537,7 @@ app.post(
                     'image/png',
 
                     subFolderId
+
                 );
             }
 
@@ -328,11 +559,14 @@ app.post(
 
                     const singleBuffer =
                         Buffer.from(
+
                             individualImages[i].replace(
                                 /^data:image\/\w+;base64,/,
                                 ''
                             ),
+
                             'base64'
+
                         );
 
 
@@ -345,6 +579,7 @@ app.post(
                         'image/png',
 
                         subFolderId
+
                     );
                 }
             }
@@ -358,11 +593,14 @@ app.post(
 
                 const gifBuffer =
                     Buffer.from(
+
                         gifImage.replace(
                             /^data:image\/\w+;base64,/,
                             ''
                         ),
+
                         'base64'
+
                     );
 
 
@@ -375,6 +613,7 @@ app.post(
                     'image/gif',
 
                     subFolderId
+
                 );
             }
 
@@ -385,40 +624,53 @@ app.post(
 
             res.json({
 
-                success: true,
+                success:
+                    true,
 
                 folder_link:
                     folder.data.webViewLink
+
             });
 
 
         } catch (error) {
 
             console.error(
-                'Error upload session:',
+                '❌ Error upload session:',
                 error
             );
 
 
-            res.status(500).json({
+            res
+                .status(500)
+                .json({
 
-                success: false,
+                    success:
+                        false,
 
-                message:
-                    'Gagal membuat folder',
+                    message:
+                        'Gagal membuat folder',
 
-                error:
-                    error.message
-            });
+                    error:
+                        error.message
+
+                });
+
         }
+
     }
 );
 
 
 // =====================================================
-// ENDPOINT 2
+// ENDPOINT 2:
 // UPLOAD CUSTOM FRAME
-// KE FOLDER "frame"
+//
+// FRAME MASUK KE:
+// GOOGLE DRIVE
+// └── FOLDER UTAMA
+//     └── frame
+//         └── frame.png
 // =====================================================
 
 app.post(
@@ -434,18 +686,23 @@ app.post(
 
 
             // =================================================
-            // VALIDASI DATA
+            // VALIDASI FRAME DATA
             // =================================================
 
             if (!frameData) {
 
-                return res.status(400).json({
+                return res
+                    .status(400)
+                    .json({
 
-                    success: false,
+                        success:
+                            false,
 
-                    message:
-                        'Data frame tidak ditemukan'
-                });
+                        message:
+                            'Data frame tidak ditemukan'
+
+                    });
+
             }
 
 
@@ -469,7 +726,7 @@ app.post(
 
 
             // =================================================
-            // CONVERT BASE64 → BUFFER
+            // CONVERT BASE64 KE BUFFER
             // =================================================
 
             const frameBuffer =
@@ -477,6 +734,30 @@ app.post(
                     base64Clean,
                     'base64'
                 );
+
+
+            // =================================================
+            // VALIDASI BUFFER
+            // =================================================
+
+            if (
+                !frameBuffer ||
+                frameBuffer.length === 0
+            ) {
+
+                return res
+                    .status(400)
+                    .json({
+
+                        success:
+                            false,
+
+                        message:
+                            'Data gambar tidak valid'
+
+                    });
+
+            }
 
 
             // =================================================
@@ -502,12 +783,12 @@ app.post(
                     'image/png',
 
                     frameFolderId
+
                 );
 
 
             // =================================================
-            // AMBIL FILE ID LANGSUNG
-            // DARI GOOGLE DRIVE
+            // FILE ID GOOGLE DRIVE
             // =================================================
 
             const fileId =
@@ -515,19 +796,28 @@ app.post(
 
 
             // =================================================
-            // URL GAMBAR
+            // URL FRAME
+            //
+            // JANGAN gunakan:
+            // drive.google.com/uc?export=view
+            //
+            // Gunakan proxy server sendiri.
             // =================================================
 
-            const directUrl =
-                `https://drive.google.com/uc?export=view&id=${fileId}`;
+            const frameUrl =
+                `/frame/${fileId}`;
 
+
+            // =================================================
+            // LOG
+            // =================================================
 
             console.log(
-                '===================================='
+                '=========================================='
             );
 
             console.log(
-                'FRAME BERHASIL DIUPLOAD'
+                '✅ FRAME BERHASIL DIUPLOAD'
             );
 
             console.log(
@@ -542,11 +832,11 @@ app.post(
 
             console.log(
                 'URL:',
-                directUrl
+                frameUrl
             );
 
             console.log(
-                '===================================='
+                '=========================================='
             );
 
 
@@ -556,7 +846,8 @@ app.post(
 
             res.json({
 
-                success: true,
+                success:
+                    true,
 
                 frame_id:
                     fileId,
@@ -565,18 +856,19 @@ app.post(
                     uploaded.name,
 
                 frame_url:
-                    directUrl
+                    frameUrl
+
             });
 
 
         } catch (error) {
 
             console.error(
-                '===================================='
+                '=========================================='
             );
 
             console.error(
-                'ERROR UPLOAD FRAME'
+                '❌ ERROR UPLOAD FRAME'
             );
 
             console.error(
@@ -584,28 +876,35 @@ app.post(
             );
 
             console.error(
-                '===================================='
+                '=========================================='
             );
 
 
-            res.status(500).json({
+            res
+                .status(500)
+                .json({
 
-                success: false,
+                    success:
+                        false,
 
-                message:
-                    'Gagal mengunggah frame ke Google Drive',
+                    message:
+                        'Gagal mengunggah frame ke Google Drive',
 
-                error:
-                    error.message
-            });
+                    error:
+                        error.message
+
+                });
+
         }
+
     }
 );
 
 
 // =====================================================
-// ENDPOINT 3
-// AMBIL SEMUA FRAME DARI FOLDER "frame"
+// ENDPOINT 3:
+// AMBIL DAFTAR FRAME
+// DARI FOLDER "frame"
 // =====================================================
 
 app.get(
@@ -623,7 +922,7 @@ app.get(
 
 
             // =================================================
-            // AMBIL FILE DALAM FOLDER FRAME
+            // AMBIL FILE FRAME
             // =================================================
 
             const response =
@@ -639,9 +938,12 @@ app.get(
                     orderBy:
                         'createdTime',
 
-                    supportsAllDrives: true,
+                    supportsAllDrives:
+                        true,
 
-                    includeItemsFromAllDrives: true
+                    includeItemsFromAllDrives:
+                        true
+
                 });
 
 
@@ -654,35 +956,46 @@ app.get(
 
                     .filter(
                         file =>
+
                             file.mimeType &&
                             file.mimeType.startsWith(
                                 'image/'
                             )
+
                     )
 
                     .map(
-                        file => {
+                        file => ({
 
-                            return {
+                            id:
+                                file.id,
 
-                                id:
-                                    file.id,
+                            name:
+                                file.name,
 
-                                name:
-                                    file.name,
+                            // =================================================
+                            // PENTING
+                            //
+                            // URL menggunakan server sendiri.
+                            // Ini memungkinkan canvas membaca gambar.
+                            // =================================================
 
-                                url:
-                                    `https://drive.google.com/uc?export=view&id=${file.id}`,
+                            url:
+                                `/frame/${file.id}`,
 
-                                createdTime:
-                                    file.createdTime
-                            };
-                        }
+                            createdTime:
+                                file.createdTime
+
+                        })
                     );
 
 
+            // =================================================
+            // LOG
+            // =================================================
+
             console.log(
-                `Berhasil mengambil ${frames.length} frame dari Google Drive`
+                `📷 ${frames.length} frame ditemukan di Google Drive`
             );
 
 
@@ -692,32 +1005,40 @@ app.get(
 
             res.json({
 
-                success: true,
+                success:
+                    true,
 
                 frames:
                     frames
+
             });
 
 
         } catch (error) {
 
             console.error(
-                'Error get frames:',
+                '❌ Error get frames:',
                 error
             );
 
 
-            res.status(500).json({
+            res
+                .status(500)
+                .json({
 
-                success: false,
+                    success:
+                        false,
 
-                message:
-                    'Gagal memuat daftar frame',
+                    message:
+                        'Gagal memuat daftar frame',
 
-                error:
-                    error.message
-            });
+                    error:
+                        error.message
+
+                });
+
         }
+
     }
 );
 
@@ -728,12 +1049,49 @@ app.get(
 
 app.get(
     '/',
-
     (req, res) => {
 
         res.send(
             'Server Photobooth berjalan.'
         );
+
+    }
+);
+
+
+// =====================================================
+// ERROR HANDLER
+// =====================================================
+
+app.use(
+    (err, req, res, next) => {
+
+        console.error(
+            '❌ Unhandled server error:',
+            err
+        );
+
+
+        if (res.headersSent) {
+            return next(err);
+        }
+
+
+        res
+            .status(500)
+            .json({
+
+                success:
+                    false,
+
+                message:
+                    'Terjadi kesalahan pada server',
+
+                error:
+                    err.message
+
+            });
+
     }
 );
 
@@ -744,27 +1102,35 @@ app.get(
 
 app.listen(
     PORT,
-
     () => {
 
         console.log(
-            '===================================='
+            '=========================================='
         );
 
         console.log(
-            `Server berjalan di port ${PORT}`
+            '🚀 SERVER PHOTOBOOTH BERJALAN'
         );
 
         console.log(
-            `http://localhost:${PORT}`
+            `🌐 Port: ${PORT}`
         );
 
         console.log(
-            'Google Drive Frame System: AKTIF'
+            `🌐 URL: http://localhost:${PORT}`
         );
 
         console.log(
-            '===================================='
+            '☁️ Google Drive Frame System: AKTIF'
         );
+
+        console.log(
+            '🖼️ Frame Proxy: AKTIF'
+        );
+
+        console.log(
+            '=========================================='
+        );
+
     }
 );
