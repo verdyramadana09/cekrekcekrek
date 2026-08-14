@@ -1224,7 +1224,11 @@
 #google-drive-stickers{grid-template-columns:repeat(4,1fr);max-height:190px;overflow-y:auto;padding-right:2px}
 #google-drive-stickers .sticker-item-btn img{pointer-events:none}
 </style></style>
-</head>
+<style>
+.sticker-scroll-box{max-height:180px;overflow-y:auto;overflow-x:hidden;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:4px;align-content:start;overscroll-behavior:contain;}
+.sticker-scroll-box::-webkit-scrollbar{width:6px}.sticker-scroll-box::-webkit-scrollbar-thumb{background:#bbb;border-radius:8px}
+#sticker-editor-panel{display:none!important}
+</style></head>
 
 
 <body>
@@ -1526,7 +1530,7 @@
             <div class="sticker-grid"><button class="sticker-item-btn" onclick="addSticker('❤️')">❤️</button><button class="sticker-item-btn" onclick="addSticker('⭐')">⭐</button><button class="sticker-item-btn" onclick="addSticker('🔥')">🔥</button><button class="sticker-item-btn" onclick="addSticker('👑')">👑</button><button class="sticker-item-btn" onclick="addSticker('✨')">✨</button><button class="sticker-item-btn" onclick="addSticker('🎉')">🎉</button><button class="sticker-item-btn" onclick="addSticker('😎')">😎</button><button class="sticker-item-btn" onclick="addSticker('🌸')">🌸</button></div>
             <div id="custom-sticker-admin" style="display:none;margin-bottom:12px"><input type="file" id="custom-sticker-input" accept="image/png" style="display:none" onchange="handleCustomStickerUpload(this)"><button class="outline" style="width:100%" onclick="document.getElementById('custom-sticker-input').click()">+ Tambah Stiker PNG</button></div>
             <div class="sticker-category-title" style="margin-top:10px">Stiker Tersimpan</div>
-            <div id="google-drive-stickers" class="sticker-grid"></div>
+            <div id="google-drive-stickers" class="sticker-grid sticker-scroll-box"></div>
             <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
             <div class="sticker-category-title">Filter Warna</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('none')">Original</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('grayscale(100%)')">Hitam Putih</button><button class="outline" style="padding:8px 16px;font-size:12px" onclick="applyFilter('sepia(100%)')">Retro</button></div>
         </div>
