@@ -77,42 +77,48 @@ async function getOrCreateFrameFolder() {
 // =====================================================
 // ENDPOINT 1: UPLOAD SESSION (TETAP SEPERTI SEMULA / TIDAK DIRUBAH)
 // =====================================================
-app.post('/upload-session', async (req, res) => {
+app.post('/upload-frame', async (req, res) => {
     try {
-        const { frameImage, individualImages, gifImage } = req.body;
-        const sessionName = `Sesi_${Date.now()}`;
+        const { frameName, frameData } = req.body;
+        if (!frameData) {
+            return res.status(400).json({ success: false, message: 'Data frame tidak ditemukan' });
+        }
+
+        const frameFolderId = await getOrCreateFrameFolder();
+        if (!frameFolderId) {
+            return res.status(500).json({ success: false, message: 'Folder frame di Google Drive gagal diinisialisasi.' });
+        }
+
+        const base64Clean = frameData.replace(/^data:image\/\w+;base64,/, "");
+        const frameBuffer = Buffer.from(base64Clean, 'base64');
         
-        const folder = await drive.files.create({
-            resource: { name: sessionName, mimeType: 'application/vnd.google-apps.folder', parents: [GOOGLE_DRIVE_FOLDER_ID] },
-            fields: 'id, webViewLink'
+        const fileName = frameName || `Custom_Frame_${Date.now()}.png`;
+        
+        // Unggah buffer ke folder "frame" di Google Drive dan atur izin publik
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end(frameBuffer);
+
+        const fileMetadata = { name: fileName, parents: [frameFolderId] };
+        const media = { mimeType: 'image/png', body: bufferStream };
+
+        const uploaded = await drive.files.create({
+            resource: fileMetadata,
+            media: media,
+            fields: 'id, webViewLink, webContentLink'
         });
-        const subFolderId = folder.data.id;
 
-        // 1. Upload Hasil Frame
-        if (frameImage) {
-            const frameBuffer = Buffer.from(frameImage.replace(/^data:image\/\w+;base64,/, ""), 'base64');
-            await uploadBufferToDrive(frameBuffer, 'Hasil_Frame.png', 'image/png', subFolderId);
-        }
+        await drive.permissions.create({
+            fileId: uploaded.data.id,
+            requestBody: { role: 'reader', type: 'anyone' },
+        });
 
-        // 2. Upload Foto Satuan
-        if (individualImages && Array.isArray(individualImages)) {
-            for (let i = 0; i < individualImages.length; i++) {
-                const singleBuffer = Buffer.from(individualImages[i].replace(/^data:image\/\w+;base64,/, ""), 'base64');
-                await uploadBufferToDrive(singleBuffer, `Foto_Satuan_${i + 1}.png`, 'image/png', subFolderId);
-            }
-        }
+        // Gunakan format direct link file ID Google Drive agar stabil dirender browser
+        const directUrl = `https://drive.google.com/uc?export=view&id=${uploaded.data.id}`;
 
-        // 3. Upload GIF
-        if (gifImage) {
-            const gifBuffer = Buffer.from(gifImage.replace(/^data:image\/\w+;base64,/, ""), 'base64');
-            await uploadBufferToDrive(gifBuffer, 'Animasi_Live.gif', 'image/gif', subFolderId);
-        }
-
-        res.json({ success: true, folder_link: folder.data.webViewLink });
-
+        res.json({ success: true, frame_url: directUrl });
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, message: 'Gagal membuat folder', error: error.message });
+        console.error('Error upload frame:', error);
+        res.status(500).json({ success: false, message: 'Gagal mengunggah frame', error: error.message });
     }
 });
 
