@@ -2227,65 +2227,64 @@ async function selectFrame(
 
 
 /* =====================================================
-   CUSTOM FRAME UPLOAD, LOCALSTORAGE, & SCROLL HANDLERS
+   CUSTOM FRAME UPLOAD KE GOOGLE DRIVE & LOCAL
 ===================================================== */
 
-// Fungsi untuk menggeser frame ke kiri/kanan menggunakan tombol
-function scrollFrames(distance) {
-    const frameList = document.getElementById('frame-list');
-    frameList.scrollBy({ left: distance, behavior: 'smooth' });
-}
-
-// Menyimpan dan memuat frame kustom ke localStorage agar tahan saat refresh
-function saveCustomFrameToStorage(dataUrl) {
-    let savedFrames = JSON.parse(localStorage.getItem('custom_frames') || '[]');
-    savedFrames.push(dataUrl);
-    localStorage.setItem('custom_frames', JSON.stringify(savedFrames));
-}
-
-function loadCustomFramesFromStorage() {
-    let savedFrames = JSON.parse(localStorage.getItem('custom_frames') || '[]');
-    const frameList = document.getElementById('frame-list');
-
-    savedFrames.forEach(dataUrl => {
-        const newFrameItem = document.createElement('div');
-        newFrameItem.className = 'frame-item';
-        newFrameItem.style.backgroundImage = `url('${dataUrl}')`;
-        newFrameItem.style.backgroundSize = 'cover';
-        newFrameItem.style.backgroundPosition = 'center';
-        
-        newFrameItem.onclick = function() {
-            selectFrame(this, dataUrl);
-        };
-
-        frameList.appendChild(newFrameItem);
-    });
-}
-
-function handleCustomFrameUpload(input) {
+async function handleCustomFrameUpload(input) {
     if (input.files && input.files[0]) {
+        const file = input.files[0];
         const reader = new FileReader();
-        reader.onload = function(e) {
-            const dataUrl = e.target.result;
-            
-            // Simpan ke local storage agar tersimpan permanen saat di-refresh
-            saveCustomFrameToStorage(dataUrl);
+        
+        reader.onload = async function(e) {
+            const base64Data = e.target.result;
 
-            const frameList = document.getElementById('frame-list');
-            const newFrameItem = document.createElement('div');
-            newFrameItem.className = 'frame-item';
-            newFrameItem.style.backgroundImage = `url('${dataUrl}')`;
-            newFrameItem.style.backgroundSize = 'cover';
-            newFrameItem.style.backgroundPosition = 'center';
-            
-            newFrameItem.onclick = function() {
-                selectFrame(this, dataUrl);
-            };
+            try {
+                // Tampilkan indikator loading sederhana jika diperlukan
+                console.log("Mengunggah frame ke Google Drive...");
 
-            frameList.appendChild(newFrameItem);
-            selectFrame(newFrameItem, dataUrl);
+                const response = await fetch('/upload-frame', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        frameName: file.name,
+                        frameData: base64Data
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.frame_url) {
+                    const frameUrl = result.frame_url;
+                    
+                    // Simpan ke localStorage juga sebagai cadangan agar langsung tampil cepat
+                    saveCustomFrameToStorage(frameUrl);
+
+                    const frameList = document.getElementById('frame-list');
+                    const newFrameItem = document.createElement('div');
+                    newFrameItem.className = 'frame-item';
+                    newFrameItem.style.backgroundImage = `url('${frameUrl}')`;
+                    newFrameItem.style.backgroundSize = 'cover';
+                    newFrameItem.style.backgroundPosition = 'center';
+                    
+                    newFrameItem.onclick = function() {
+                        selectFrame(this, frameUrl);
+                    };
+
+                    frameList.appendChild(newFrameItem);
+                    selectFrame(newFrameItem, frameUrl);
+                    alert('Frame berhasil disimpan permanen ke Google Drive!');
+                } else {
+                    alert('Gagal menyimpan frame ke Google Drive: ' + (result.message || 'Error tidak diketahui'));
+                }
+            } catch (err) {
+                console.error('Error upload frame:', err);
+                alert('Terjadi kesalahan koneksi saat mengunggah frame ke server.');
+            }
         };
-        reader.readAsDataURL(input.files[0]);
+        
+        reader.readAsDataURL(file);
     }
 }
 
