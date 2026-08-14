@@ -10,7 +10,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-
         :root {
             --bg-color: #F5F5F7;
             --primary: #000000;
@@ -39,25 +38,16 @@
             color: var(--primary);
         }
 
-
-        /* =====================================================
-           SCREEN
-        ===================================================== */
-
         .screen {
             display: none;
-
             height: 100vh;
-
             padding: 16px 24px;
-
             flex-direction: column;
         }
 
         .screen.active {
             display: flex;
         }
-
 
         h1 {
             font-size: 32px;
@@ -73,37 +63,26 @@
             margin: 0 0 24px 0;
         }
 
-
-        /* =====================================================
-           BUTTON
-        ===================================================== */
-
         .bottom-actions {
             margin-top: auto;
             padding-top: 16px;
 
             display: flex;
-
             gap: 10px;
-
             flex-wrap: wrap;
-
             justify-content: center;
         }
 
         button {
             background-color: var(--primary);
-
             color: var(--on-primary);
 
             border: none;
-
             border-radius: 30px;
 
             padding: 12px 20px;
 
             font-size: 14px;
-
             font-weight: 600;
 
             cursor: pointer;
@@ -119,42 +98,35 @@
 
         button:disabled {
             opacity: 0.5;
-
             cursor: not-allowed;
         }
 
         button.outline {
             background-color: transparent;
-
             color: var(--primary);
-
             border: 2px solid var(--primary);
         }
 
 
         /* =====================================================
-           FRAME SELECT
+           PILIH FRAME
         ===================================================== */
 
         .frame-grid {
-
             display: flex;
 
             align-items: center;
 
-            justify-content: flex-start;
-
-            gap: 30px;
+            gap: 40px;
 
             flex: 1;
 
             width: 100%;
 
             overflow-x: auto;
-
             overflow-y: hidden;
 
-            padding: 40px 80px;
+            padding: 30px 12vw;
 
             scroll-behavior: smooth;
 
@@ -165,22 +137,23 @@
             display: none;
         }
 
-
         .frame-item {
+            flex: 0 0 auto;
 
-            flex: 0 0 230px;
-
-            height: 330px;
+            /*
+             * Frame dibuat besar.
+             * Kurang lebih setengah tinggi layar laptop.
+             */
+            width: min(390px, 32vw);
+            height: min(560px, 50vh);
 
             background-color: #ddd;
 
             background-repeat: no-repeat;
-
             background-position: center;
-
             background-size: cover;
 
-            border-radius: 14px;
+            border-radius: 16px;
 
             cursor: pointer;
 
@@ -198,21 +171,20 @@
         }
 
         .frame-item.selected {
-
             border-color: #000;
 
             transform: scale(1.05);
 
+            /*
+             * Tidak ada shadow hitam.
+             */
             box-shadow: none;
         }
 
-
-        /* =====================================================
-           CHECK MARK
-        ===================================================== */
-
+        /*
+         * CHECKLIST PUTIH DI TENGAH
+         */
         .frame-item.selected::after {
-
             content: "✓";
 
             position: absolute;
@@ -220,20 +192,22 @@
             top: 50%;
             left: 50%;
 
-            transform:
-                translate(-50%, -50%);
+            transform: translate(-50%, -50%);
 
-            color: #fff;
+            color: white;
 
-            font-size: 64px;
+            font-size: 70px;
 
             font-weight: 700;
 
             line-height: 1;
 
+            /*
+             * Sedikit text shadow supaya tetap
+             * terlihat di frame terang maupun gelap.
+             */
             text-shadow:
-                0 2px 5px rgba(0, 0, 0, 0.55),
-                0 0 10px rgba(0, 0, 0, 0.35);
+                0 2px 6px rgba(0, 0, 0, 0.35);
 
             pointer-events: none;
 
@@ -246,19 +220,16 @@
         ===================================================== */
 
         .camera-container {
-
             display: flex;
 
-            gap: 16px;
+            gap: 20px;
 
             flex: 1;
 
             min-height: 0;
         }
 
-
         .video-wrapper {
-
             flex: 3;
 
             background: #000;
@@ -278,13 +249,10 @@
             min-height: 0;
         }
 
-
         #camera-feed {
-
             display: block;
 
             width: 100%;
-
             height: 100%;
 
             object-fit: cover;
@@ -300,14 +268,12 @@
         ===================================================== */
 
         .countdown {
-
             position: absolute;
 
             top: 50%;
             left: 50%;
 
-            transform:
-                translate(-50%, -50%);
+            transform: translate(-50%, -50%);
 
             font-size: 80px;
 
@@ -321,13 +287,7 @@
             z-index: 100;
         }
 
-
-        /* =====================================================
-           FLASH
-        ===================================================== */
-
         .flash {
-
             position: absolute;
 
             inset: 0;
@@ -342,7 +302,6 @@
         }
 
         .flash.active {
-
             opacity: 0.8;
 
             transition:
@@ -351,18 +310,17 @@
 
 
         /* =====================================================
-           RIGHT PREVIEW
+           PREVIEW FRAME DI SAMPING KAMERA
         ===================================================== */
 
         .preview-wrapper {
-
             flex: 2;
 
-            background: #e0e0e0;
+            background: #dcdcdc;
 
             border-radius: 16px;
 
-            padding: 10px;
+            padding: 12px;
 
             display: flex;
 
@@ -375,118 +333,104 @@
             overflow: hidden;
         }
 
-
+        /*
+         * Area preview frame.
+         */
         .frame-preview-container {
-
             position: relative;
 
             width: 100%;
-
             height: 100%;
 
             display: flex;
 
-            justify-content: center;
-
             align-items: center;
+            justify-content: center;
 
             overflow: hidden;
         }
 
-
-        /* FRAME UTAMA */
-
+        /*
+         * Frame asli.
+         * Frame TIDAK berada di atas kamera utama.
+         */
         #camera-side-frame {
-
             position: absolute;
 
-            object-fit: contain;
+            display: block;
+
+            object-fit: fill;
 
             pointer-events: none;
+
+            z-index: 30;
+        }
+
+        /*
+         * Container untuk slot foto.
+         */
+        #photo-slots {
+            position: absolute;
+
+            z-index: 10;
+
+            pointer-events: none;
+        }
+
+
+        /* =====================================================
+           SLOT FOTO
+        ===================================================== */
+
+        .photo-slot {
+            position: absolute;
+
+            overflow: hidden;
+
+            cursor: pointer;
+
+            pointer-events: auto;
+
+            border-radius: 2px;
+
+            transition:
+                transform 0.15s,
+                outline 0.15s;
 
             z-index: 20;
         }
 
-
-        /* FOTO-FOTO */
-
-        #photo-slots {
-
-            position: absolute;
-
-            inset: 0;
-
-            width: 100%;
-
-            height: 100%;
-
-            overflow: hidden;
-
-            z-index: 10;
-        }
-
-
-        .photo-slot {
-
-            position: absolute;
-
-            overflow: hidden;
-
-            border-radius: 3px;
-
-            cursor: pointer;
-
-            z-index: 10;
-
-            transition:
-                transform 0.15s ease,
-                outline 0.15s ease;
-        }
-
-
-        /*
-         * FOTO YANG SUDAH DIAMBIL
-         */
-
-        .photo-slot.has-photo:hover {
-
+        .photo-slot:hover {
             transform: scale(1.015);
 
             outline:
                 2px solid white;
 
-            z-index: 50;
+            z-index: 60;
         }
 
-
         .photo-slot canvas {
-
             width: 100%;
-
             height: 100%;
 
             display: block;
         }
 
-
-        /* NOMOR FOTO */
-
+        /*
+         * Nomor foto.
+         */
         .slot-number {
-
             position: absolute;
 
             top: 5px;
-
             left: 5px;
 
             width: 25px;
-
             height: 25px;
 
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
             border-radius: 50%;
@@ -505,11 +449,10 @@
             pointer-events: none;
         }
 
-
-        /* BELUM ADA FOTO */
-
+        /*
+         * Teks sebelum foto diambil.
+         */
         .slot-empty {
-
             position: absolute;
 
             inset: 0;
@@ -517,7 +460,6 @@
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
             text-align: center;
@@ -536,11 +478,10 @@
             pointer-events: none;
         }
 
-
-        /* RETAKE */
-
+        /*
+         * Label Ambil Ulang.
+         */
         .retake-label {
-
             position: absolute;
 
             inset: 0;
@@ -548,7 +489,6 @@
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
             text-align: center;
@@ -567,24 +507,21 @@
             transition:
                 opacity 0.15s;
 
-            z-index: 60;
+            z-index: 80;
 
             pointer-events: none;
         }
 
-
-        .photo-slot.has-photo:hover .retake-label {
-
+        .photo-slot:hover .retake-label {
             opacity: 1;
         }
 
 
         /* =====================================================
-           EDITOR
+           PREVIEW EDIT
         ===================================================== */
 
         .editor-container {
-
             display: flex;
 
             gap: 16px;
@@ -594,15 +531,12 @@
             min-height: 0;
         }
 
-
         .canvas-area {
-
             flex: 3;
 
             display: flex;
 
             justify-content: center;
-
             align-items: center;
 
             background: #e0e0e0;
@@ -616,9 +550,7 @@
             position: relative;
         }
 
-
         canvas {
-
             max-width: 100%;
 
             max-height: 100%;
@@ -631,9 +563,7 @@
                 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
-
         .tools-area {
-
             flex: 2;
 
             background: white;
@@ -651,7 +581,6 @@
         ===================================================== */
 
         .result-container {
-
             display: flex;
 
             gap: 20px;
@@ -663,9 +592,7 @@
             align-items: center;
         }
 
-
         .result-left {
-
             flex: 1;
 
             height: 100%;
@@ -673,7 +600,6 @@
             display: flex;
 
             justify-content: center;
-
             align-items: center;
 
             background: #e0e0e0;
@@ -681,9 +607,7 @@
             border-radius: 12px;
         }
 
-
         .result-right {
-
             flex: 1;
 
             display: flex;
@@ -691,7 +615,6 @@
             flex-direction: column;
 
             align-items: center;
-
             justify-content: center;
 
             background: white;
@@ -711,7 +634,6 @@
         ===================================================== */
 
         #loading-overlay {
-
             display: none;
 
             position: absolute;
@@ -724,7 +646,6 @@
             z-index: 10;
 
             justify-content: center;
-
             align-items: center;
 
             flex-direction: column;
@@ -732,9 +653,7 @@
             border-radius: 10px;
         }
 
-
         .spinner {
-
             border:
                 4px solid #f3f3f3;
 
@@ -744,16 +663,13 @@
             border-radius: 50%;
 
             width: 40px;
-
             height: 40px;
 
             animation:
                 spin 1s linear infinite;
         }
 
-
         @keyframes spin {
-
             0% {
                 transform: rotate(0deg);
             }
@@ -761,541 +677,373 @@
             100% {
                 transform: rotate(360deg);
             }
-
         }
 
 
         /* =====================================================
-           MOBILE
+           RESPONSIVE
         ===================================================== */
 
         @media (max-width: 800px) {
 
             .frame-item {
-
-                flex-basis: 190px;
-
-                height: 280px;
+                width: 260px;
+                height: 390px;
             }
-
 
             .frame-grid {
-
-                padding:
-                    30px 40px;
+                padding: 25px 40px;
+                gap: 25px;
             }
 
-
             .camera-container {
-
                 flex-direction: column;
             }
 
-
             .video-wrapper {
-
                 min-height: 50vh;
             }
 
-
             .preview-wrapper {
-
                 min-height: 30vh;
             }
 
-
             .editor-container,
             .result-container {
-
                 flex-direction: column;
             }
-
-
-            .canvas-area,
-            .result-left {
-
-                min-height: 50vh;
-            }
-
-
-            .tools-area,
-            .result-right {
-
-                width: 100%;
-            }
-
         }
 
     </style>
 </head>
 
-
 <body>
 
 
-    <!-- =====================================================
-         START SCREEN
-    ===================================================== -->
+<!-- =====================================================
+     START SCREEN
+===================================================== -->
+
+<div
+    id="start-screen"
+    class="screen active"
+>
 
     <div
-        id="start-screen"
-        class="screen active"
+        style="
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+        "
     >
 
-        <div
-            style="
-                flex:1;
-                display:flex;
-                flex-direction:column;
-                justify-content:center;
-                align-items:center;
-            "
+        <h1>
+            Photobooth
+        </h1>
+
+        <p>
+            Capture your moments beautifully
+        </p>
+
+    </div>
+
+    <div class="bottom-actions">
+
+        <button
+            onclick="nav('frame-screen')"
         >
+            Mulai Sesi
+        </button>
 
-            <h1>
-                Photobooth
-            </h1>
+    </div>
 
-            <p>
-                Capture your moments beautifully
-            </p>
-
-        </div>
+</div>
 
 
-        <div class="bottom-actions">
+<!-- =====================================================
+     FRAME SCREEN
+===================================================== -->
 
-            <button
-                onclick="nav('frame-screen')"
-            >
-                Mulai Sesi
-            </button>
+<div
+    id="frame-screen"
+    class="screen"
+>
 
-        </div>
+    <h2>
+        Pilih Frame
+    </h2>
+
+    <div
+        class="frame-grid"
+        id="frame-list"
+    >
+
+        <!--
+            Frame default.
+            Tambahkan frame lainnya di sini
+            jika diperlukan.
+        -->
+
+        <div
+            class="frame-item"
+
+            style="
+                background-image:
+                url('frame/default.png');
+
+                background-size:cover;
+                background-position:center;
+            "
+
+            onclick="
+                selectFrame(
+                    this,
+                    'frame/default.png'
+                )
+            "
+        ></div>
 
     </div>
 
 
+    <div class="bottom-actions">
 
-    <!-- =====================================================
-         FRAME SCREEN
-    ===================================================== -->
+        <button
+            id="btn-continue-camera"
+            disabled
+
+            onclick="
+                nav('camera-screen');
+                initCamera();
+            "
+        >
+            Pilih Frame Dulu
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     CAMERA SCREEN
+===================================================== -->
+
+<div
+    id="camera-screen"
+    class="screen"
+>
 
     <div
-        id="frame-screen"
-        class="screen"
+        style="
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:12px;
+            align-items:center;
+        "
     >
 
-        <h2>
-            Pilih Frame
+        <h2 style="margin:0;">
+            Kamera
         </h2>
 
+        <button
+            class="outline"
+
+            style="
+                width:auto;
+                padding:6px 12px;
+                font-size:12px;
+                margin:0;
+            "
+
+            onclick="toggleMirror()"
+        >
+            Balik Kamera
+        </button>
+
+    </div>
+
+
+    <div class="camera-container">
+
+
+        <!-- =================================================
+             KAMERA LIVE
+        ================================================= -->
 
         <div
-            class="frame-grid"
-            id="frame-list"
+            class="video-wrapper"
+            id="video-wrapper"
         >
 
+            <video
+                id="camera-feed"
+                autoplay
+                playsinline
+            ></video>
+
             <div
-                class="frame-item"
+                id="countdown"
+                class="countdown"
+            ></div>
 
-                style="
-                    background-image:
-                    url('frame/default.png');
-
-                    background-size: cover;
-
-                    background-position: center;
-                "
-
-                onclick="
-                    selectFrame(
-                        this,
-                        'frame/default.png'
-                    )
-                "
+            <div
+                id="flash"
+                class="flash"
             ></div>
 
         </div>
 
 
-        <div class="bottom-actions">
+        <!-- =================================================
+             FRAME + HASIL FOTO
+        ================================================= -->
 
-            <button
-                id="btn-continue-camera"
-
-                disabled
-
-                onclick="
-                    nav('camera-screen');
-                    initCamera();
-                "
-            >
-                Pilih Frame Dulu
-            </button>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =====================================================
-         CAMERA SCREEN
-    ===================================================== -->
-
-    <div
-        id="camera-screen"
-        class="screen"
-    >
-
-        <div
-            style="
-                display:flex;
-                justify-content:space-between;
-                margin-bottom:12px;
-                align-items:center;
-            "
-        >
-
-            <h2 style="margin:0;">
-                Kamera
-            </h2>
-
-
-            <button
-                class="outline"
-
-                style="
-                    width:auto;
-                    padding:6px 12px;
-                    font-size:12px;
-                    margin:0;
-                "
-
-                onclick="toggleMirror()"
-            >
-                Balik Kamera
-            </button>
-
-        </div>
-
-
-        <div class="camera-container">
-
-
-            <!-- LIVE CAMERA -->
+        <div class="preview-wrapper">
 
             <div
-                class="video-wrapper"
-                id="video-wrapper"
+                class="frame-preview-container"
+                id="frame-preview-container"
             >
 
-                <video
-                    id="camera-feed"
-                    autoplay
-                    playsinline
-                ></video>
-
-
+                <!-- SLOT FOTO -->
                 <div
-                    id="countdown"
-                    class="countdown"
+                    id="photo-slots"
                 ></div>
 
 
-                <div
-                    id="flash"
-                    class="flash"
-                ></div>
-
-            </div>
-
-
-
-            <!-- FRAME + HASIL FOTO -->
-
-            <div class="preview-wrapper">
-
-                <div
-                    class="frame-preview-container"
-                    id="frame-preview-container"
+                <!-- FRAME ASLI -->
+                <img
+                    id="camera-side-frame"
+                    src=""
+                    alt="Frame"
                 >
 
-                    <div
-                        id="photo-slots"
-                    ></div>
-
-
-                    <img
-                        id="camera-side-frame"
-                        src=""
-                        alt="Frame"
-                    >
-
-                </div>
-
             </div>
-
-        </div>
-
-
-        <div class="bottom-actions">
-
-            <button
-                id="btn-take"
-                onclick="takePhotos()"
-            >
-                Ambil Foto
-            </button>
-
-
-            <button
-                id="btn-next-preview"
-
-                disabled
-
-                onclick="
-                    nav('preview-screen');
-                    loadPreview();
-                "
-            >
-                Lanjutkan
-            </button>
 
         </div>
 
     </div>
 
 
+    <div class="bottom-actions">
 
-    <!-- =====================================================
-         PREVIEW SCREEN
-    ===================================================== -->
+        <button
+            id="btn-take"
+            onclick="takePhotos()"
+        >
+            Ambil Foto
+        </button>
 
-    <div
-        id="preview-screen"
-        class="screen"
-    >
+        <button
+            id="btn-next-preview"
+            disabled
 
-        <h2>
-            Preview & Edit
-        </h2>
-
-
-        <div class="editor-container">
-
-            <div class="canvas-area">
-
-                <canvas
-                    id="result-canvas"
-                ></canvas>
-
-
-                <div
-                    id="loading-overlay"
-                >
-
-                    <div class="spinner"></div>
-
-                    <p
-                        style="
-                            margin-top:10px;
-                            font-weight:bold;
-                        "
-                    >
-                        Memproses...
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="tools-area">
-
-                <h3 style="margin-top:0;">
-                    Filter Warna
-                </h3>
-
-
-                <div
-                    style="
-                        display:flex;
-                        flex-direction:column;
-                        gap:8px;
-                        margin-bottom:20px;
-                    "
-                >
-
-                    <button
-                        class="outline"
-
-                        onclick="
-                            applyFilter('none')
-                        "
-                    >
-                        Original
-                    </button>
-
-
-                    <button
-                        class="outline"
-
-                        onclick="
-                            applyFilter(
-                                'grayscale(100%)'
-                            )
-                        "
-                    >
-                        Hitam Putih
-                    </button>
-
-
-                    <button
-                        class="outline"
-
-                        onclick="
-                            applyFilter(
-                                'sepia(100%)'
-                            )
-                        "
-                    >
-                        Retro / Sepia
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="bottom-actions">
-
-            <button
-                onclick="
-                    processAndUploadSession()
-                "
-            >
-                Selesai & Proses Otomatis
-            </button>
-
-        </div>
+            onclick="
+                nav('preview-screen');
+                loadPreview();
+            "
+        >
+            Lanjutkan
+        </button>
 
     </div>
 
+</div>
 
 
-    <!-- =====================================================
-         RESULT SCREEN
-    ===================================================== -->
+<!-- =====================================================
+     PREVIEW SCREEN
+===================================================== -->
 
-    <div
-        id="result-screen"
-        class="screen"
-    >
+<div
+    id="preview-screen"
+    class="screen"
+>
 
-        <h2>
-            Sesi Selesai
-        </h2>
-
-
-        <div class="result-container">
-
-            <div class="result-left">
-
-                <canvas
-                    id="final-preview-canvas"
-
-                    style="
-                        max-height:100%;
-                        border-radius:8px;
-                    "
-                ></canvas>
-
-            </div>
+    <h2>
+        Preview & Edit
+    </h2>
 
 
-            <div class="result-right">
+    <div class="editor-container">
 
-                <h3 style="margin-top:0;">
-                    Scan untuk Unduh Folder Sesi
-                </h3>
+        <div class="canvas-area">
+
+            <canvas
+                id="result-canvas"
+            ></canvas>
 
 
-                <div
-                    id="qrcode-container"
+            <div id="loading-overlay">
 
-                    style="
-                        margin:10px 0;
-                    "
-                >
-
-                    <div
-                        class="spinner"
-
-                        style="
-                            margin:20px auto;
-                        "
-                    ></div>
-
-                </div>
-
+                <div class="spinner"></div>
 
                 <p
-                    id="qr-status-text"
-
                     style="
-                        font-size:11px;
-                        color:#666;
-                        margin-bottom:15px;
+                        margin-top:10px;
+                        font-weight:bold;
                     "
                 >
-                    Mengunggah file ke Drive...
+                    Memproses...
                 </p>
 
+            </div>
 
-                <div
-                    style="
-                        display:flex;
-                        flex-direction:column;
-                        gap:8px;
-                        width:100%;
+        </div>
+
+
+        <div class="tools-area">
+
+            <h3 style="margin-top:0;">
+                Filter Warna
+            </h3>
+
+
+            <div
+                style="
+                    display:flex;
+                    flex-direction:column;
+                    gap:8px;
+                    margin-bottom:20px;
+                "
+            >
+
+                <button
+                    class="outline"
+                    onclick="
+                        applyFilter('none')
                     "
                 >
-
-                    <button
-                        onclick="downloadImage()"
-                    >
-                        ⬇️ Unduh Foto Frame
-                    </button>
+                    Original
+                </button>
 
 
-                    <button
-                        class="outline"
+                <button
+                    class="outline"
+                    onclick="
+                        applyFilter(
+                            'grayscale(100%)'
+                        )
+                    "
+                >
+                    Hitam Putih
+                </button>
 
-                        onclick="downloadTanpaFrame()"
-                    >
-                        🖼️ Unduh Foto Satuan
-                    </button>
 
-
-                    <button
-                        class="outline"
-
-                        onclick="location.reload()"
-
-                        style="
-                            background-color:#ffebeb;
-                            color:red;
-                            border-color:red;
-                        "
-                    >
-                        🔄 Sesi Baru
-                    </button>
-
-                </div>
+                <button
+                    class="outline"
+                    onclick="
+                        applyFilter(
+                            'sepia(100%)'
+                        )
+                    "
+                >
+                    Retro / Sepia
+                </button>
 
             </div>
 
@@ -1304,1431 +1052,972 @@
     </div>
 
 
+    <div class="bottom-actions">
 
-    <!-- =====================================================
-         JAVASCRIPT
-    ===================================================== -->
+        <button
+            onclick="
+                processAndUploadSession()
+            "
+        >
+            Selesai & Proses Otomatis
+        </button>
 
-    <script>
+    </div>
 
-
-        /* =====================================================
-           NAVIGATION
-        ===================================================== */
-
-        function nav(screenId) {
-
-            document
-                .querySelectorAll('.screen')
-                .forEach(
-                    screen =>
-                        screen.classList.remove(
-                            'active'
-                        )
-                );
+</div>
 
 
-            document
-                .getElementById(screenId)
-                .classList.add(
+<!-- =====================================================
+     RESULT SCREEN
+===================================================== -->
+
+<div
+    id="result-screen"
+    class="screen"
+>
+
+    <h2>
+        Sesi Selesai
+    </h2>
+
+
+    <div class="result-container">
+
+        <div class="result-left">
+
+            <canvas
+                id="final-preview-canvas"
+                style="
+                    max-height:100%;
+                    border-radius:8px;
+                "
+            ></canvas>
+
+        </div>
+
+
+        <div class="result-right">
+
+            <h3 style="margin-top:0;">
+                Scan untuk Unduh Folder Sesi
+            </h3>
+
+
+            <div
+                id="qrcode-container"
+                style="margin:10px 0;"
+            >
+
+                <div
+                    class="spinner"
+                    style="
+                        margin:20px auto;
+                    "
+                ></div>
+
+            </div>
+
+
+            <p
+                id="qr-status-text"
+                style="
+                    font-size:11px;
+                    color:#666;
+                    margin-bottom:15px;
+                "
+            >
+                Mengunggah file ke Drive...
+            </p>
+
+
+            <div
+                style="
+                    display:flex;
+                    flex-direction:column;
+                    gap:8px;
+                    width:100%;
+                "
+            >
+
+                <button
+                    onclick="downloadImage()"
+                >
+                    ⬇️ Unduh Foto Frame
+                </button>
+
+
+                <button
+                    class="outline"
+                    onclick="downloadTanpaFrame()"
+                >
+                    🖼️ Unduh Foto Satuan
+                </button>
+
+
+                <button
+                    class="outline"
+                    onclick="location.reload()"
+
+                    style="
+                        background-color:#ffebeb;
+                        color:red;
+                        border-color:red;
+                    "
+                >
+                    🔄 Sesi Baru
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+function nav(screenId) {
+
+    document
+        .querySelectorAll('.screen')
+        .forEach(
+            screen => {
+                screen.classList.remove(
                     'active'
                 );
-
-        }
-
-
-
-        /* =====================================================
-           GLOBAL VARIABLES
-        ===================================================== */
-
-        let requiredPhotos = 0;
-
-        let selectedFramePath = '';
-
-        let frameHoles = [];
-
-        let stream = null;
-
-        let isMirrored = true;
-
-        let capturedImages = [];
-
-        let finalFrameImageObj = null;
-
-        let currentCanvasFilter = 'none';
-
-        let isTakingPhoto = false;
+            }
+        );
 
 
-
-        /* =====================================================
-           DETECT TRANSPARENT HOLES
-        ===================================================== */
-
-        async function detectFrameHoles(
-            imgSrc
-        ) {
-
-            return new Promise(
-                (resolve, reject) => {
-
-                    const img =
-                        new Image();
+    const target =
+        document.getElementById(
+            screenId
+        );
 
 
-                    img.onload = () => {
+    if (target) {
 
-                        finalFrameImageObj =
-                            img;
+        target.classList.add(
+            'active'
+        );
 
+    }
 
-                        const canvas =
-                            document.createElement(
-                                'canvas'
-                            );
-
-
-                        const ctx =
-                            canvas.getContext(
-                                '2d',
-                                {
-                                    willReadFrequently:
-                                        true
-                                }
-                            );
+}
 
 
-                        const width =
-                            img.width;
+/* =====================================================
+   VARIABLES
+===================================================== */
+
+let requiredPhotos = 0;
+
+let selectedFramePath = '';
+
+let frameHoles = [];
+
+let stream = null;
+
+let isMirrored = true;
+
+let capturedImages = [];
+
+let finalFrameImageObj = null;
+
+let currentCanvasFilter = 'none';
+
+let isTakingPhoto = false;
 
 
-                        const height =
-                            img.height;
+/* =====================================================
+   DETECT TRANSPARENT FRAME HOLES
+===================================================== */
+
+async function detectFrameHoles(
+    imgSrc
+) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const img =
+                new Image();
 
 
-                        canvas.width =
-                            width;
+            img.onload = () => {
+
+                finalFrameImageObj =
+                    img;
 
 
-                        canvas.height =
-                            height;
+                const canvas =
+                    document.createElement(
+                        'canvas'
+                    );
 
 
-                        ctx.drawImage(
-                            img,
-                            0,
-                            0
-                        );
+                const ctx =
+                    canvas.getContext(
+                        '2d',
+                        {
+                            willReadFrequently:
+                                true
+                        }
+                    );
 
 
-                        const imgData =
-                            ctx.getImageData(
-                                0,
-                                0,
-                                width,
-                                height
-                            );
+                const width =
+                    img.width;
 
 
-                        const data =
-                            imgData.data;
+                const height =
+                    img.height;
 
 
-                        const visited =
-                            new Uint8Array(
-                                width * height
-                            );
+                canvas.width =
+                    width;
 
 
-                        const holes = [];
+                canvas.height =
+                    height;
 
 
-                        for (
-                            let y = 0;
-                            y < height;
-                            y++
+                ctx.drawImage(
+                    img,
+                    0,
+                    0
+                );
+
+
+                const imageData =
+                    ctx.getImageData(
+                        0,
+                        0,
+                        width,
+                        height
+                    );
+
+
+                const data =
+                    imageData.data;
+
+
+                const visited =
+                    new Uint8Array(
+                        width * height
+                    );
+
+
+                const holes = [];
+
+
+                for (
+                    let y = 0;
+                    y < height;
+                    y++
+                ) {
+
+                    for (
+                        let x = 0;
+                        x < width;
+                        x++
+                    ) {
+
+                        const index =
+                            y * width + x;
+
+
+                        /*
+                         * Alpha < 10
+                         * berarti transparan.
+                         */
+
+                        if (
+                            data[
+                                index * 4 + 3
+                            ] < 10 &&
+                            visited[index] === 0
                         ) {
 
-                            for (
-                                let x = 0;
-                                x < width;
-                                x++
+                            let minX = x;
+                            let maxX = x;
+
+                            let minY = y;
+                            let maxY = y;
+
+
+                            const stack =
+                                [index];
+
+
+                            while (
+                                stack.length > 0
                             ) {
 
-                                const index =
-                                    y * width + x;
+                                const idx =
+                                    stack.pop();
+
+
+                                if (
+                                    visited[idx]
+                                ) {
+                                    continue;
+                                }
+
+
+                                const px =
+                                    idx % width;
+
+
+                                const py =
+                                    Math.floor(
+                                        idx / width
+                                    );
 
 
                                 if (
                                     data[
-                                        index * 4 + 3
-                                    ] < 10 &&
-                                    visited[index] === 0
+                                        idx * 4 + 3
+                                    ] >= 10
                                 ) {
-
-                                    let minX = x;
-                                    let maxX = x;
-                                    let minY = y;
-                                    let maxY = y;
-
-
-                                    const stack =
-                                        [index];
-
-
-                                    while (
-                                        stack.length > 0
-                                    ) {
-
-                                        const idx =
-                                            stack.pop();
-
-
-                                        if (
-                                            visited[idx]
-                                        )
-                                            continue;
-
-
-                                        const px =
-                                            idx % width;
-
-
-                                        const py =
-                                            Math.floor(
-                                                idx /
-                                                width
-                                            );
-
-
-                                        if (
-                                            data[
-                                                idx * 4 + 3
-                                            ] >= 10
-                                        )
-                                            continue;
-
-
-                                        visited[idx] =
-                                            1;
-
-
-                                        if (
-                                            px < minX
-                                        )
-                                            minX = px;
-
-
-                                        if (
-                                            px > maxX
-                                        )
-                                            maxX = px;
-
-
-                                        if (
-                                            py < minY
-                                        )
-                                            minY = py;
-
-
-                                        if (
-                                            py > maxY
-                                        )
-                                            maxY = py;
-
-
-                                        if (
-                                            px + 1 <
-                                            width
-                                        )
-                                            stack.push(
-                                                idx + 1
-                                            );
-
-
-                                        if (
-                                            px - 1 >=
-                                            0
-                                        )
-                                            stack.push(
-                                                idx - 1
-                                            );
-
-
-                                        if (
-                                            py + 1 <
-                                            height
-                                        )
-                                            stack.push(
-                                                idx + width
-                                            );
-
-
-                                        if (
-                                            py - 1 >=
-                                            0
-                                        )
-                                            stack.push(
-                                                idx - width
-                                            );
-
-                                    }
-
-
-                                    if (
-                                        maxX - minX > 80 &&
-                                        maxY - minY > 80
-                                    ) {
-
-                                        holes.push({
-
-                                            x: minX,
-
-                                            y: minY,
-
-                                            w:
-                                                maxX -
-                                                minX,
-
-                                            h:
-                                                maxY -
-                                                minY
-
-                                        });
-
-                                    }
-
+                                    continue;
                                 }
+
+
+                                visited[idx] =
+                                    1;
+
+
+                                if (
+                                    px < minX
+                                ) {
+                                    minX = px;
+                                }
+
+
+                                if (
+                                    px > maxX
+                                ) {
+                                    maxX = px;
+                                }
+
+
+                                if (
+                                    py < minY
+                                ) {
+                                    minY = py;
+                                }
+
+
+                                if (
+                                    py > maxY
+                                ) {
+                                    maxY = py;
+                                }
+
+
+                                if (
+                                    px + 1 < width
+                                ) {
+                                    stack.push(
+                                        idx + 1
+                                    );
+                                }
+
+
+                                if (
+                                    px - 1 >= 0
+                                ) {
+                                    stack.push(
+                                        idx - 1
+                                    );
+                                }
+
+
+                                if (
+                                    py + 1 < height
+                                ) {
+                                    stack.push(
+                                        idx + width
+                                    );
+                                }
+
+
+                                if (
+                                    py - 1 >= 0
+                                ) {
+                                    stack.push(
+                                        idx - width
+                                    );
+                                }
+
+                            }
+
+
+                            /*
+                             * Abaikan lubang kecil.
+                             */
+
+                            if (
+                                maxX - minX > 80 &&
+                                maxY - minY > 80
+                            ) {
+
+                                holes.push({
+
+                                    x: minX,
+
+                                    y: minY,
+
+                                    w:
+                                        maxX -
+                                        minX,
+
+                                    h:
+                                        maxY -
+                                        minY
+
+                                });
 
                             }
 
                         }
 
-
-                        holes.sort(
-                            (a, b) => {
-
-                                if (
-                                    Math.abs(
-                                        a.y -
-                                        b.y
-                                    ) < 20
-                                ) {
-
-                                    return (
-                                        a.x -
-                                        b.x
-                                    );
-
-                                }
-
-                                return (
-                                    a.y -
-                                    b.y
-                                );
-
-                            }
-                        );
-
-
-                        resolve(
-                            holes
-                        );
-
-                    };
-
-
-                    img.onerror = () => {
-
-                        reject(
-                            'Gambar frame tidak ditemukan.'
-                        );
-
-                    };
-
-
-                    img.src =
-                        imgSrc;
+                    }
 
                 }
-            );
+
+
+                /*
+                 * Urutkan berdasarkan
+                 * posisi Y kemudian X.
+                 */
+
+                holes.sort(
+                    (a, b) => {
+
+                        if (
+                            Math.abs(
+                                a.y - b.y
+                            ) < 20
+                        ) {
+
+                            return (
+                                a.x - b.x
+                            );
+
+                        }
+
+
+                        return (
+                            a.y - b.y
+                        );
+
+                    }
+                );
+
+
+                resolve(
+                    holes
+                );
+
+            };
+
+
+            img.onerror = () => {
+
+                reject(
+                    'Gambar frame tidak ditemukan.'
+                );
+
+            };
+
+
+            img.src =
+                imgSrc;
 
         }
+    );
+
+}
 
 
+/* =====================================================
+   SELECT FRAME
+===================================================== */
 
-        /* =====================================================
-           SELECT FRAME
-        ===================================================== */
+async function selectFrame(
+    element,
+    framePath
+) {
 
-        async function selectFrame(
-            element,
-            framePath
-        ) {
+    document
+        .querySelectorAll(
+            '.frame-item'
+        )
+        .forEach(
+            frame => {
 
-            document
-                .querySelectorAll(
-                    '.frame-item'
-                )
-                .forEach(
-                    item =>
-                        item.classList.remove(
-                            'selected'
-                        )
+                frame.classList.remove(
+                    'selected'
                 );
 
+            }
+        );
 
-            element.classList.add(
-                'selected'
+
+    element.classList.add(
+        'selected'
+    );
+
+
+    selectedFramePath =
+        framePath;
+
+
+    const button =
+        document.getElementById(
+            'btn-continue-camera'
+        );
+
+
+    button.disabled =
+        true;
+
+
+    button.innerText =
+        'Memindai Frame...';
+
+
+    try {
+
+        frameHoles =
+            await detectFrameHoles(
+                framePath
             );
 
 
-            selectedFramePath =
-                framePath;
+        requiredPhotos =
+            frameHoles.length;
 
 
-            const button =
-                document.getElementById(
-                    'btn-continue-camera'
-                );
-
+        if (
+            requiredPhotos === 0
+        ) {
 
             button.disabled =
                 true;
 
 
             button.innerText =
-                'Memindai Frame...';
+                'Pilih Frame Dulu';
 
 
-            try {
-
-                frameHoles =
-                    await detectFrameHoles(
-                        framePath
-                    );
+            alert(
+                'Frame tidak mempunyai lubang transparan.'
+            );
 
 
-                requiredPhotos =
-                    frameHoles.length;
+            return;
 
+        }
+
+
+        button.disabled =
+            false;
+
+
+        button.innerText =
+            `Lanjut (${requiredPhotos} Foto)`;
+
+
+    } catch(error) {
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   INIT CAMERA
+===================================================== */
+
+async function initCamera() {
+
+    try {
+
+        /*
+         * Matikan stream sebelumnya.
+         */
+
+        if (stream) {
+
+            stream
+                .getTracks()
+                .forEach(
+                    track => {
+                        track.stop();
+                    }
+                );
+
+        }
+
+
+        stream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+
+                    video: {
+
+                        facingMode:
+                            'user',
+
+                        width: {
+                            ideal: 1280
+                        },
+
+                        height: {
+                            ideal: 720
+                        }
+
+                    }
+
+                });
+
+
+        const video =
+            document.getElementById(
+                'camera-feed'
+            );
+
+
+        video.srcObject =
+            stream;
+
+
+        /*
+         * Reset foto.
+         */
+
+        capturedImages =
+            new Array(
+                requiredPhotos
+            );
+
+
+        /*
+         * Reset tombol.
+         */
+
+        document
+            .getElementById(
+                'btn-take'
+            )
+            .disabled = false;
+
+
+        document
+            .getElementById(
+                'btn-next-preview'
+            )
+            .disabled = true;
+
+
+        /*
+         * Tunggu video siap.
+         */
+
+        await new Promise(
+            resolve => {
 
                 if (
-                    requiredPhotos === 0
+                    video.readyState >= 2
                 ) {
 
-                    button.innerText =
-                        'Pilih Frame Dulu';
+                    resolve();
 
+                } else {
 
-                    alert(
-                        'Frame tidak memiliki lubang transparan!'
-                    );
-
-
-                    return;
+                    video.onloadedmetadata =
+                        () => {
+                            resolve();
+                        };
 
                 }
 
-
-                button.disabled =
-                    false;
-
-
-                button.innerText =
-                    `Lanjut (${requiredPhotos} Foto)`;
-
-
-            } catch (error) {
-
-                console.error(
-                    error
-                );
-
-
-                alert(
-                    error
-                );
-
             }
+        );
 
-        }
 
+        /*
+         * Buat preview frame.
+         */
 
+        buildFramePreview();
 
-        /* =====================================================
-           INIT CAMERA
-        ===================================================== */
 
-        async function initCamera() {
+    } catch(error) {
 
-            try {
+        console.error(
+            error
+        );
 
-                if (stream) {
 
-                    stream
-                        .getTracks()
-                        .forEach(
-                            track =>
-                                track.stop()
-                        );
+        alert(
+            'Izin kamera diperlukan.'
+        );
 
-                }
+    }
 
+}
 
-                stream =
-                    await navigator
-                        .mediaDevices
-                        .getUserMedia({
 
-                            video: {
+/* =====================================================
+   BUILD FRAME PREVIEW
+===================================================== */
 
-                                facingMode:
-                                    'user',
+function buildFramePreview() {
 
-                                width: {
-                                    ideal:
-                                        1280
-                                },
+    if (
+        !finalFrameImageObj
+    ) {
+        return;
+    }
 
-                                height: {
-                                    ideal:
-                                        720
-                                }
 
-                            }
+    const container =
+        document.getElementById(
+            'frame-preview-container'
+        );
 
-                        });
 
+    const frame =
+        document.getElementById(
+            'camera-side-frame'
+        );
 
-                const video =
-                    document.getElementById(
-                        'camera-feed'
-                    );
 
+    const slots =
+        document.getElementById(
+            'photo-slots'
+        );
 
-                video.srcObject =
-                    stream;
 
+    const containerWidth =
+        container.clientWidth;
 
-                capturedImages =
-                    new Array(
-                        requiredPhotos
-                    );
 
+    const containerHeight =
+        container.clientHeight;
 
-                isTakingPhoto =
-                    false;
 
+    /*
+     * Ukuran frame ASLI.
+     */
 
-                document
-                    .getElementById(
-                        'btn-take'
-                    )
-                    .disabled =
-                    false;
+    const frameWidth =
+        finalFrameImageObj.width;
 
 
-                document
-                    .getElementById(
-                        'btn-next-preview'
-                    )
-                    .disabled =
-                    true;
+    const frameHeight =
+        finalFrameImageObj.height;
 
 
-                setTimeout(
-                    () => {
+    const frameRatio =
+        frameWidth /
+        frameHeight;
 
-                        buildFramePreview();
 
-                        adjustCameraRatio();
+    /*
+     * Fit frame ke panel.
+     */
 
-                    },
-                    500
-                );
+    let displayWidth =
+        containerWidth;
 
 
-            } catch (error) {
+    let displayHeight =
+        displayWidth /
+        frameRatio;
 
-                console.error(
-                    error
-                );
 
+    if (
+        displayHeight >
+        containerHeight
+    ) {
 
-                alert(
-                    'Izin Kamera diperlukan.'
-                );
+        displayHeight =
+            containerHeight;
 
-            }
 
-        }
+        displayWidth =
+            displayHeight *
+            frameRatio;
 
+    }
 
 
-        /* =====================================================
-           CAMERA RATIO
-        ===================================================== */
+    /*
+     * Posisi frame di tengah.
+     */
 
-        function adjustCameraRatio() {
+    const offsetX =
+        (
+            containerWidth -
+            displayWidth
+        ) / 2;
 
-            const videoWrapper =
-                document.getElementById(
-                    'video-wrapper'
-                );
 
+    const offsetY =
+        (
+            containerHeight -
+            displayHeight
+        ) / 2;
 
-            if (
-                !frameHoles.length
-            )
-                return;
 
+    /*
+     * Tampilkan frame.
+     */
 
-            const firstHole =
-                frameHoles[0];
+    frame.src =
+        selectedFramePath;
 
 
-            const ratio =
-                firstHole.w /
-                firstHole.h;
+    frame.style.width =
+        displayWidth + 'px';
 
 
-            videoWrapper.style.aspectRatio =
-                `${ratio}`;
+    frame.style.height =
+        displayHeight + 'px';
 
-        }
 
+    frame.style.left =
+        offsetX + 'px';
 
 
-        /* =====================================================
-           BUILD FRAME PREVIEW
-        ===================================================== */
+    frame.style.top =
+        offsetY + 'px';
 
-        function buildFramePreview() {
 
-            const container =
-                document.getElementById(
-                    'frame-preview-container'
-                );
+    /*
+     * Container slot
+     * harus sama persis dengan
+     * ukuran frame.
+     */
 
+    slots.style.left =
+        offsetX + 'px';
 
-            const slots =
-                document.getElementById(
-                    'photo-slots'
-                );
 
+    slots.style.top =
+        offsetY + 'px';
 
-            slots.innerHTML =
-                '';
 
+    slots.style.width =
+        displayWidth + 'px';
 
-            if (
-                !finalFrameImageObj
-            )
-                return;
 
+    slots.style.height =
+        displayHeight + 'px';
 
-            const parentWidth =
-                container.clientWidth;
 
+    slots.innerHTML =
+        '';
 
-            const parentHeight =
-                container.clientHeight;
 
+    /*
+     * Buat slot sesuai
+     * lubang frame.
+     */
 
-            const frameRatio =
-                finalFrameImageObj.width /
-                finalFrameImageObj.height;
-
-
-            let frameWidth =
-                parentWidth;
-
-
-            let frameHeight =
-                frameWidth /
-                frameRatio;
-
-
-            if (
-                frameHeight >
-                parentHeight
-            ) {
-
-                frameHeight =
-                    parentHeight;
-
-
-                frameWidth =
-                    frameHeight *
-                    frameRatio;
-
-            }
-
-
-            const left =
-                (
-                    parentWidth -
-                    frameWidth
-                ) / 2;
-
-
-            const top =
-                (
-                    parentHeight -
-                    frameHeight
-                ) / 2;
-
-
-            frameHoles.forEach(
-                (
-                    hole,
-                    index
-                ) => {
-
-                    const slot =
-                        document.createElement(
-                            'div'
-                        );
-
-
-                    slot.className =
-                        'photo-slot';
-
-
-                    slot.style.left =
-                        `${
-                            left +
-                            (
-                                hole.x /
-                                finalFrameImageObj.width
-                            ) *
-                            frameWidth
-                        }px`;
-
-
-                    slot.style.top =
-                        `${
-                            top +
-                            (
-                                hole.y /
-                                finalFrameImageObj.height
-                            ) *
-                            frameHeight
-                        }px`;
-
-
-                    slot.style.width =
-                        `${
-                            (
-                                hole.w /
-                                finalFrameImageObj.width
-                            ) *
-                            frameWidth
-                        }px`;
-
-
-                    slot.style.height =
-                        `${
-                            (
-                                hole.h /
-                                finalFrameImageObj.height
-                            ) *
-                            frameHeight
-                        }px`;
-
-
-                    slot.dataset.index =
-                        index;
-
-
-                    const canvas =
-                        document.createElement(
-                            'canvas'
-                        );
-
-
-                    canvas.width =
-                        hole.w;
-
-
-                    canvas.height =
-                        hole.h;
-
-
-                    slot.appendChild(
-                        canvas
-                    );
-
-
-                    const number =
-                        document.createElement(
-                            'div'
-                        );
-
-
-                    number.className =
-                        'slot-number';
-
-
-                    number.innerText =
-                        index + 1;
-
-
-                    slot.appendChild(
-                        number
-                    );
-
-
-                    const empty =
-                        document.createElement(
-                            'div'
-                        );
-
-
-                    empty.className =
-                        'slot-empty';
-
-
-                    empty.innerHTML =
-                        `Foto ${index + 1}<br>Belum diambil`;
-
-
-                    slot.appendChild(
-                        empty
-                    );
-
-
-                    const retake =
-                        document.createElement(
-                            'div'
-                        );
-
-
-                    retake.className =
-                        'retake-label';
-
-
-                    retake.innerHTML =
-                        '↻ Ambil Ulang';
-
-
-                    slot.appendChild(
-                        retake
-                    );
-
-
-                    /*
-                     * PENTING:
-                     * Klik langsung pada slot
-                     */
-
-                    slot.addEventListener(
-                        'click',
-                        function(event) {
-
-                            event.preventDefault();
-
-                            event.stopPropagation();
-
-
-                            /*
-                             * Hanya bisa retake
-                             * jika foto sudah ada
-                             */
-
-                            if (
-                                capturedImages[index]
-                            ) {
-
-                                retakePhoto(
-                                    index
-                                );
-
-                            }
-
-                        }
-                    );
-
-
-                    slots.appendChild(
-                        slot
-                    );
-
-
-                    renderSlot(
-                        index
-                    );
-
-                }
-            );
-
-
-            /*
-             * Frame berada paling atas
-             */
-
-            const frame =
-                document.getElementById(
-                    'camera-side-frame'
-                );
-
-
-            frame.src =
-                selectedFramePath;
-
-
-            frame.style.width =
-                `${frameWidth}px`;
-
-
-            frame.style.height =
-                `${frameHeight}px`;
-
-        }
-
-
-
-        /* =====================================================
-           RENDER PHOTO SLOT
-        ===================================================== */
-
-        function renderSlot(
+    frameHoles.forEach(
+        (
+            hole,
             index
-        ) {
-
-            const slots =
-                document.querySelectorAll(
-                    '.photo-slot'
-                );
-
+        ) => {
 
             const slot =
-                slots[index];
-
-
-            if (!slot)
-                return;
-
-
-            const canvas =
-                slot.querySelector(
-                    'canvas'
+                document.createElement(
+                    'div'
                 );
 
 
-            const ctx =
-                canvas.getContext(
-                    '2d'
-                );
-
-
-            ctx.clearRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+            slot.className =
+                'photo-slot';
 
 
             /*
-             * FOTO BELUM ADA
+             * X
              */
 
-            if (
-                !capturedImages[index]
-            ) {
-
-                ctx.fillStyle =
-                    '#222';
-
-
-                ctx.fillRect(
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                );
-
-
-                slot.classList.remove(
-                    'has-photo'
-                );
-
-
-                return;
-
-            }
-
-
-            slot.classList.add(
-                'has-photo'
-            );
-
-
-            const img =
-                new Image();
-
-
-            img.onload =
-                () => {
-
-                    drawImageIntoHole(
-
-                        ctx,
-
-                        img,
-
-                        {
-                            x: 0,
-
-                            y: 0,
-
-                            w: canvas.width,
-
-                            h: canvas.height
-                        }
-
-                    );
-
-                };
-
-
-            img.src =
-                capturedImages[index];
-
-
-            const empty =
-                slot.querySelector(
-                    '.slot-empty'
-                );
-
-
-            if (empty) {
-
-                empty.style.display =
-                    'none';
-
-            }
-
-        }
-
-
-
-        /* =====================================================
-           DRAW IMAGE TO SLOT
-        ===================================================== */
-
-        function drawImageIntoHole(
-            ctx,
-            img,
-            target
-        ) {
-
-            const imageRatio =
-                img.width /
-                img.height;
-
-
-            const targetRatio =
-                target.w /
-                target.h;
-
-
-            let sourceWidth =
-                img.width;
-
-
-            let sourceHeight =
-                img.height;
-
-
-            let sourceX =
-                0;
-
-
-            let sourceY =
-                0;
-
-
-            if (
-                imageRatio >
-                targetRatio
-            ) {
-
-                sourceWidth =
-                    img.height *
-                    targetRatio;
-
-
-                sourceX =
-                    (
-                        img.width -
-                        sourceWidth
-                    ) / 2;
-
-            } else {
-
-                sourceHeight =
-                    img.width /
-                    targetRatio;
-
-
-                sourceY =
-                    (
-                        img.height -
-                        sourceHeight
-                    ) / 2;
-
-            }
-
-
-            ctx.drawImage(
-
-                img,
-
-                sourceX,
-
-                sourceY,
-
-                sourceWidth,
-
-                sourceHeight,
-
-                target.x,
-
-                target.y,
-
-                target.w,
-
-                target.h
-
-            );
-
-        }
-
-
-
-        /* =====================================================
-           MIRROR
-        ===================================================== */
-
-        function toggleMirror() {
-
-            isMirrored =
-                !isMirrored;
-
-
-            document
-                .getElementById(
-                    'camera-feed'
-                )
-                .style.transform =
-                isMirrored
-                    ? 'scaleX(-1)'
-                    : 'scaleX(1)';
-
-        }
-
-
-
-        /* =====================================================
-           TAKE ALL PHOTOS
-        ===================================================== */
-
-        async function takePhotos() {
-
-            if (
-                isTakingPhoto
-            )
-                return;
-
-
-            if (
-                !stream
-            )
-                return;
-
-
-            isTakingPhoto =
-                true;
-
-
-            const takeButton =
-                document.getElementById(
-                    'btn-take'
-                );
-
-
-            takeButton.disabled =
-                true;
+            slot.style.left =
+                (
+                    hole.x /
+                    frameWidth *
+                    displayWidth
+                ) + 'px';
 
 
             /*
-             * Ambil semua lubang
+             * Y
              */
 
-            for (
-                let i = 0;
-                i < requiredPhotos;
-                i++
-            ) {
-
-                await runCountdown();
-
-
-                captureFrame(
-                    i
-                );
-
-            }
-
-
-            isTakingPhoto =
-                false;
+            slot.style.top =
+                (
+                    hole.y /
+                    frameHeight *
+                    displayHeight
+                ) + 'px';
 
 
             /*
-             * Lanjutkan aktif
+             * WIDTH
              */
 
-            document
-                .getElementById(
-                    'btn-next-preview'
-                )
-                .disabled =
-                false;
+            slot.style.width =
+                (
+                    hole.w /
+                    frameWidth *
+                    displayWidth
+                ) + 'px';
 
 
             /*
-             * Tombol Ambil Foto
-             * bisa digunakan lagi
+             * HEIGHT
              */
 
-            takeButton.disabled =
-                false;
-
-        }
-
-
-
-        /* =====================================================
-           RETAKE FOTO TERTENTU
-        ===================================================== */
-
-        async function retakePhoto(
-            index
-        ) {
-
-            /*
-             * Jangan izinkan jika
-             * kamera sedang mengambil foto
-             */
-
-            if (
-                isTakingPhoto
-            )
-                return;
+            slot.style.height =
+                (
+                    hole.h /
+                    frameHeight *
+                    displayHeight
+                ) + 'px';
 
 
-            if (
-                !stream
-            )
-                return;
+            slot.dataset.index =
+                index;
 
 
             /*
-             * Pastikan index valid
+             * Canvas untuk foto.
              */
-
-            if (
-                index < 0 ||
-                index >= requiredPhotos
-            )
-                return;
-
-
-            isTakingPhoto =
-                true;
-
-
-            /*
-             * Nonaktifkan klik slot
-             * selama countdown
-             */
-
-            const slots =
-                document.querySelectorAll(
-                    '.photo-slot'
-                );
-
-
-            slots.forEach(
-                slot => {
-
-                    slot.style.pointerEvents =
-                        'none';
-
-                }
-            );
-
-
-            /*
-             * Countdown khusus foto
-             */
-
-            await runCountdown();
-
-
-            /*
-             * Ambil ulang foto
-             */
-
-            captureFrame(
-                index
-            );
-
-
-            /*
-             * Aktifkan kembali slot
-             */
-
-            slots.forEach(
-                slot => {
-
-                    slot.style.pointerEvents =
-                        'auto';
-
-                }
-            );
-
-
-            isTakingPhoto =
-                false;
-
-
-            /*
-             * Lanjutkan tetap aktif
-             */
-
-            document
-                .getElementById(
-                    'btn-next-preview'
-                )
-                .disabled =
-                false;
-
-        }
-
-
-
-        /* =====================================================
-           COUNTDOWN
-        ===================================================== */
-
-        function runCountdown() {
-
-            return new Promise(
-                resolve => {
-
-                    let count =
-                        3;
-
-
-                    const countdown =
-                        document.getElementById(
-                            'countdown'
-                        );
-
-
-                    countdown.innerText =
-                        count;
-
-
-                    const interval =
-                        setInterval(
-                            () => {
-
-                                count--;
-
-
-                                if (
-                                    count > 0
-                                ) {
-
-                                    countdown.innerText =
-                                        count;
-
-                                } else {
-
-                                    clearInterval(
-                                        interval
-                                    );
-
-
-                                    countdown.innerText =
-                                        '';
-
-
-                                    const flash =
-                                        document.getElementById(
-                                            'flash'
-                                        );
-
-
-                                    flash.classList.add(
-                                        'active'
-                                    );
-
-
-                                    setTimeout(
-                                        () => {
-
-                                            flash.classList.remove(
-                                                'active'
-                                            );
-
-                                        },
-                                        120
-                                    );
-
-
-                                    resolve();
-
-                                }
-
-                            },
-                            700
-                        );
-
-                }
-            );
-
-        }
-
-
-
-        /* =====================================================
-           CAPTURE FRAME
-        ===================================================== */
-
-        function captureFrame(
-            index
-        ) {
-
-            const video =
-                document.getElementById(
-                    'camera-feed'
-                );
-
-
-            if (
-                !video.videoWidth ||
-                !video.videoHeight
-            )
-                return;
-
 
             const canvas =
                 document.createElement(
@@ -2737,62 +2026,116 @@
 
 
             canvas.width =
-                video.videoWidth;
+                hole.w;
 
 
             canvas.height =
-                video.videoHeight;
+                hole.h;
 
 
-            const ctx =
-                canvas.getContext(
-                    '2d'
-                );
-
-
-            /*
-             * Mirror mengikuti
-             * tampilan kamera
-             */
-
-            if (
-                isMirrored
-            ) {
-
-                ctx.translate(
-                    canvas.width,
-                    0
-                );
-
-
-                ctx.scale(
-                    -1,
-                    1
-                );
-
-            }
-
-
-            ctx.drawImage(
-                video,
-                0,
-                0
+            slot.appendChild(
+                canvas
             );
 
 
             /*
-             * Simpan hasil foto
+             * Nomor.
              */
 
-            capturedImages[index] =
-                canvas.toDataURL(
-                    'image/jpeg',
-                    0.92
+            const number =
+                document.createElement(
+                    'div'
                 );
 
 
+            number.className =
+                'slot-number';
+
+
+            number.innerText =
+                index + 1;
+
+
+            slot.appendChild(
+                number
+            );
+
+
             /*
-             * Update tampilan slot
+             * Status kosong.
+             */
+
+            const empty =
+                document.createElement(
+                    'div'
+                );
+
+
+            empty.className =
+                'slot-empty';
+
+
+            empty.innerHTML =
+                `Foto ${index + 1}<br>Belum diambil`;
+
+
+            slot.appendChild(
+                empty
+            );
+
+
+            /*
+             * Label retake.
+             */
+
+            const retake =
+                document.createElement(
+                    'div'
+                );
+
+
+            retake.className =
+                'retake-label';
+
+
+            retake.innerHTML =
+                '↻ Ambil Ulang';
+
+
+            slot.appendChild(
+                retake
+            );
+
+
+            /*
+             * Klik slot.
+             */
+
+            slot.addEventListener(
+                'click',
+                () => {
+
+                    if (
+                        capturedImages[index]
+                    ) {
+
+                        retakePhoto(
+                            index
+                        );
+
+                    }
+
+                }
+            );
+
+
+            slots.appendChild(
+                slot
+            );
+
+
+            /*
+             * Render status awal.
              */
 
             renderSlot(
@@ -2800,212 +2143,860 @@
             );
 
         }
+    );
+
+}
 
 
+/* =====================================================
+   RENDER SLOT
+===================================================== */
 
-        /* =====================================================
-           LOAD PREVIEW
-        ===================================================== */
+function renderSlot(index) {
 
-        function loadPreview() {
-
-            if (
-                stream
-            ) {
-
-                stream
-                    .getTracks()
-                    .forEach(
-                        track =>
-                            track.stop()
-                    );
+    const slots =
+        document.querySelectorAll(
+            '.photo-slot'
+        );
 
 
-                stream =
-                    null;
-
-            }
+    const slot =
+        slots[index];
 
 
-            drawCanvas(
-                true,
-                'result-canvas'
-            );
+    if (!slot) {
+        return;
+    }
+
+
+    const canvas =
+        slot.querySelector(
+            'canvas'
+        );
+
+
+    const ctx =
+        canvas.getContext(
+            '2d'
+        );
+
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    const empty =
+        slot.querySelector(
+            '.slot-empty'
+        );
+
+
+    /*
+     * Belum ada foto.
+     */
+
+    if (
+        !capturedImages[index]
+    ) {
+
+        ctx.fillStyle =
+            '#222';
+
+
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+
+        if (empty) {
+
+            empty.style.display =
+                'flex';
 
         }
 
 
+        return;
 
-        /* =====================================================
-           FILTER
-        ===================================================== */
-
-        function applyFilter(
-            filterCss
-        ) {
-
-            currentCanvasFilter =
-                filterCss;
+    }
 
 
-            drawCanvas(
-                true,
-                'result-canvas'
+    /*
+     * Sudah ada foto.
+     */
+
+    if (empty) {
+
+        empty.style.display =
+            'none';
+
+    }
+
+
+    const image =
+        new Image();
+
+
+    image.onload =
+        () => {
+
+            drawImageIntoHole(
+
+                ctx,
+
+                image,
+
+                {
+                    x: 0,
+
+                    y: 0,
+
+                    w:
+                        canvas.width,
+
+                    h:
+                        canvas.height
+
+                }
+
             );
 
+        };
+
+
+    image.src =
+        capturedImages[index];
+
+}
+
+
+/* =====================================================
+   FIT FOTO KE LUBANG
+===================================================== */
+
+function drawImageIntoHole(
+    ctx,
+    image,
+    target
+) {
+
+    const imageRatio =
+        image.width /
+        image.height;
+
+
+    const targetRatio =
+        target.w /
+        target.h;
+
+
+    let sourceWidth =
+        image.width;
+
+
+    let sourceHeight =
+        image.height;
+
+
+    let sourceX = 0;
+
+
+    let sourceY = 0;
+
+
+    /*
+     * Crop horizontal.
+     */
+
+    if (
+        imageRatio >
+        targetRatio
+    ) {
+
+        sourceWidth =
+            image.height *
+            targetRatio;
+
+
+        sourceX =
+            (
+                image.width -
+                sourceWidth
+            ) / 2;
+
+    }
+
+
+    /*
+     * Crop vertical.
+     */
+
+    else {
+
+        sourceHeight =
+            image.width /
+            targetRatio;
+
+
+        sourceY =
+            (
+                image.height -
+                sourceHeight
+            ) / 2;
+
+    }
+
+
+    ctx.drawImage(
+
+        image,
+
+        sourceX,
+        sourceY,
+
+        sourceWidth,
+        sourceHeight,
+
+        target.x,
+        target.y,
+
+        target.w,
+        target.h
+
+    );
+
+}
+
+
+/* =====================================================
+   TOGGLE MIRROR
+===================================================== */
+
+function toggleMirror() {
+
+    isMirrored =
+        !isMirrored;
+
+
+    document
+        .getElementById(
+            'camera-feed'
+        )
+        .style.transform =
+        isMirrored
+            ? 'scaleX(-1)'
+            : 'scaleX(1)';
+
+}
+
+
+/* =====================================================
+   TAKE ALL PHOTOS
+===================================================== */
+
+async function takePhotos() {
+
+    if (
+        isTakingPhoto
+    ) {
+        return;
+    }
+
+
+    isTakingPhoto =
+        true;
+
+
+    document
+        .getElementById(
+            'btn-take'
+        )
+        .disabled = true;
+
+
+    /*
+     * Ambil foto satu per satu.
+     */
+
+    for (
+        let i = 0;
+        i < requiredPhotos;
+        i++
+    ) {
+
+        await runCountdown();
+
+
+        captureFrame(
+            i
+        );
+
+    }
+
+
+    isTakingPhoto =
+        false;
+
+
+    document
+        .getElementById(
+            'btn-take'
+        )
+        .disabled = false;
+
+
+    document
+        .getElementById(
+            'btn-next-preview'
+        )
+        .disabled = false;
+
+}
+
+
+/* =====================================================
+   RETAKE SATU SLOT
+===================================================== */
+
+async function retakePhoto(
+    index
+) {
+
+    if (
+        isTakingPhoto ||
+        !stream
+    ) {
+        return;
+    }
+
+
+    isTakingPhoto =
+        true;
+
+
+    /*
+     * Disable sementara
+     * slot lain.
+     */
+
+    const slots =
+        document.querySelectorAll(
+            '.photo-slot'
+        );
+
+
+    slots.forEach(
+        slot => {
+
+            slot.style.pointerEvents =
+                'none';
+
         }
+    );
 
 
+    /*
+     * Countdown.
+     */
 
-        /* =====================================================
-           DRAW FINAL CANVAS
-        ===================================================== */
+    await runCountdown();
 
-        async function drawCanvas(
-            withFrame = true,
-            canvasId = 'result-canvas'
-        ) {
 
-            const canvas =
+    /*
+     * Ambil ulang hanya
+     * index yang dipilih.
+     */
+
+    captureFrame(
+        index
+    );
+
+
+    /*
+     * Aktifkan kembali.
+     */
+
+    slots.forEach(
+        slot => {
+
+            slot.style.pointerEvents =
+                'auto';
+
+        }
+    );
+
+
+    isTakingPhoto =
+        false;
+
+
+    document
+        .getElementById(
+            'btn-next-preview'
+        )
+        .disabled = false;
+
+}
+
+
+/* =====================================================
+   COUNTDOWN
+===================================================== */
+
+function runCountdown() {
+
+    return new Promise(
+        resolve => {
+
+            let count = 3;
+
+
+            const countdown =
                 document.getElementById(
-                    canvasId
+                    'countdown'
                 );
 
 
-            const ctx =
-                canvas.getContext(
-                    '2d'
+            countdown.innerText =
+                count;
+
+
+            const interval =
+                setInterval(
+                    () => {
+
+                        count--;
+
+
+                        if (
+                            count > 0
+                        ) {
+
+                            countdown.innerText =
+                                count;
+
+                        } else {
+
+                            clearInterval(
+                                interval
+                            );
+
+
+                            countdown.innerText =
+                                '';
+
+
+                            /*
+                             * Flash.
+                             */
+
+                            const flash =
+                                document.getElementById(
+                                    'flash'
+                                );
+
+
+                            flash.classList.add(
+                                'active'
+                            );
+
+
+                            setTimeout(
+                                () => {
+
+                                    flash.classList.remove(
+                                        'active'
+                                    );
+
+                                },
+                                120
+                            );
+
+
+                            resolve();
+
+                        }
+
+                    },
+                    700
                 );
 
+        }
+    );
 
-            canvas.width =
-                finalFrameImageObj.width;
-
-
-            canvas.height =
-                finalFrameImageObj.height;
+}
 
 
-            ctx.fillStyle =
-                '#FFFFFF';
+/* =====================================================
+   CAPTURE FRAME
+===================================================== */
+
+function captureFrame(
+    index
+) {
+
+    const video =
+        document.getElementById(
+            'camera-feed'
+        );
 
 
-            ctx.fillRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
+    if (
+        !video.videoWidth ||
+        !video.videoHeight
+    ) {
+
+        return;
+
+    }
+
+
+    const canvas =
+        document.createElement(
+            'canvas'
+        );
+
+
+    canvas.width =
+        video.videoWidth;
+
+
+    canvas.height =
+        video.videoHeight;
+
+
+    const ctx =
+        canvas.getContext(
+            '2d'
+        );
+
+
+    /*
+     * Mirror sama seperti
+     * tampilan kamera.
+     */
+
+    if (
+        isMirrored
+    ) {
+
+        ctx.translate(
+            canvas.width,
+            0
+        );
+
+
+        ctx.scale(
+            -1,
+            1
+        );
+
+    }
+
+
+    ctx.drawImage(
+        video,
+        0,
+        0
+    );
+
+
+    capturedImages[index] =
+        canvas.toDataURL(
+            'image/jpeg',
+            0.92
+        );
+
+
+    /*
+     * Update slot.
+     */
+
+    renderSlot(
+        index
+    );
+
+}
+
+
+/* =====================================================
+   LOAD PREVIEW
+===================================================== */
+
+function loadPreview() {
+
+    /*
+     * Matikan kamera.
+     */
+
+    if (stream) {
+
+        stream
+            .getTracks()
+            .forEach(
+                track => {
+
+                    track.stop();
+
+                }
             );
 
 
-            ctx.filter =
-                currentCanvasFilter;
+        stream =
+            null;
+
+    }
 
 
-            const promises =
-                capturedImages.map(
-                    (
-                        source,
-                        index
-                    ) => {
+    drawCanvas(
+        true,
+        'result-canvas'
+    );
 
-                        return new Promise(
-                            resolve => {
+}
+
+
+/* =====================================================
+   APPLY FILTER
+===================================================== */
+
+function applyFilter(
+    filterCss
+) {
+
+    currentCanvasFilter =
+        filterCss;
+
+
+    drawCanvas(
+        true,
+        'result-canvas'
+    );
+
+}
+
+
+/* =====================================================
+   DRAW FINAL CANVAS
+===================================================== */
+
+async function drawCanvas(
+    withFrame = true,
+    canvasId = 'result-canvas'
+) {
+
+    if (
+        !finalFrameImageObj
+    ) {
+
+        return;
+
+    }
+
+
+    const canvas =
+        document.getElementById(
+            canvasId
+        );
+
+
+    const ctx =
+        canvas.getContext(
+            '2d'
+        );
+
+
+    canvas.width =
+        finalFrameImageObj.width;
+
+
+    canvas.height =
+        finalFrameImageObj.height;
+
+
+    /*
+     * Background.
+     */
+
+    ctx.fillStyle =
+        '#FFFFFF';
+
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /*
+     * Filter.
+     */
+
+    ctx.filter =
+        currentCanvasFilter;
+
+
+    const photoPromises =
+        capturedImages.map(
+            (
+                source,
+                index
+            ) => {
+
+                return new Promise(
+                    resolve => {
+
+                        if (
+                            !source
+                        ) {
+
+                            resolve();
+
+                            return;
+
+                        }
+
+
+                        const image =
+                            new Image();
+
+
+                        image.onload =
+                            () => {
+
+                                const hole =
+                                    frameHoles[
+                                        index
+                                    ];
+
 
                                 if (
-                                    !source
+                                    hole
                                 ) {
 
-                                    resolve();
+                                    drawImageIntoHole(
 
-                                    return;
+                                        ctx,
+
+                                        image,
+
+                                        hole
+
+                                    );
 
                                 }
 
 
-                                const img =
-                                    new Image();
+                                resolve();
+
+                            };
 
 
-                                img.onload =
-                                    () => {
-
-                                        drawImageIntoHole(
-
-                                            ctx,
-
-                                            img,
-
-                                            frameHoles[
-                                                index
-                                            ]
-
-                                        );
-
-
-                                        resolve();
-
-                                    };
-
-
-                                img.onerror =
-                                    () => {
-
-                                        resolve();
-
-                                    };
-
-
-                                img.src =
-                                    source;
-
-                            }
-                        );
+                        image.src =
+                            source;
 
                     }
                 );
 
+            }
+        );
 
-            await Promise.all(
-                promises
+
+    await Promise.all(
+        photoPromises
+    );
+
+
+    /*
+     * Frame diletakkan
+     * paling akhir.
+     */
+
+    if (
+        withFrame
+    ) {
+
+        ctx.filter =
+            'none';
+
+
+        ctx.drawImage(
+
+            finalFrameImageObj,
+
+            0,
+            0,
+
+            canvas.width,
+            canvas.height
+
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   DOWNLOAD FRAME
+===================================================== */
+
+function downloadImage() {
+
+    const link =
+        document.createElement(
+            'a'
+        );
+
+
+    link.download =
+        `photobooth_frame_${Date.now()}.png`;
+
+
+    link.href =
+        document
+            .getElementById(
+                'result-canvas'
+            )
+            .toDataURL(
+                'image/png'
             );
 
 
-            /*
-             * Frame paling atas
-             */
+    link.click();
+
+}
+
+
+/* =====================================================
+   DOWNLOAD FOTO SATUAN
+===================================================== */
+
+function downloadTanpaFrame() {
+
+    capturedImages.forEach(
+        (
+            image,
+            index
+        ) => {
 
             if (
-                withFrame
+                !image
             ) {
 
-                ctx.filter =
-                    'none';
-
-
-                ctx.drawImage(
-
-                    finalFrameImageObj,
-
-                    0,
-                    0,
-
-                    canvas.width,
-                    canvas.height
-
-                );
+                return;
 
             }
 
-        }
-
-
-
-        /* =====================================================
-           DOWNLOAD FINAL
-        ===================================================== */
-
-        function downloadImage() {
 
             const link =
                 document.createElement(
@@ -3014,294 +3005,266 @@
 
 
             link.download =
-                `photobooth_frame_${Date.now()}.png`;
+                `foto_satuan_${index + 1}_${Date.now()}.png`;
 
 
             link.href =
-                document
-                    .getElementById(
-                        'result-canvas'
-                    )
-                    .toDataURL(
-                        'image/png'
-                    );
+                image;
 
 
             link.click();
 
         }
+    );
+
+}
 
 
+/* =====================================================
+   PROCESS + UPLOAD
+===================================================== */
 
-        /* =====================================================
-           DOWNLOAD FOTO SATUAN
-        ===================================================== */
+async function processAndUploadSession() {
 
-        function downloadTanpaFrame() {
-
-            capturedImages.forEach(
-                (
-                    image,
-                    index
-                ) => {
-
-                    if (
-                        !image
-                    )
-                        return;
+    nav(
+        'result-screen'
+    );
 
 
-                    const link =
-                        document.createElement(
-                            'a'
-                        );
+    /*
+     * Buat preview final.
+     */
+
+    await drawCanvas(
+        true,
+        'final-preview-canvas'
+    );
 
 
-                    link.download =
-                        `foto_satuan_${index + 1}_${Date.now()}.png`;
+    /*
+     * Buat hasil utama.
+     */
+
+    await drawCanvas(
+        true,
+        'result-canvas'
+    );
 
 
-                    link.href =
-                        image;
-
-
-                    link.click();
-
-                }
-            );
-
-        }
-
-
-
-        /* =====================================================
-           UPLOAD SESSION
-        ===================================================== */
-
-        async function processAndUploadSession() {
-
-            nav(
-                'result-screen'
-            );
-
-
-            await drawCanvas(
-                true,
-                'final-preview-canvas'
-            );
-
-
-            await drawCanvas(
-                true,
+    const frameImageData =
+        document
+            .getElementById(
                 'result-canvas'
+            )
+            .toDataURL(
+                'image/png'
             );
 
 
-            const frameImageData =
-                document
-                    .getElementById(
-                        'result-canvas'
+    /*
+     * Buat GIF.
+     */
+
+    gifshot.createGIF(
+
+        {
+
+            images: [
+                ...capturedImages,
+                frameImageData
+            ],
+
+            interval: 0.6,
+
+            gifWidth: 600,
+
+            gifHeight:
+                Math.floor(
+                    600 *
+                    (
+                        finalFrameImageObj.height /
+                        finalFrameImageObj.width
                     )
-                    .toDataURL(
-                        'image/png'
-                    );
+                ),
+
+            numFrames:
+                capturedImages.length + 1
+
+        },
+
+        async function(obj) {
+
+            let gifData =
+                '';
 
 
-            gifshot.createGIF(
+            if (
+                !obj.error
+            ) {
 
-                {
+                gifData =
+                    obj.image;
 
-                    images: [
-                        ...capturedImages,
-                        frameImageData
-                    ],
-
-                    interval:
-                        0.6,
-
-                    gifWidth:
-                        600,
-
-                    gifHeight:
-                        Math.floor(
-                            600 *
-                            (
-                                finalFrameImageObj.height /
-                                finalFrameImageObj.width
-                            )
-                        ),
-
-                    numFrames:
-                        capturedImages.length +
-                        1
-
-                },
-
-                async function(obj) {
-
-                    let gifData =
-                        '';
+            }
 
 
-                    if (
-                        !obj.error
-                    ) {
+            try {
 
-                        gifData =
-                            obj.image;
+                /*
+                 * Upload ke server.
+                 */
 
-                    }
+                const response =
+                    await fetch(
+                        '/upload-session',
+                        {
 
+                            method: 'POST',
 
-                    try {
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
 
-                        const response =
-                            await fetch(
-                                '/upload-session',
-                                {
+                            body:
+                                JSON.stringify({
 
-                                    method:
-                                        'POST',
+                                    frameImage:
+                                        frameImageData,
 
-                                    headers: {
-                                        'Content-Type':
-                                            'application/json'
-                                    },
+                                    individualImages:
+                                        capturedImages,
 
-                                    body:
-                                        JSON.stringify({
+                                    gifImage:
+                                        gifData
 
-                                            frameImage:
-                                                frameImageData,
-
-                                            individualImages:
-                                                capturedImages,
-
-                                            gifImage:
-                                                gifData
-
-                                        })
-
-                                }
-                            );
-
-
-                        const result =
-                            await response.json();
-
-
-                        if (
-                            result.success
-                        ) {
-
-                            const qrContainer =
-                                document.getElementById(
-                                    'qrcode-container'
-                                );
-
-
-                            qrContainer.innerHTML =
-                                '';
-
-
-                            new QRCode(
-
-                                qrContainer,
-
-                                {
-
-                                    text:
-                                        result.folder_link,
-
-                                    width:
-                                        170,
-
-                                    height:
-                                        170,
-
-                                    colorDark:
-                                        '#000000',
-
-                                    colorLight:
-                                        '#ffffff',
-
-                                    correctLevel:
-                                        QRCode
-                                            .CorrectLevel
-                                            .H
-
-                                }
-
-                            );
-
-
-                            document
-                                .getElementById(
-                                    'qr-status-text'
-                                )
-                                .innerText =
-                                'Scan untuk unduh folder sesi!';
-
-                        } else {
-
-                            alert(
-                                'Gagal membuat folder di Drive.'
-                            );
+                                })
 
                         }
-
-                    } catch (error) {
-
-                        console.error(
-                            'Error:',
-                            error
-                        );
-
-
-                        alert(
-                            'Gagal menghubungi server Node.js.'
-                        );
-
-                    }
-
-                }
-
-            );
-
-        }
-
-
-
-        /* =====================================================
-           RESIZE
-        ===================================================== */
-
-        window.addEventListener(
-            'resize',
-            () => {
-
-                const cameraScreen =
-                    document.getElementById(
-                        'camera-screen'
                     );
+
+
+                const result =
+                    await response.json();
 
 
                 if (
-                    cameraScreen.classList.contains(
-                        'active'
-                    )
+                    result.success
                 ) {
 
-                    buildFramePreview();
+                    const qrContainer =
+                        document.getElementById(
+                            'qrcode-container'
+                        );
 
-                    adjustCameraRatio();
+
+                    qrContainer.innerHTML =
+                        '';
+
+
+                    /*
+                     * QR CODE.
+                     */
+
+                    new QRCode(
+                        qrContainer,
+                        {
+
+                            text:
+                                result.folder_link,
+
+                            width:
+                                170,
+
+                            height:
+                                170,
+
+                            colorDark:
+                                '#000000',
+
+                            colorLight:
+                                '#ffffff',
+
+                            correctLevel:
+                                QRCode
+                                    .CorrectLevel
+                                    .H
+
+                        }
+                    );
+
+
+                    document
+                        .getElementById(
+                            'qr-status-text'
+                        )
+                        .innerText =
+                        'Scan untuk unduh folder sesi!';
+
+
+                } else {
+
+                    alert(
+                        'Gagal membuat folder di Drive.'
+                    );
 
                 }
 
-            }
-        );
 
-    </script>
+            } catch(error) {
+
+                console.error(
+                    'Error:',
+                    error
+                );
+
+
+                alert(
+                    'Gagal menghubungi server Node.js.'
+                );
+
+            }
+
+        }
+
+    );
+
+}
+
+
+/* =====================================================
+   WINDOW RESIZE
+===================================================== */
+
+window.addEventListener(
+    'resize',
+    () => {
+
+        const cameraScreen =
+            document.getElementById(
+                'camera-screen'
+            );
+
+
+        if (
+            cameraScreen.classList.contains(
+                'active'
+            )
+        ) {
+
+            /*
+             * Hitung ulang posisi
+             * lubang frame.
+             */
+
+            buildFramePreview();
+
+        }
+
+    }
+);
+
+</script>
 
 </body>
 </html>
