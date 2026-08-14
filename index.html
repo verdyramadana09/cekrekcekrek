@@ -574,76 +574,6 @@
             gap: 6px;
         }
 
-        /* =====================================================
-            CAMERA SELECTOR
-        ===================================================== */
-
-        .camera-select {
-            width: 100%;
-            min-height: 40px;
-            padding: 8px 34px 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: #f8fbff;
-            color: var(--black);
-            font-family: inherit;
-            font-size: 12px;
-            font-weight: 600;
-            outline: none;
-            cursor: pointer;
-        }
-
-        .camera-select:focus {
-            border-color: var(--blue);
-            box-shadow: 0 0 0 2px rgba(25,118,210,.10);
-        }
-
-        .camera-select:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-        }
-
-        .camera-switch-btn {
-            width: 100%;
-            min-height: 38px;
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: #fff;
-            color: var(--blue-dark);
-            font-family: inherit;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: .2s ease;
-        }
-
-        .camera-switch-btn:hover:not(:disabled) {
-            border-color: var(--blue);
-            background: var(--blue-soft);
-        }
-
-        .camera-switch-btn:active:not(:disabled) {
-            transform: scale(.98);
-        }
-
-        .camera-switch-btn:disabled {
-            opacity: .5;
-            cursor: not-allowed;
-        }
-
-        @media (max-width: 1100px) {
-            .camera-select {
-                min-height: 42px;
-                font-size: 13px;
-            }
-
-            .camera-switch-btn {
-                min-height: 42px;
-                font-size: 13px;
-            }
-        }
-
         .setting-label {
             font-size: 13px;
             font-weight: 600;
@@ -672,6 +602,69 @@
         .setting-buttons button:hover {
             background: var(--blue);
             color: white;
+        }
+
+
+        /* =====================================================
+           CAMERA SELECTOR
+        ===================================================== */
+        .camera-select {
+            width: 100%;
+            min-height: 38px;
+            padding: 8px 32px 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fbff;
+            color: var(--black);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .camera-select:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 2px rgba(20,115,230,0.10);
+        }
+
+        .camera-select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .camera-switch-btn {
+            width: 100%;
+            min-height: 36px;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--blue);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .camera-switch-btn:hover {
+            border-color: var(--blue);
+            background: #f8fbff;
+        }
+
+        .camera-switch-btn:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 1100px) {
+            .camera-select,
+            .camera-switch-btn {
+                min-height: 42px;
+                font-size: 13px;
+            }
         }
 
         .setting-toggle-row {
@@ -1528,10 +1521,7 @@
         <button
             id="btn-continue-camera"
             disabled
-            onclick="
-                nav('camera-screen');
-                initCamera();
-            "
+            onclick="nav('camera-screen')"
         >
             Pilih Frame Dulu
         </button>
@@ -1862,21 +1852,87 @@ function nav(screenId) {
 
         });
 
-
     const target =
         document.getElementById(
             screenId
         );
 
-
-    if (target) {
-
-        target.classList.add(
-            'active'
-        );
-
+    if (!target) {
+        return;
     }
 
+    target.classList.add(
+        'active'
+    );
+
+    /* =================================================
+       CAMERA SCREEN
+       Pastikan preview kamera aktif saat halaman kamera
+       dibuka, tanpa mengubah alur frame/capture.
+    ================================================= */
+
+    if (screenId === 'camera-screen') {
+
+        requestAnimationFrame(() => {
+
+            setTimeout(async () => {
+
+                try {
+
+                    if (!stream) {
+
+                        await initCamera(
+                            selectedCameraId || ''
+                        );
+
+                    } else {
+
+                        const video =
+                            document.getElementById(
+                                'camera-feed'
+                            );
+
+                        if (video) {
+
+                            if (
+                                video.srcObject !==
+                                stream
+                            ) {
+                                video.srcObject =
+                                    stream;
+                            }
+
+                            try {
+                                await video.play();
+                            } catch (_) {}
+
+                            video.style.transform =
+                                isMirrored
+                                    ? 'scaleX(-1)'
+                                    : 'scaleX(1)';
+                        }
+
+                        if (
+                            typeof loadCameraDevices ===
+                            'function'
+                        ) {
+                            await loadCameraDevices();
+                        }
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        'Gagal mengaktifkan kamera:',
+                        error
+                    );
+
+                }
+
+            }, 50);
+
+        });
+    }
 }
 
 
@@ -2484,94 +2540,69 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function initCamera(preferredDeviceId = '') {
 
+    const video =
+        document.getElementById(
+            'camera-feed'
+        );
+
+    if (!video) {
+        console.error(
+            'Elemen #camera-feed tidak ditemukan.'
+        );
+        return;
+    }
+
+    if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ) {
+        alert(
+            'Browser tidak mendukung kamera.'
+        );
+        return;
+    }
+
     try {
 
-        if (!navigator.mediaDevices ||
-            !navigator.mediaDevices.getUserMedia) {
-
-            alert('Browser tidak mendukung kamera.');
-
-            return;
-        }
-
-
-        if (stream) {
-
-            stream
-                .getTracks()
-                .forEach(
-                    track => {
-                        try {
-                            track.stop();
-                        } catch (_) {}
-                    }
-                );
-
-            stream = null;
-        }
-
+        stopCameraStream();
 
         let constraints;
-
-
-        /*
-         * Jika pengguna sudah memilih kamera,
-         * gunakan deviceId tersebut.
-         *
-         * Jika belum, tetap gunakan kamera depan
-         * seperti perilaku script asli.
-         */
 
         if (preferredDeviceId) {
 
             constraints = {
-
                 video: {
-
                     deviceId: {
-                        exact: preferredDeviceId
+                        exact:
+                            preferredDeviceId
                     },
-
                     width: {
                         ideal: 1280
                     },
-
                     height: {
                         ideal: 720
                     }
-
                 },
-
                 audio: false
-
             };
 
         } else {
 
             constraints = {
-
                 video: {
-
                     facingMode: {
                         ideal: 'user'
                     },
-
                     width: {
                         ideal: 1280
                     },
-
                     height: {
                         ideal: 720
                     }
-
                 },
-
                 audio: false
-
             };
-
         }
-
 
         try {
 
@@ -2584,13 +2615,8 @@ async function initCamera(preferredDeviceId = '') {
 
         } catch (error) {
 
-            /*
-             * Fallback untuk browser/perangkat
-             * yang tidak menerima constraint tertentu.
-             */
-
             console.warn(
-                'Constraint kamera gagal, menggunakan fallback:',
+                'Kamera dengan constraint utama gagal, mencoba fallback:',
                 error
             );
 
@@ -2598,33 +2624,13 @@ async function initCamera(preferredDeviceId = '') {
                 await navigator
                     .mediaDevices
                     .getUserMedia({
-
                         video: true,
-
                         audio: false
-
                     });
         }
 
-
-        const video =
-            document.getElementById(
-                'camera-feed'
-            );
-
-
-        if (!video) {
-
-            throw new Error(
-                'Elemen camera-feed tidak ditemukan.'
-            );
-        }
-
-
         video.muted = true;
-
         video.autoplay = true;
-
         video.playsInline = true;
 
         video.setAttribute(
@@ -2637,46 +2643,27 @@ async function initCamera(preferredDeviceId = '') {
             ''
         );
 
-
         video.srcObject =
             stream;
 
-
-        /*
-         * Simpan deviceId kamera yang benar-benar
-         * sedang digunakan oleh browser.
-         */
-
-        const activeTrack =
+        const track =
             stream.getVideoTracks()[0];
 
-        if (activeTrack) {
+        if (track) {
 
             const settings =
-                activeTrack.getSettings();
+                track.getSettings();
 
             if (settings.deviceId) {
-
                 selectedCameraId =
                     settings.deviceId;
             }
         }
 
-
-        /*
-         * Pertahankan mirror seperti script asli.
-         */
-
         video.style.transform =
             isMirrored
                 ? 'scaleX(-1)'
                 : 'scaleX(1)';
-
-
-        /*
-         * Tunggu metadata agar kamera siap.
-         * Ini penting terutama di iPad/iPhone.
-         */
 
         await new Promise(
             resolve => {
@@ -2684,18 +2671,16 @@ async function initCamera(preferredDeviceId = '') {
                 if (
                     video.readyState >= 2
                 ) {
-
                     resolve();
-
                     return;
                 }
 
-                const onReady =
+                const handler =
                     () => {
 
                         video.removeEventListener(
                             'loadedmetadata',
-                            onReady
+                            handler
                         );
 
                         resolve();
@@ -2703,7 +2688,7 @@ async function initCamera(preferredDeviceId = '') {
 
                 video.addEventListener(
                     'loadedmetadata',
-                    onReady
+                    handler
                 );
 
                 setTimeout(
@@ -2711,7 +2696,7 @@ async function initCamera(preferredDeviceId = '') {
 
                         video.removeEventListener(
                             'loadedmetadata',
-                            onReady
+                            handler
                         );
 
                         resolve();
@@ -2722,114 +2707,103 @@ async function initCamera(preferredDeviceId = '') {
             }
         );
 
-
-        /*
-         * Beberapa browser membutuhkan play()
-         * setelah penggantian source.
-         */
-
         try {
-
             await video.play();
-
-        } catch (playError) {
-
-            console.warn(
-                'Video play menunggu interaksi pengguna:',
-                playError
-            );
-        }
-
+        } catch (_) {}
 
         capturedImages =
             new Array(
                 requiredPhotos
             );
 
-
-        document
-            .getElementById(
-                'btn-take'
-            )
-            .style.pointerEvents = 'auto';
-
-
-        document
-            .getElementById(
-                'btn-next-preview'
-            )
-            .disabled = true;
-
-
-        /*
-         * Setelah izin kamera diberikan,
-         * enumerateDevices() biasanya sudah
-         * mengembalikan label kamera.
-         */
-
-        await loadCameraDevices();
-
-
-        const select =
+        const takeButton =
             document.getElementById(
-                'camera-select'
+                'btn-take'
             );
 
-
-        if (
-            select &&
-            selectedCameraId
-        ) {
-
-            const optionExists =
-                Array.from(
-                    select.options
-                ).some(
-                    option =>
-                        option.value ===
-                        selectedCameraId
-                );
-
-            if (optionExists) {
-
-                select.value =
-                    selectedCameraId;
-            }
+        if (takeButton) {
+            takeButton.style.pointerEvents =
+                'auto';
         }
 
+        const nextButton =
+            document.getElementById(
+                'btn-next-preview'
+            );
 
-    } catch (error) {
+        if (nextButton) {
+            nextButton.disabled =
+                true;
+        }
+
+        if (
+            typeof loadCameraDevices ===
+            'function'
+        ) {
+            await loadCameraDevices();
+        }
+
+        if (
+            typeof buildFramePreview ===
+            'function'
+        ) {
+            buildFramePreview();
+        }
+
+    } catch(error) {
 
         console.error(
             'Gagal membuka kamera:',
             error
         );
 
-        if (stream) {
-
-            stream
-                .getTracks()
-                .forEach(
-                    track => {
-                        try {
-                            track.stop();
-                        } catch (_) {}
-                    }
-                );
-
-            stream = null;
-        }
+        stopCameraStream();
 
         alert(
-            'Kamera tidak dapat digunakan. Pastikan izin kamera sudah diberikan.'
+            'Izin kamera diperlukan.'
         );
     }
 }
 
 
 /* =====================================================
-   CAMERA DEVICE LIST
+   CAMERA DEVICE MANAGER
 ===================================================== */
+
+function stopCameraStream() {
+
+    if (stream) {
+
+        stream
+            .getTracks()
+            .forEach(track => {
+
+                try {
+                    track.stop();
+                } catch (_) {}
+
+            });
+
+        stream = null;
+    }
+
+    const video =
+        document.getElementById(
+            'camera-feed'
+        );
+
+    if (video) {
+        video.srcObject = null;
+    }
+}
+
+
+function getCameraSelect() {
+    return document.getElementById(
+        'camera-select'
+    );
+}
+
 
 function getCameraDisplayName(
     camera,
@@ -2841,50 +2815,41 @@ function getCameraDisplayName(
             camera.label || ''
         ).trim();
 
-
     if (!label) {
-
         return `Kamera ${index + 1}`;
     }
 
-
     const lower =
         label.toLowerCase();
-
-
-    /*
-     * Nama kamera iPhone/iPad/Safari
-     * tidak selalu konsisten. Kita hanya
-     * normalisasi nama yang jelas.
-     */
 
     if (
         lower.includes('front') ||
         lower.includes('user') ||
         lower.includes('facetime')
     ) {
-
         return 'Kamera Depan';
     }
 
+    if (
+        lower.includes('ultra') &&
+        lower.includes('wide')
+    ) {
+        return 'Kamera Belakang Ultra Wide';
+    }
 
     if (
         lower.includes('back') ||
         lower.includes('rear') ||
         lower.includes('environment')
     ) {
-
         if (
-            lower.includes('ultra') ||
             lower.includes('wide')
         ) {
-
             return 'Kamera Belakang Wide';
         }
 
         return 'Kamera Belakang';
     }
-
 
     return label;
 }
@@ -2893,10 +2858,7 @@ function getCameraDisplayName(
 async function loadCameraDevices() {
 
     const select =
-        document.getElementById(
-            'camera-select'
-        );
-
+        getCameraSelect();
 
     if (
         !navigator.mediaDevices ||
@@ -2914,14 +2876,12 @@ async function loadCameraDevices() {
         return [];
     }
 
-
     try {
 
         const devices =
             await navigator
                 .mediaDevices
                 .enumerateDevices();
-
 
         availableCameras =
             devices.filter(
@@ -2930,15 +2890,11 @@ async function loadCameraDevices() {
                     'videoinput'
             );
 
-
         if (!select) {
-
             return availableCameras;
         }
 
-
         select.innerHTML = '';
-
 
         if (!availableCameras.length) {
 
@@ -2950,9 +2906,7 @@ async function loadCameraDevices() {
             return [];
         }
 
-
         select.disabled = false;
-
 
         availableCameras.forEach(
             (camera, index) => {
@@ -2977,7 +2931,6 @@ async function loadCameraDevices() {
             }
         );
 
-
         if (
             selectedCameraId &&
             availableCameras.some(
@@ -3000,7 +2953,6 @@ async function loadCameraDevices() {
                 select.value;
         }
 
-
         return availableCameras;
 
     } catch (error) {
@@ -3010,7 +2962,6 @@ async function loadCameraDevices() {
             error
         );
 
-
         if (select) {
 
             select.innerHTML =
@@ -3019,66 +2970,45 @@ async function loadCameraDevices() {
             select.disabled = true;
         }
 
-
         return [];
     }
 }
 
 
-/* =====================================================
-   SELECT CAMERA FROM DROPDOWN
-===================================================== */
-
 async function selectCamera(
     deviceId
 ) {
 
-    if (!deviceId) {
+    if (!deviceId ||
+        cameraSwitchBusy
+    ) {
         return;
     }
 
-
-    if (cameraSwitchBusy) {
-        return;
-    }
-
-
-    cameraSwitchBusy =
-        true;
-
+    cameraSwitchBusy = true;
 
     const select =
-        document.getElementById(
-            'camera-select'
-        );
+        getCameraSelect();
 
-
-    const switchButton =
+    const button =
         document.getElementById(
             'camera-switch-btn'
         );
 
-
     if (select) {
-
         select.disabled = true;
     }
 
-
-    if (switchButton) {
-
-        switchButton.disabled = true;
-
-        switchButton.textContent =
+    if (button) {
+        button.disabled = true;
+        button.textContent =
             '⏳ Mengganti Kamera...';
     }
-
 
     try {
 
         selectedCameraId =
             deviceId;
-
 
         await initCamera(
             deviceId
@@ -3086,134 +3016,42 @@ async function selectCamera(
 
     } finally {
 
-        cameraSwitchBusy =
-            false;
-
+        cameraSwitchBusy = false;
 
         if (select) {
-
             select.disabled = false;
         }
 
+        if (button) {
 
-        if (switchButton) {
-
-            switchButton.disabled =
+            button.disabled =
                 false;
 
-            switchButton.textContent =
+            button.textContent =
                 '🔄 Ganti Kamera';
         }
     }
 }
 
 
-/* =====================================================
-   SWITCH CAMERA
-   Untuk iPhone / iPad / Android
-===================================================== */
-
-async function switchCamera() {
-
-    if (cameraSwitchBusy) {
-        return;
-    }
-
-
-    if (!availableCameras.length) {
-
-        await loadCameraDevices();
-    }
-
-
-    if (!availableCameras.length) {
-
-        return;
-    }
-
-
-    let currentIndex =
-        availableCameras.findIndex(
-            camera =>
-                camera.deviceId ===
-                selectedCameraId
-        );
-
-
-    if (currentIndex < 0) {
-
-        currentIndex = 0;
-    }
-
-
-    const nextIndex =
-        (
-            currentIndex + 1
-        ) %
-        availableCameras.length;
-
-
-    const nextCamera =
-        availableCameras[
-            nextIndex
-        ];
-
-
-    if (!nextCamera) {
-
-        return;
-    }
-
-
-    const select =
-        document.getElementById(
-            'camera-select'
-        );
-
-
-    if (select) {
-
-        select.value =
-            nextCamera.deviceId;
-    }
-
-
-    await selectCamera(
-        nextCamera.deviceId
-    );
-}
-
-
-/* =====================================================
-   CAMERA SELECTOR EVENT
-===================================================== */
-
 function initCameraSelector() {
 
     const select =
-        document.getElementById(
-            'camera-select'
-        );
-
+        getCameraSelect();
 
     if (!select) {
-
         return;
     }
-
 
     if (
         select.dataset.cameraReady ===
         'true'
     ) {
-
         return;
     }
 
-
     select.dataset.cameraReady =
         'true';
-
 
     select.addEventListener(
         'change',
@@ -3222,22 +3060,78 @@ function initCameraSelector() {
             await selectCamera(
                 this.value
             );
+
         }
     );
-
-
-    /*
-     * Muat daftar jika permission
-     * sebelumnya sudah diberikan.
-     */
-
-    loadCameraDevices();
 }
 
 
-/* =====================================================
-   CAMERA DEVICE CHANGE
-===================================================== */
+async function switchCamera() {
+
+    if (cameraSwitchBusy) {
+        return;
+    }
+
+    if (!availableCameras.length) {
+
+        await loadCameraDevices();
+    }
+
+    if (!availableCameras.length) {
+        return;
+    }
+
+    let currentIndex =
+        availableCameras.findIndex(
+            camera =>
+                camera.deviceId ===
+                selectedCameraId
+        );
+
+    if (currentIndex < 0) {
+        currentIndex = 0;
+    }
+
+    const nextIndex =
+        (
+            currentIndex + 1
+        ) %
+        availableCameras.length;
+
+    const nextCamera =
+        availableCameras[
+            nextIndex
+        ];
+
+    if (!nextCamera) {
+        return;
+    }
+
+    const select =
+        getCameraSelect();
+
+    if (select) {
+        select.value =
+            nextCamera.deviceId;
+    }
+
+    await selectCamera(
+        nextCamera.deviceId
+    );
+}
+
+
+function initCameraSelectorOnLoad() {
+
+    initCameraSelector();
+
+    /*
+     * Tidak meminta izin kamera di halaman awal.
+     * Daftar device akan diperbarui setelah kamera
+     * pertama kali dibuka.
+     */
+}
+
 
 if (
     navigator.mediaDevices &&
@@ -3249,6 +3143,7 @@ if (
         async () => {
 
             await loadCameraDevices();
+
         }
     );
 }
@@ -3258,9 +3153,385 @@ document.addEventListener(
     'DOMContentLoaded',
     () => {
 
-        initCameraSelector();
+        initCameraSelectorOnLoad();
+
     }
 );
+
+
+
+/* =====================================================
+   BUILD FRAME PREVIEW
+===================================================== */
+
+function buildFramePreview() {
+
+    if (
+        !finalFrameImageObj
+    ) {
+
+        return;
+
+    }
+
+
+    const slots =
+        document.getElementById(
+            'photo-slots'
+        );
+
+
+    slots.innerHTML = '';
+    photoTransforms = frameHoles.map((_,i) => photoTransforms[i] || {scale:1,x:0,y:0});
+    selectedPhotoIndex = Math.min(selectedPhotoIndex, Math.max(0, frameHoles.length-1));
+    renderPhotoEditorControls();
+
+    frameHoles.forEach(
+        (
+            hole,
+            index
+        ) => {
+
+            const slot =
+                document.createElement(
+                    'div'
+                );
+
+
+            slot.className =
+                'photo-slot';
+
+
+            const targetWidth = 140;
+            const targetHeight = Math.round(targetWidth * (hole.h / hole.w));
+
+            slot.style.width = targetWidth + 'px';
+            slot.style.height = targetHeight + 'px';
+            slot.style.flex = `0 0 ${targetHeight}px`;
+
+
+            slot.dataset.index =
+                index;
+
+
+            const canvas =
+                document.createElement(
+                    'canvas'
+                );
+
+
+            canvas.width =
+                hole.w;
+
+
+            canvas.height =
+                hole.h;
+
+
+            slot.appendChild(
+                canvas
+            );
+
+
+            const empty =
+                document.createElement(
+                    'div'
+                );
+
+
+            empty.className =
+                'slot-empty';
+
+
+            empty.innerText =
+                `${index + 1}`;
+
+
+            slot.appendChild(
+                empty
+            );
+
+
+            const retake =
+                document.createElement(
+                    'div'
+                );
+
+
+            retake.className =
+                'retake-label';
+
+
+            retake.innerText =
+                'Ambil Ulang';
+
+
+            slot.appendChild(
+                retake
+            );
+
+
+            slot.addEventListener(
+                'click',
+                () => {
+
+                    if (
+                        capturedImages[index]
+                    ) {
+
+                        retakePhoto(
+                            index
+                        );
+
+                    }
+
+                }
+            );
+
+
+            slots.appendChild(
+                slot
+            );
+
+
+            renderSlot(
+                index
+            );
+
+        }
+    );
+
+    updatePhotoCounter();
+
+}
+
+
+/* =====================================================
+   UPDATE PHOTO COUNTER
+===================================================== */
+
+function updatePhotoCounter() {
+    const count = capturedImages.filter(img => img !== undefined && img !== null).length;
+    const counterText = document.getElementById('photo-counter-text');
+    if (counterText) {
+        counterText.innerText = `${count}/${requiredPhotos}`;
+    }
+}
+
+
+/* =====================================================
+   RENDER SLOT
+===================================================== */
+
+function renderSlot(index) {
+
+    const slots =
+        document.querySelectorAll(
+            '.photo-slot'
+        );
+
+
+    const slot =
+        slots[index];
+
+
+    if (!slot) {
+
+        return;
+
+    }
+
+
+    const canvas =
+        slot.querySelector(
+            'canvas'
+        );
+
+
+    const ctx =
+        canvas.getContext(
+            '2d'
+        );
+
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    const empty =
+        slot.querySelector(
+            '.slot-empty'
+        );
+
+
+    if (
+        !capturedImages[index]
+    ) {
+
+        ctx.fillStyle =
+            '#ffffff';
+
+
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+
+        if (empty) {
+
+            empty.style.display =
+                'flex';
+
+        }
+
+        updatePhotoCounter();
+        return;
+
+    }
+
+
+    if (empty) {
+
+        empty.style.display =
+            'none';
+
+    }
+
+
+    const image =
+        new Image();
+
+
+    image.onload =
+        () => {
+
+            drawImageIntoHole(
+
+                ctx,
+
+                image,
+
+                {
+
+                    x: 0,
+
+                    y: 0,
+
+                    w:
+                        canvas.width,
+
+                    h:
+                        canvas.height
+
+                }
+
+            );
+
+        };
+
+
+    image.src =
+        capturedImages[index];
+
+    updatePhotoCounter();
+
+}
+
+
+/* =====================================================
+   DRAW IMAGE INTO HOLE
+===================================================== */
+
+const editorImageCache={};let editorDrawRAF=0;let editorPointers=new Map();let editorPinchStart=null;
+function getEditorImage(source){if(editorImageCache[source])return Promise.resolve(editorImageCache[source]);return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{editorImageCache[source]=img;resolve(img)};img.onerror=reject;img.src=source})}
+function drawImageIntoHole(ctx,image,target,transform={scale:1,x:0,y:0}){const imageRatio=image.width/image.height,targetRatio=target.w/target.h;let baseW=image.width,baseH=image.height,sourceX=0,sourceY=0;if(imageRatio>targetRatio){baseW=image.height*targetRatio;sourceX=(image.width-baseW)/2}else{baseH=image.width/targetRatio;sourceY=(image.height-baseH)/2}const scale=Math.max(.35,Math.min(4,transform.scale||1)),cropW=baseW/scale,cropH=baseH/scale,maxX=Math.max(0,(baseW-cropW)/2),maxY=Math.max(0,(baseH-cropH)/2),panX=Math.max(-1,Math.min(1,(transform.x||0)/100))*maxX,panY=Math.max(-1,Math.min(1,(transform.y||0)/100))*maxY,sx=sourceX+(baseW-cropW)/2+panX,sy=sourceY+(baseH-cropH)/2+panY;ctx.save();ctx.beginPath();ctx.rect(target.x,target.y,target.w,target.h);ctx.clip();ctx.drawImage(image,sx,sy,cropW,cropH,target.x,target.y,target.w,target.h);ctx.restore()}
+function renderPhotoEditorControls(){const box=document.getElementById('photo-editor-selector');if(!box)return;box.innerHTML='';frameHoles.forEach((_,i)=>{const b=document.createElement('button');b.className='photo-select-btn'+(i===selectedPhotoIndex?' active':'');b.textContent=`Foto ${i+1}`;b.onclick=()=>selectPhotoForEdit(i);box.appendChild(b)});updatePhotoEditorInputs()}
+function selectPhotoForEdit(i){selectedPhotoIndex=i;renderPhotoEditorControls();scheduleEditorDraw()}
+function updatePhotoEditorInputs(){}
+function updatePhotoTransform(type,value){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};const v=Number(value);if(type==='zoom')photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,v/100));else photoTransforms[selectedPhotoIndex][type]=v;scheduleEditorDraw()}
+function resetSelectedPhotoTransform(){photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};scheduleEditorDraw()}
+function addSticker(text){stickers.push({type:'text',text,x:finalFrameImageObj?finalFrameImageObj.width/2:0,y:finalFrameImageObj?finalFrameImageObj.height/2:0,size:90});selectedStickerIndex=stickers.length-1;renderStickerEditor();scheduleEditorDraw()}
+async function handleCustomStickerUpload(input){
+    if(!sessionName||sessionName.trim().toLowerCase()!=='cekrek'){input.value='';return}
+    const file=input.files&&input.files[0];
+    if(!file||file.type!=='image/png'){alert('Pilih file PNG transparan.');input.value='';return}
+    const reader=new FileReader();
+    reader.onload=async e=>{
+        try{
+            const response=await fetch('/upload-sticker',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminName:sessionName,stickerName:file.name,stickerData:e.target.result})});
+            const result=await response.json();
+            if(!response.ok||!result.success||!result.sticker_url)throw new Error(result.message||'Gagal menyimpan stiker ke Google Drive.');
+            await loadStickersFromGoogleDrive();
+            await addImageSticker(result.sticker_url,file.name);
+        }catch(err){
+            console.error('Error upload sticker:',err);
+            alert('Gagal mengunggah stiker: '+err.message);
+        }finally{input.value='';}
+    };
+    reader.readAsDataURL(file);
+}
+async function addImageSticker(url,name='Stiker PNG'){
+    return new Promise((resolve,reject)=>{
+        const img=new Image();
+        img.onload=()=>{
+            const size=Math.min(220,Math.max(80,Math.round(Math.min(img.width,img.height)*0.35)));
+            stickers.push({type:'image',src:url,img,name,x:finalFrameImageObj?finalFrameImageObj.width/2:0,y:finalFrameImageObj?finalFrameImageObj.height/2:0,size});
+            selectedStickerIndex=stickers.length-1;
+            renderStickerEditor();
+            scheduleEditorDraw();
+            resolve();
+        };
+        img.onerror=()=>reject(new Error('Stiker tidak dapat dimuat dari Google Drive.'));
+        img.src=url;
+    });
+}
+async function loadStickersFromGoogleDrive(){
+    try{
+        const response=await fetch('/get-stickers');
+        if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        const result=await response.json();
+        if(!result.success||!Array.isArray(result.stickers))throw new Error(result.message||'Gagal memuat stiker.');
+        googleDriveStickers=result.stickers;
+        const container=document.getElementById('google-drive-stickers');
+        if(!container)return;
+        container.innerHTML='';
+        googleDriveStickers.forEach(sticker=>{
+            const button=document.createElement('button');
+            button.className='sticker-item-btn';
+            button.type='button';
+            button.title=sticker.name||'Stiker PNG';
+            const img=document.createElement('img');
+            img.src=sticker.url;
+            img.alt=sticker.name||'Stiker PNG';
+            img.style.width='55px';
+            img.style.height='55px';
+            img.style.objectFit='contain';
+            img.loading='lazy';
+            button.appendChild(img);
+            button.onclick=()=>addImageSticker(sticker.url,sticker.name);
+            container.appendChild(button);
+        });
+    }catch(error){console.error('Gagal memuat stiker dari Google Drive:',error);}
+}
+
+function renderStickerEditor(){const p=document.getElementById('sticker-editor-panel'),b=document.getElementById('sticker-selector');if(!p||!b)return;p.style.display=stickers.length?'block':'none';b.innerHTML='';stickers.forEach((st,i)=>{const wrap=document.createElement('div');wrap.className='sticker-chip'+(i===selectedStickerIndex?' active':'');const btn=document.createElement('button');btn.className='sticker-chip';btn.style.border='0';btn.style.padding='0';btn.textContent=st.type==='image'?'🖼️':st.text;btn.onclick=()=>{selectedStickerIndex=i;renderStickerEditor();scheduleEditorDraw()};const del=document.createElement('button');del.className='sticker-chip-delete';del.textContent='×';del.title='Hapus stiker';del.onclick=e=>{e.stopPropagation();deleteStickerAt(i)};wrap.appendChild(btn);wrap.appendChild(del);b.appendChild(wrap)});updateStickerInputs()}
+function updateStickerInputs(){const st=stickers[selectedStickerIndex];if(!st)return;const i=document.getElementById('sticker-size'),v=document.getElementById('sticker-size-value');if(i)i.value=Math.round(st.size);if(v)v.textContent=Math.round(st.size)}
+function updateStickerTransform(type,value){const st=stickers[selectedStickerIndex];if(!st)return;st[type]=Number(value);const v=document.getElementById(`sticker-${type}-value`);if(v)v.textContent=Math.round(st[type]);scheduleEditorDraw()}
+function deleteStickerAt(i){stickers.splice(i,1);selectedStickerIndex=stickers.length?Math.min(i,stickers.length-1):-1;renderStickerEditor();scheduleEditorDraw()}
+function deleteSelectedSticker(){if(selectedStickerIndex>=0)deleteStickerAt(selectedStickerIndex)}
+function drawStickers(ctx,showSelection=false){stickers.forEach((st,i)=>{ctx.save();if(st.type==='image'&&st.img){const w=st.size,h=st.size*(st.img.height/st.img.width);ctx.drawImage(st.img,st.x-w/2,st.y-h/2,w,h);if(showSelection&&i===selectedStickerIndex){ctx.strokeStyle='#1976d2';ctx.lineWidth=3;ctx.strokeRect(st.x-w/2-8,st.y-h/2-8,w+16,h+16)}}else{ctx.font=`${st.size}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=5;ctx.fillText(st.text,st.x,st.y);if(showSelection&&i===selectedStickerIndex){const w=ctx.measureText(st.text).width;ctx.shadowBlur=0;ctx.strokeStyle='#1976d2';ctx.lineWidth=3;ctx.strokeRect(st.x-w/2-8,st.y-st.size/2-8,w+16,st.size+16)}}ctx.restore()})}
+function stickerBounds(st){if(st.type==='image'&&st.img){const w=st.size,h=st.size*(st.img.height/st.img.width);return{x:st.x-w/2,y:st.y-h/2,w,h}}return{x:st.x-st.size/2,y:st.y-st.size/2,w:st.size,h:st.size}}
+function pointInSticker(st,p){const b=stickerBounds(st);return p.x>=b.x-15&&p.x<=b.x+b.w+15&&p.y>=b.y-15&&p.y<=b.y+b.h+15}
+function scheduleEditorDraw(){if(editorDrawRAF)return;editorDrawRAF=requestAnimationFrame(()=>{editorDrawRAF=0;drawCanvas(true,'result-canvas')})}
+function editorPoint(c,e){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)}}
+function initPreviewEditorDrag(){const c=document.getElementById('result-canvas');if(!c||c.dataset.editorReady)return;c.dataset.editorReady='1';c.style.touchAction='none';c.addEventListener('pointerdown',e=>{const p=editorPoint(c,e);editorPointers.set(e.pointerId,p);if(editorPointers.size===2){editorDrag=null;const a=[...editorPointers.values()];editorPinchStart={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),scale:photoTransforms[selectedPhotoIndex]?.scale||1};return}if(selectedStickerIndex>=0&&stickers[selectedStickerIndex]&&pointInSticker(stickers[selectedStickerIndex],p)){const st=stickers[selectedStickerIndex];editorDrag={type:'sticker',sx:p.x,sy:p.y,ox:st.x,oy:st.y,os:st.size};c.setPointerCapture(e.pointerId);c.classList.add('dragging');return}if(frameHoles[selectedPhotoIndex]&&capturedImages[selectedPhotoIndex]){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};editorDrag={type:'photo',sx:p.x,sy:p.y,ox:photoTransforms[selectedPhotoIndex].x,oy:photoTransforms[selectedPhotoIndex].y};c.setPointerCapture(e.pointerId);c.classList.add('dragging')}});c.addEventListener('pointermove',e=>{const p=editorPoint(c,e);if(editorPointers.has(e.pointerId))editorPointers.set(e.pointerId,p);if(editorPointers.size===2){const a=[...editorPointers.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(editorPinchStart){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,editorPinchStart.scale*(d/editorPinchStart.distance)));scheduleEditorDraw()}return}if(!editorDrag)return;const dx=p.x-editorDrag.sx,dy=p.y-editorDrag.sy;if(editorDrag.type==='sticker'){const st=stickers[selectedStickerIndex];st.x=Math.max(0,Math.min(c.width,editorDrag.ox+dx));st.y=Math.max(0,Math.min(c.height,editorDrag.oy+dy));}else{const t=photoTransforms[selectedPhotoIndex];t.x=Math.max(-100,Math.min(100,editorDrag.ox+dx*100/c.width));t.y=Math.max(-100,Math.min(100,editorDrag.oy+dy*100/c.height));}scheduleEditorDraw()});const end=e=>{editorPointers.delete(e.pointerId);if(editorPointers.size<2)editorPinchStart=null;editorDrag=null;c.classList.remove('dragging')};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('wheel',e=>{if(!frameHoles[selectedPhotoIndex]||!capturedImages[selectedPhotoIndex])return;e.preventDefault();if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,photoTransforms[selectedPhotoIndex].scale*(e.deltaY<0?1.08:.925)));scheduleEditorDraw()},{passive:false})}
 
 /* =====================================================
    MIRROR
