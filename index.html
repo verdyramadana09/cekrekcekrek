@@ -351,17 +351,31 @@
 
 
         /* =====================================================
-            FRAME SELECT
+            FRAME SELECT & TOMBOL TAMBAH FRAME
         ===================================================== */
 
         .frame-screen-header {
             text-align: center;
-
             margin-top: 5px;
+            position: relative;
         }
 
         .frame-screen-header p {
             margin-bottom: 0;
+        }
+
+        .add-frame-top-right {
+            position: absolute;
+            top: 0;
+            right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .add-frame-top-right {
+                position: relative;
+                margin-top: 10px;
+                right: 0;
+            }
         }
 
         .frame-grid {
@@ -456,7 +470,7 @@
 
         .camera-screen-layout {
             display: grid;
-            grid-template-columns: 240px 1fr 280px;
+            grid-template-columns: 240px 1fr 320px;
             gap: 16px;
             flex: 1;
             min-height: 0;
@@ -681,28 +695,29 @@
         }
 
         .slots-grid-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             flex: 1;
-            align-content: start;
+            align-items: center;
+            overflow-y: auto;
+            padding: 4px;
         }
 
         .photo-slot {
             position: relative;
-            width: 100%;
-            aspect-ratio: 3 / 4;
             background: #f0f4f8;
             border-radius: 8px;
             overflow: hidden;
             cursor: pointer;
-            border: 1px solid var(--border);
-            transition: transform .15s, outline .15s;
+            border: 2px solid var(--border);
+            transition: transform .15s, outline .15s, border-color .15s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         .photo-slot:hover {
             transform: scale(1.02);
-            outline: 2px solid var(--blue);
+            border-color: var(--blue);
         }
 
         .photo-slot canvas {
@@ -721,8 +736,8 @@
             justify-content: center;
             text-align: center;
             color: #9aa9b8;
-            font-size: 11px;
-            font-weight: 500;
+            font-size: 12px;
+            font-weight: 600;
             background: #f8fbff;
             z-index: 30;
             pointer-events: none;
@@ -735,9 +750,9 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            background: rgba(13,71,161,.75);
+            background: rgba(13,71,161,.8);
             color: white;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             opacity: 0;
             transition: opacity .15s;
@@ -849,7 +864,7 @@
 
 
         /* =====================================================
-            RESULT SCREEN (CUSTOM REFERENCE LAYOUT WITH BARCODE)
+            RESULT SCREEN
         ===================================================== */
 
         #result-screen {
@@ -975,7 +990,6 @@
             color: #707070;
         }
 
-        /* Barcode Section Box */
         .barcode-section-box {
             background: #f4ecff;
             border: 1px solid #d2b4de;
@@ -1259,7 +1273,7 @@
 
 
 <!-- =====================================================
-    FRAME SCREEN
+    FRAME SCREEN (DENGAN TOMBOL TAMBAH FRAME DI KANAN ATAS)
 ===================================================== -->
 
 <div
@@ -1273,7 +1287,16 @@
         <p>
             Pilih desain frame yang ingin digunakan.
         </p>
+
+        <!-- Tombol Tambah Frame di Sudut Kanan Atas -->
+        <div class="add-frame-top-right">
+            <input type="file" id="custom-frame-input" accept="image/png, image/jpeg" style="display: none;" onchange="handleCustomFrameUpload(this)">
+            <button class="outline" onclick="document.getElementById('custom-frame-input').click()">
+                + Tambah Frame
+            </button>
+        </div>
     </div>
+
     <div
         class="frame-grid"
         id="frame-list"
@@ -1294,6 +1317,7 @@
             "
         ></div>
     </div>
+
     <div class="bottom-actions">
         <button
             class="outline"
@@ -1500,7 +1524,7 @@
 
 
 <!-- =====================================================
-    RESULT SCREEN (DENGAN BARCODE, NAMA VRDYRMDHN, DAN FITUR DOWNLOAD)
+    RESULT SCREEN
 ===================================================== -->
 
 <div
@@ -1517,7 +1541,7 @@
         <!-- Right Side: Action Cards Column -->
         <div class="custom-result-right">
             
-            <!-- Card 1: Social Links dengan nama vrdyrmdhn -->
+            <!-- Card 1: Social Links dengan username vrdyrmdhn & Barcode -->
             <div class="result-card-social">
                 <div class="social-card-title">Follow Us!</div>
                 <div class="social-row-items">
@@ -1543,7 +1567,6 @@
                     </div>
                 </div>
                 
-                <!-- Barcode / QR Code Section -->
                 <div class="barcode-section-box">
                     <div class="barcode-section-title">📱 Scan Barcode untuk Hasil Foto</div>
                     <div id="qrcode-container">
@@ -2188,6 +2211,34 @@ async function selectFrame(
 
 
 /* =====================================================
+   CUSTOM FRAME UPLOAD HANDLER
+===================================================== */
+
+function handleCustomFrameUpload(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const frameList = document.getElementById('frame-list');
+            
+            const newFrameItem = document.createElement('div');
+            newFrameItem.className = 'frame-item';
+            newFrameItem.style.backgroundImage = `url('${e.target.result}')`;
+            newFrameItem.style.backgroundSize = 'cover';
+            newFrameItem.style.backgroundPosition = 'center';
+            
+            newFrameItem.onclick = function() {
+                selectFrame(this, e.target.result);
+            };
+
+            frameList.appendChild(newFrameItem);
+            selectFrame(newFrameItem, e.target.result);
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+
+/* =====================================================
    INIT CAMERA
 ===================================================== */
 
@@ -2317,86 +2368,10 @@ function buildFramePreview() {
     }
 
 
-    const container =
-        document.getElementById(
-            'frame-preview-container'
-        );
-
-
-    const frame =
-        document.getElementById(
-            'camera-side-frame'
-        );
-
-
     const slots =
         document.getElementById(
             'photo-slots'
         );
-
-
-    const containerWidth =
-        container.clientWidth || 300;
-
-
-    const containerHeight =
-        container.clientHeight || 400;
-
-
-    const frameWidth =
-        finalFrameImageObj.width;
-
-
-    const frameHeight =
-        finalFrameImageObj.height;
-
-
-    const frameRatio =
-        frameWidth /
-        frameHeight;
-
-
-    let displayWidth =
-        containerWidth;
-
-
-    let displayHeight =
-        displayWidth /
-        frameRatio;
-
-
-    if (
-        displayHeight >
-        containerHeight
-    ) {
-
-        displayHeight =
-            containerHeight;
-
-
-        displayWidth =
-            displayHeight *
-            frameRatio;
-
-    }
-
-
-    const offsetX =
-        (
-            containerWidth -
-            displayWidth
-        ) / 2;
-
-
-    const offsetY =
-        (
-            containerHeight -
-            displayHeight
-        ) / 2;
-
-
-    frame.src =
-        selectedFramePath;
 
 
     slots.innerHTML =
@@ -2417,6 +2392,14 @@ function buildFramePreview() {
 
             slot.className =
                 'photo-slot';
+
+
+            const targetWidth = 140;
+            const targetHeight = Math.round(targetWidth * (hole.h / hole.w));
+
+            slot.style.width = targetWidth + 'px';
+            slot.style.height = targetHeight + 'px';
+            slot.style.flex = `0 0 ${targetHeight}px`;
 
 
             slot.dataset.index =
