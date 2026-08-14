@@ -1474,47 +1474,24 @@
     .result-page-header{padding-top:20px;}
     #result-screen .custom-result-wrapper{padding:10px 12px 20px;}
 }
-
-
-/* =====================================================
-   CAMERA SELECTOR
-===================================================== */
-.camera-select {
-    width: 100%;
-    min-height: 38px;
-    padding: 8px 32px 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: #f8fbff;
-    color: #111;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    outline: none;
-    cursor: pointer;
-    box-sizing: border-box;
-}
-.camera-select:focus {
-    border-color: #1473e6;
-    box-shadow: 0 0 0 2px rgba(20,115,230,.10);
-}
-.camera-select:disabled { opacity: .6; cursor: not-allowed; }
-.camera-switch-btn {
-    width: 100%;
-    min-height: 36px;
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: #fff;
-    color: #1473e6;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-.camera-switch-btn:hover { background: #f5f9ff; border-color: #1473e6; }
-.camera-switch-btn:disabled { opacity: .55; cursor: not-allowed; }
 </style>
+
+<style id="export-bounding-box-protection">
+/* Bounding box is editor-only and must never be part of exported output. */
+.exporting .bounding-box,
+.exporting .resize-handle,
+.exporting .rotate-handle,
+.exporting .delete-handle,
+.exporting .sticker-controls,
+.exporting [class*="bounding-box"],
+.exporting [class*="resize-handle"],
+.exporting [class*="rotate-handle"],
+.exporting [class*="delete-handle"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+</style>
+
 </head>
 
 
@@ -1662,7 +1639,10 @@
         <button
             id="btn-continue-camera"
             disabled
-            onclick="nav('camera-screen')"
+            onclick="
+                nav('camera-screen');
+                requestAnimationFrame(() => initCamera());
+            "
         >
             Pilih Frame Dulu
         </button>
@@ -1695,12 +1675,9 @@
 
             <div class="setting-group">
                 <div class="setting-label">📷 Camera</div>
-                <select id="camera-select" class="camera-select" aria-label="Pilih kamera">
-                    <option value="">Memuat kamera...</option>
-                </select>
-                <button type="button" id="camera-switch-btn" class="camera-switch-btn" onclick="switchCamera()">
-                    🔄 Ganti Kamera
-                </button>
+                <div style="background:#f8fbff; padding:8px 12px; border-radius:10px; text-align:center; font-size:12px; font-weight:600; border:1px solid var(--border);">
+                    Front Camera
+                </div>
             </div>
 
             <div class="setting-toggle-row mirror-switch-row">
@@ -1956,11 +1933,6 @@ let frameHoles = [];
 
 let stream = null;
 
-// Kamera yang sedang dipilih. Tetap kompatibel dengan perangkat desktop, Android, iPhone, dan iPad.
-let selectedCameraId = '';
-let availableCameras = [];
-let cameraSwitchBusy = false;
-
 let isMirrored = true;
 
 let capturedImages = [];
@@ -2003,15 +1975,6 @@ function nav(screenId) {
         target.classList.add(
             'active'
         );
-
-        // Kamera diaktifkan setelah camera-screen benar-benar aktif.
-        if (screenId === 'camera-screen') {
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    initCamera(false, selectedCameraId || '');
-                }, 50);
-            });
-        }
 
     }
 
@@ -2673,7 +2636,7 @@ function syncCameraPreviewToHole(preferredIndex = 0) {
     }
 }
 
-async function initCamera(fromRetry = false, preferredDeviceId = '') {
+async function initCamera(fromRetry = false) {
     const video = document.getElementById('camera-feed');
     const status = document.getElementById('camera-status');
     const statusTitle = document.getElementById('camera-status-title');
@@ -2746,43 +2709,26 @@ async function initCamera(fromRetry = false, preferredDeviceId = '') {
          * ideal + fallback membuat kamera lebih kompatibel dengan
          * Android, iPhone/iPad, laptop, webcam USB, dan browser desktop.
          */
-        const constraintSets = preferredDeviceId
-            ? [
-                {
-                    video: {
-                        deviceId: { exact: preferredDeviceId },
-                        width: { ideal: 1280, min: 320 },
-                        height: { ideal: 720, min: 240 }
-                    },
-                    audio: false
+        const constraintSets = [
+            {
+                video: {
+                    facingMode: { ideal: 'user' },
+                    width: { ideal: 1280, min: 320 },
+                    height: { ideal: 720, min: 240 }
                 },
-                {
-                    video: {
-                        deviceId: { exact: preferredDeviceId }
-                    },
-                    audio: false
-                }
-            ]
-            : [
-                {
-                    video: {
-                        facingMode: { ideal: 'user' },
-                        width: { ideal: 1280, min: 320 },
-                        height: { ideal: 720, min: 240 }
-                    },
-                    audio: false
+                audio: false
+            },
+            {
+                video: {
+                    facingMode: 'user'
                 },
-                {
-                    video: {
-                        facingMode: 'user'
-                    },
-                    audio: false
-                },
-                {
-                    video: true,
-                    audio: false
-                }
-            ];
+                audio: false
+            },
+            {
+                video: true,
+                audio: false
+            }
+        ];
 
         let lastError = null;
 
@@ -2806,10 +2752,6 @@ async function initCamera(fromRetry = false, preferredDeviceId = '') {
         if (!stream) {
             throw lastError || new Error('Kamera tidak ditemukan.');
         }
-
-        const activeTrack = stream.getVideoTracks()[0];
-        const activeSettings = activeTrack?.getSettings?.() || {};
-        selectedCameraId = activeSettings.deviceId || preferredDeviceId || selectedCameraId || '';
 
         video.muted = true;
         video.autoplay = true;
@@ -2888,17 +2830,6 @@ async function initCamera(fromRetry = false, preferredDeviceId = '') {
             device: stream.getVideoTracks()[0]?.label || 'Unknown'
         });
 
-        // Setelah permission diberikan, label dan deviceId kamera biasanya sudah tersedia.
-        await loadCameraDevices();
-
-        const cameraSelect = document.getElementById('camera-select');
-        if (cameraSelect && selectedCameraId) {
-            const optionExists = Array.from(cameraSelect.options).some(
-                option => option.value === selectedCameraId
-            );
-            if (optionExists) cameraSelect.value = selectedCameraId;
-        }
-
     } catch (error) {
         console.error('Gagal mengaktifkan kamera:', error);
         stopCurrentStream();
@@ -2944,152 +2875,6 @@ async function initCamera(fromRetry = false, preferredDeviceId = '') {
         showStatus(title, message);
     }
 }
-
-/* =====================================================
-   CAMERA DEVICE SELECTOR
-   Tambahan ini hanya mengatur pemilihan perangkat kamera.
-   Sistem capture/frame asli tetap dipakai.
-===================================================== */
-
-function getCameraSelect() {
-    return document.getElementById('camera-select');
-}
-
-function getCameraSwitchButton() {
-    return document.getElementById('camera-switch-btn');
-}
-
-function stopCameraStreamForSwitch() {
-    if (stream) {
-        stream.getTracks().forEach(track => {
-            try { track.stop(); } catch (_) {}
-        });
-        stream = null;
-    }
-
-    const video = document.getElementById('camera-feed');
-    if (video) video.srcObject = null;
-}
-
-function cameraLabel(device, index) {
-    const label = String(device.label || '').trim();
-    return label || `Kamera ${index + 1}`;
-}
-
-async function loadCameraDevices() {
-    const select = getCameraSelect();
-    if (!select || !navigator.mediaDevices?.enumerateDevices) return [];
-
-    try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        availableCameras = devices.filter(device => device.kind === 'videoinput');
-
-        select.innerHTML = '';
-
-        if (!availableCameras.length) {
-            select.innerHTML = '<option value="">Kamera tidak ditemukan</option>';
-            select.disabled = true;
-            return [];
-        }
-
-        select.disabled = false;
-
-        availableCameras.forEach((device, index) => {
-            const option = document.createElement('option');
-            option.value = device.deviceId;
-            option.textContent = cameraLabel(device, index);
-            select.appendChild(option);
-        });
-
-        if (selectedCameraId && availableCameras.some(device => device.deviceId === selectedCameraId)) {
-            select.value = selectedCameraId;
-        } else if (!selectedCameraId && select.options.length) {
-            select.selectedIndex = 0;
-            selectedCameraId = select.value;
-        }
-
-        return availableCameras;
-    } catch (error) {
-        console.error('Gagal membaca daftar kamera:', error);
-        select.innerHTML = '<option value="">Tidak dapat membaca kamera</option>';
-        select.disabled = true;
-        return [];
-    }
-}
-
-async function selectCamera(deviceId) {
-    if (!deviceId || cameraSwitchBusy) return;
-
-    const screen = document.getElementById('camera-screen');
-    if (screen && !screen.classList.contains('active')) return;
-
-    cameraSwitchBusy = true;
-    const select = getCameraSelect();
-    const button = getCameraSwitchButton();
-
-    if (select) select.disabled = true;
-    if (button) {
-        button.disabled = true;
-        button.textContent = '⏳ Mengganti Kamera...';
-    }
-
-    try {
-        selectedCameraId = deviceId;
-        await initCamera(false, deviceId);
-    } finally {
-        cameraSwitchBusy = false;
-        if (select) select.disabled = false;
-        if (button) {
-            button.disabled = false;
-            button.textContent = '🔄 Ganti Kamera';
-        }
-    }
-}
-
-function initCameraSelector() {
-    const select = getCameraSelect();
-    if (!select || select.dataset.ready === '1') return;
-
-    select.dataset.ready = '1';
-    select.addEventListener('change', () => selectCamera(select.value));
-}
-
-async function switchCamera() {
-    if (cameraSwitchBusy) return;
-
-    if (!availableCameras.length) {
-        await loadCameraDevices();
-    }
-
-    if (availableCameras.length < 2) return;
-
-    let currentIndex = availableCameras.findIndex(
-        device => device.deviceId === selectedCameraId
-    );
-
-    if (currentIndex < 0) currentIndex = 0;
-
-    const nextDevice = availableCameras[
-        (currentIndex + 1) % availableCameras.length
-    ];
-
-    if (nextDevice) {
-        const select = getCameraSelect();
-        if (select) select.value = nextDevice.deviceId;
-        await selectCamera(nextDevice.deviceId);
-    }
-}
-
-initCameraSelector();
-
-if (navigator.mediaDevices?.addEventListener) {
-    navigator.mediaDevices.addEventListener('devicechange', () => {
-        if (document.getElementById('camera-screen')?.classList.contains('active')) {
-            loadCameraDevices();
-        }
-    });
-}
-
 
 /* =====================================================
    BUILD FRAME PREVIEW
@@ -4827,7 +4612,7 @@ window.addEventListener('load',()=>{
         if (!cameraIsActive() || !video) return;
 
         if (!stream || !stream.active) {
-            initCamera(true, selectedCameraId || '');
+            initCamera(true);
             return;
         }
 
@@ -4886,5 +4671,649 @@ window.addEventListener('resize', () => {
 });
 
 </script>
+
+
+<script>
+/* =====================================================
+   FINAL PATCH — FILTER FOTO + GIF RASIO
+   Hanya memperbaiki hasil capture/GIF.
+   Struktur frame, editor, sticker, kamera dan upload asli
+   tetap dipertahankan.
+===================================================== */
+
+/* -----------------------------------------------------
+   CAPTURE FOTO DENGAN FILTER KAMERA
+   Filter CSS pada <video> tidak otomatis ikut masuk ke
+   canvas. Karena itu filter dibakar saat foto diambil.
+----------------------------------------------------- */
+function captureFrame(index) {
+    const video = document.getElementById('camera-feed');
+
+    if (!video || !video.videoWidth || !video.videoHeight) {
+        return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.save();
+
+    /* Filter kamera harus masuk ke file foto */
+    ctx.filter = activeCameraEffect || 'none';
+
+    /* Samakan zoom Fish Eye dengan preview kamera */
+    const useFishEyeZoom =
+        activeCameraEffectName === 'fisheye';
+
+    if (useFishEyeZoom) {
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.scale(1.08, 1.08);
+        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    }
+
+    /* Mirror tetap mengikuti setting pengguna */
+    if (isMirrored) {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+    }
+
+    ctx.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.restore();
+
+    capturedImages[index] = canvas.toDataURL(
+        'image/jpeg',
+        0.92
+    );
+
+    /*
+     * Filter kamera sudah tertanam di capturedImages.
+     * Jangan langsung menerapkan filter kamera kedua kali
+     * ketika drawCanvas dijalankan.
+     */
+    currentCanvasFilter = 'none';
+
+    renderSlot(index);
+
+    requestAnimationFrame(() => {
+        if (typeof syncCameraPreviewToHole === 'function') {
+            syncCameraPreviewToHole(index + 1);
+        }
+    });
+}
+
+
+/* -----------------------------------------------------
+   FILTER KAMERA
+----------------------------------------------------- */
+function applyCameraEffect(
+    filterCss,
+    button,
+    effectName = 'normal'
+) {
+    activeCameraEffect = filterCss || 'none';
+    activeCameraEffectName = effectName || 'normal';
+
+    /*
+     * Jangan memasukkan filter kamera ke currentCanvasFilter.
+     * Filter kamera sudah dibakar ketika captureFrame().
+     */
+    currentCanvasFilter = 'none';
+
+    document
+        .querySelectorAll('#camera-filters .filter-thumb-item')
+        .forEach(btn => btn.classList.remove('active'));
+
+    if (button) {
+        button.classList.add('active');
+    }
+
+    const video = document.getElementById('camera-feed');
+
+    if (video) {
+        video.style.filter =
+            activeCameraEffect === 'none'
+                ? 'none'
+                : activeCameraEffect;
+
+        video.style.transform =
+            (isMirrored ? 'scaleX(-1)' : 'scaleX(1)') +
+            (activeCameraEffectName === 'fisheye'
+                ? ' scale(1.08)'
+                : '');
+    }
+}
+
+
+/* -----------------------------------------------------
+   FILTER HASIL / EDITOR
+   API lama tetap berfungsi.
+----------------------------------------------------- */
+function applyFilter(filterCss) {
+    currentCanvasFilter = filterCss || 'none';
+
+    drawCanvas(true, 'result-canvas');
+    drawCanvas(true, 'final-preview-canvas');
+}
+
+
+/* -----------------------------------------------------
+   DRAW CANVAS
+
+   capturedImages sudah membawa filter kamera.
+   currentCanvasFilter hanya dipakai untuk filter hasil
+   yang sengaja dipilih setelah foto diambil.
+----------------------------------------------------- */
+async function drawCanvas(
+    withFrame = true,
+    canvasId = 'result-canvas'
+) {
+    if (!finalFrameImageObj) {
+        return;
+    }
+
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = finalFrameImageObj.width;
+    canvas.height = finalFrameImageObj.height;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const photoPromises = capturedImages.map((source, index) => {
+        return new Promise(resolve => {
+            if (!source) {
+                resolve();
+                return;
+            }
+
+            getEditorImage(source)
+                .then(image => {
+                    const hole = frameHoles[index];
+
+                    if (!hole) {
+                        resolve();
+                        return;
+                    }
+
+                    ctx.save();
+
+                    /* Filter hasil/editor, bukan filter kamera */
+                    ctx.filter = currentCanvasFilter || 'none';
+
+                    drawImageIntoHole(
+                        ctx,
+                        image,
+                        hole,
+                        photoTransforms[index] || {
+                            scale: 1,
+                            x: 0,
+                            y: 0
+                        }
+                    );
+
+                    ctx.restore();
+                    resolve();
+                })
+                .catch(() => resolve());
+        });
+    });
+
+    await Promise.all(photoPromises);
+
+    if (withFrame) {
+        ctx.save();
+        ctx.filter = 'none';
+        ctx.drawImage(
+            finalFrameImageObj,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+        ctx.restore();
+    }
+
+    drawStickers(
+        ctx,
+        canvasId === 'result-canvas'
+    );
+
+    if (canvasId === 'result-canvas') {
+        initPreviewEditorDrag();
+    }
+}
+
+
+/* -----------------------------------------------------
+   BANTUAN LOAD IMAGE UNTUK GIF
+----------------------------------------------------- */
+function loadImageForGif(source) {
+    return new Promise((resolve, reject) => {
+        if (!source) {
+            reject(new Error('Sumber gambar kosong.'));
+            return;
+        }
+
+        const img = new Image();
+
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(
+            new Error('Gagal memuat gambar GIF.')
+        );
+
+        img.src = source;
+    });
+}
+
+
+/* -----------------------------------------------------
+   NORMALISASI FOTO UNTUK GIF
+
+   INI YANG MEMPERBAIKI GIF "GEPENG".
+
+   gifshot sebelumnya menerima foto kamera 16:9 secara
+   langsung tetapi dipaksa ke gifWidth x gifHeight yang
+   mengikuti rasio frame. Akibatnya foto diregangkan.
+
+   Sekarang setiap foto dibuat menjadi canvas dengan rasio
+   yang SAMA dengan frame terlebih dahulu.
+
+   object-fit: cover versi Canvas -> foto memenuhi area
+   tanpa distorsi. Bagian yang kelebihan akan dipotong.
+----------------------------------------------------- */
+async function normalizeImageForGif(
+    source,
+    targetWidth,
+    targetHeight
+) {
+    const image = await loadImageForGif(source);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        throw new Error('Canvas GIF tidak tersedia.');
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(
+        0,
+        0,
+        targetWidth,
+        targetHeight
+    );
+
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+
+    if (!sourceWidth || !sourceHeight) {
+        throw new Error('Ukuran gambar GIF tidak valid.');
+    }
+
+    /*
+     * COVER:
+     * target ratio dan foto ratio disamakan tanpa membuat
+     * objek terlihat gepeng/tertarik.
+     */
+    const scale = Math.max(
+        targetWidth / sourceWidth,
+        targetHeight / sourceHeight
+    );
+
+    const drawWidth = sourceWidth * scale;
+    const drawHeight = sourceHeight * scale;
+
+    const drawX =
+        (targetWidth - drawWidth) / 2;
+
+    const drawY =
+        (targetHeight - drawHeight) / 2;
+
+    ctx.drawImage(
+        image,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+    );
+
+    return canvas.toDataURL(
+        'image/jpeg',
+        0.92
+    );
+}
+
+
+/* -----------------------------------------------------
+   PROCESS + UPLOAD SESSION
+
+   Struktur endpoint tetap sama.
+   Yang berubah hanya input GIF agar semua frame memiliki
+   rasio yang sama.
+----------------------------------------------------- */
+async function processAndUploadSession() {
+    nav('result-screen');
+
+    await drawCanvas(
+        true,
+        'final-preview-canvas'
+    );
+
+    await drawCanvas(
+        true,
+        'result-canvas'
+    );
+
+    const resultCanvas =
+        document.getElementById('result-canvas');
+
+    if (!resultCanvas) {
+        return;
+    }
+
+    const frameImageData =
+        resultCanvas.toDataURL('image/png');
+
+    /*
+     * GIF mengikuti rasio FRAME, bukan rasio kamera.
+     */
+    const gifWidth = 600;
+
+    const frameWidth =
+        finalFrameImageObj.width || 1;
+
+    const frameHeight =
+        finalFrameImageObj.height || 1;
+
+    const gifHeight = Math.max(
+        1,
+        Math.round(
+            gifWidth *
+            (frameHeight / frameWidth)
+        )
+    );
+
+    try {
+        /*
+         * Ubah semua foto satuan menjadi frame dengan rasio
+         * GIF yang sama. Tidak ada lagi gambar yang gepeng.
+         */
+        const normalizedGifImages = [];
+
+        for (const image of capturedImages) {
+            if (!image) continue;
+
+            try {
+                const normalized =
+                    await normalizeImageForGif(
+                        image,
+                        gifWidth,
+                        gifHeight
+                    );
+
+                normalizedGifImages.push(
+                    normalized
+                );
+            } catch (error) {
+                console.warn(
+                    'Foto GIF dilewati:',
+                    error
+                );
+            }
+        }
+
+        /*
+         * Frame hasil akhir sudah memiliki rasio frame yang benar.
+         * Masukkan setelah foto-foto satuan seperti perilaku asli.
+         */
+        normalizedGifImages.push(
+            await normalizeImageForGif(
+                frameImageData,
+                gifWidth,
+                gifHeight
+            )
+        );
+
+        if (!normalizedGifImages.length) {
+            throw new Error(
+                'Tidak ada gambar untuk dibuat GIF.'
+            );
+        }
+
+        gifshot.createGIF(
+            {
+                images: normalizedGifImages,
+                interval: 0.6,
+                gifWidth: gifWidth,
+                gifHeight: gifHeight,
+                numFrames: normalizedGifImages.length
+            },
+            async function(obj) {
+                let gifData = '';
+
+                if (!obj.error) {
+                    gifData = obj.image || '';
+                }
+
+                try {
+                    const response = await fetch(
+                        '/upload-session',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
+                            body: JSON.stringify({
+                                sessionName:
+                                    sanitizeFileName(
+                                        sessionName
+                                    ),
+                                date:
+                                    getDateString(),
+                                frameImage:
+                                    frameImageData,
+                                individualImages:
+                                    capturedImages,
+                                gifImage:
+                                    gifData
+                            })
+                        }
+                    );
+
+                    const result =
+                        await response.json();
+
+                    if (result.success) {
+                        const qrContainer =
+                            document.getElementById(
+                                'qrcode-container'
+                            );
+
+                        if (qrContainer) {
+                            qrContainer.innerHTML = '';
+
+                            new QRCode(
+                                qrContainer,
+                                {
+                                    text:
+                                        result.folder_link,
+                                    width: 140,
+                                    height: 140,
+                                    colorDark: '#0d47a1',
+                                    colorLight: '#ffffff',
+                                    correctLevel:
+                                        QRCode.CorrectLevel.H
+                                }
+                            );
+                        }
+
+                        const qrStatus =
+                            document.getElementById(
+                                'qr-status-text'
+                            );
+
+                        if (qrStatus) {
+                            qrStatus.innerText =
+                                'Scan untuk membuka hasil foto.';
+                        }
+                    } else {
+                        const qrStatus =
+                            document.getElementById(
+                                'qr-status-text'
+                            );
+
+                        if (qrStatus) {
+                            qrStatus.innerText =
+                                'Gagal memuat barcode.';
+                        }
+                    }
+                } catch (error) {
+                    console.error(
+                        'Error upload session:',
+                        error
+                    );
+
+                    const qrContainer =
+                        document.getElementById(
+                            'qrcode-container'
+                        );
+
+                    if (qrContainer) {
+                        qrContainer.innerHTML = '';
+
+                        new QRCode(
+                            qrContainer,
+                            {
+                                text:
+                                    'https://instagram.com/vrdyrmdhn',
+                                width: 140,
+                                height: 140,
+                                colorDark: '#0d47a1',
+                                colorLight: '#ffffff',
+                                correctLevel:
+                                    QRCode.CorrectLevel.H
+                            }
+                        );
+                    }
+
+                    const qrStatus =
+                        document.getElementById(
+                            'qr-status-text'
+                        );
+
+                    if (qrStatus) {
+                        qrStatus.innerText =
+                            'Scan untuk membuka link.';
+                    }
+                }
+            }
+        );
+    } catch (error) {
+        console.error(
+            'Gagal membuat GIF:',
+            error
+        );
+
+        const qrStatus =
+            document.getElementById(
+                'qr-status-text'
+            );
+
+        if (qrStatus) {
+            qrStatus.innerText =
+                'Gagal membuat GIF. Hasil foto tetap tersedia.';
+        }
+    }
+}
+</script>
+
+<script id="export-bounding-box-guard">
+/*
+ * EXPORT GUARD
+ * Bounding boxes/handles are editor UI only.
+ * They are hidden while an export is performed and restored afterwards.
+ */
+(function () {
+    const EDITOR_ONLY_SELECTORS = [
+        '.bounding-box',
+        '.resize-handle',
+        '.rotate-handle',
+        '.delete-handle',
+        '.sticker-controls',
+        '[class*="bounding-box"]',
+        '[class*="resize-handle"]',
+        '[class*="rotate-handle"]',
+        '[class*="delete-handle"]'
+    ];
+
+    function getEditorOnlyElements() {
+        const selector = EDITOR_ONLY_SELECTORS.join(',');
+        return Array.from(document.querySelectorAll(selector));
+    }
+
+    window.beginCleanExport = function () {
+        const elements = getEditorOnlyElements();
+
+        const states = elements.map(el => ({
+            el,
+            display: el.style.display,
+            visibility: el.style.visibility
+        }));
+
+        document.documentElement.classList.add('exporting');
+        document.body.classList.add('exporting');
+
+        elements.forEach(el => {
+            el.style.setProperty('display', 'none', 'important');
+            el.style.setProperty('visibility', 'hidden', 'important');
+        });
+
+        return function endCleanExport() {
+            states.forEach(({ el, display, visibility }) => {
+                el.style.display = display;
+                el.style.visibility = visibility;
+            });
+
+            document.documentElement.classList.remove('exporting');
+            document.body.classList.remove('exporting');
+        };
+    };
+
+    /*
+     * Safe wrapper for DOM-based export functions.
+     * Canvas-based exports should not draw the bounding-box DOM in the first place.
+     */
+    window.withCleanExport = async function (callback) {
+        const restore = window.beginCleanExport();
+
+        try {
+            return await callback();
+        } finally {
+            restore();
+        }
+    };
+})();
+</script>
+
 </body>
 </html>
