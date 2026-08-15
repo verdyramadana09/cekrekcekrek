@@ -1530,6 +1530,14 @@
 
 
 <style id="frame-photo-mapping-css">
+.frame-user-config-preview{display:none;width:min(760px,94vw);margin:10px auto 0;background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:18px;padding:14px;box-shadow:0 10px 30px rgba(13,71,161,.08)}
+.frame-user-config-preview.active{display:block}
+.frame-user-config-title{text-align:center;font-size:14px;font-weight:700;color:var(--blue-dark)}
+.frame-user-config-name{text-align:center;font-size:11px;color:#607d9b;margin:3px 0 10px}
+.frame-user-config-canvas{position:relative;width:min(360px,100%);margin:0 auto;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff}
+.frame-user-config-canvas img{width:100%;height:auto;display:block}
+.frame-user-config-overlay{position:absolute;display:flex;align-items:center;justify-content:center;border:3px solid;font-weight:900;font-size:clamp(12px,2vw,20px);text-shadow:0 1px 2px rgba(255,255,255,.95),0 0 3px rgba(255,255,255,.8);background:rgba(255,255,255,.12);border-radius:5px;pointer-events:none;box-sizing:border-box}
+.frame-user-config-status{text-align:center;font-size:11px;color:#607d9b;margin-top:8px}
 .frame-photo-config{display:none;width:min(1100px,94vw);margin:10px auto 0;background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 15px 45px rgba(13,71,161,.10)}
 .frame-photo-config.active{display:block}
 .frame-photo-config-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
@@ -1546,6 +1554,13 @@
 .frame-config-color{width:38px;height:32px;padding:2px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer}
 .frame-config-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap}
 .frame-config-status{font-size:11px;color:#607d9b;margin-top:8px}
+.admin-auth-field{display:none;margin-top:12px}
+.admin-auth-field.active{display:block}
+.admin-auth-label{font-size:12px;font-weight:700;color:var(--black);display:block;margin-bottom:6px}
+.admin-auth-input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:12px;outline:none;font-size:14px}
+.admin-auth-input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(25,118,210,.08)}
+.admin-auth-note{font-size:11px;color:#607d9b;margin-top:5px;line-height:1.45}
+
 @media(max-width:600px){.frame-photo-config{padding:12px}.frame-config-list{grid-template-columns:1fr}}
 </style>
 
@@ -1609,6 +1624,19 @@
                 maxlength="60"
                 autocomplete="off"
             >
+            <div id="admin-auth-field" class="admin-auth-field">
+                <label for="admin-password" class="admin-auth-label">Password admin cekrek</label>
+                <input
+                    type="password"
+                    id="admin-password"
+                    class="admin-auth-input"
+                    placeholder="Masukkan password admin"
+                    autocomplete="current-password"
+                >
+                <div class="admin-auth-note">
+                    Password hanya diperlukan untuk membuka panel pengaturan frame admin.
+                </div>
+            </div>
             <div
                 id="name-error"
                 class="name-error"
@@ -1686,11 +1714,22 @@
         <button class="frame-scroll-btn right" onclick="scrollFrames(300)">›</button>
     </div>
 
+    <!-- PREVIEW KONFIGURASI FRAME UNTUK USER BIASA (READ-ONLY) -->
+    <div id="frame-user-config-preview" class="frame-user-config-preview" aria-live="polite">
+        <div class="frame-user-config-title">Konfigurasi Frame Aktif</div>
+        <div id="frame-user-config-name" class="frame-user-config-name"></div>
+        <div id="frame-user-config-canvas" class="frame-user-config-canvas">
+            <img id="frame-user-config-image" src="" alt="Preview konfigurasi frame">
+            <div id="frame-user-config-overlays"></div>
+        </div>
+        <div id="frame-user-config-status" class="frame-user-config-status"></div>
+    </div>
+
     <div id="frame-photo-config" class="frame-photo-config">
         <div class="frame-photo-config-head">
             <div>
-                <div class="frame-photo-config-title">Pengaturan Nomor Foto</div>
-                <div class="frame-photo-config-sub">Khusus admin "cekrek". Pengaturan tersimpan PER FRAME. Nomor yang sama berarti memakai 1 foto yang sama. Contoh 1,1,2,2,3,3 hanya membutuhkan 3 kali cekrek.</div>
+                <div class="frame-photo-config-title">Pengaturan Nomor Foto — Admin Cekrek</div>
+                <div class="frame-photo-config-sub">Khusus admin "cekrek". Konfigurasi disimpan di server PER FRAME, sehingga semua perangkat yang memilih frame yang sama akan mengikuti pengaturan yang sama. Nomor yang sama berarti memakai 1 foto yang sama.</div>
             </div>
         </div>
         <div id="frame-config-frame-name" style="font-size:12px;font-weight:700;margin:4px 0 10px;text-align:center;"></div>
@@ -2039,6 +2078,7 @@ let availableCameras = [];
 let cameraSwitchBusy = false;
 
 let sessionName = '';
+let adminToken = '';
 
 
 /* =====================================================
@@ -2079,22 +2119,88 @@ function nav(screenId) {
    NAME
 ===================================================== */
 
-function continueFromName() {
+async function continueFromName() {
     const input = document.getElementById('session-name');
+    const passwordInput = document.getElementById('admin-password');
+    const adminField = document.getElementById('admin-auth-field');
     const error = document.getElementById('name-error');
     const value = input.value.trim();
+
     if (!value) {
         error.textContent = 'Silakan masukkan nama terlebih dahulu.';
         error.style.display = 'block';
         input.focus();
         return;
     }
+
     error.style.display = 'none';
     sessionName = value;
+
+    const isCekrek = value.toLowerCase() === 'cekrek';
+
+    if (adminField) {
+        adminField.classList.toggle('active', isCekrek);
+    }
+
+    if (isCekrek) {
+        const password = passwordInput ? passwordInput.value : '';
+
+        if (!password) {
+            error.textContent = 'Password admin diperlukan untuk membuka panel cekrek.';
+            error.style.display = 'block';
+            if (passwordInput) passwordInput.focus();
+            return;
+        }
+
+        error.textContent = 'Memverifikasi akses admin...';
+        error.style.display = 'block';
+
+        try {
+            const response = await fetch('/api/admin/frame-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: 'cekrek',
+                    password
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success || !result.token) {
+                throw new Error(result.message || 'Akses admin ditolak.');
+            }
+
+            adminToken = result.token;
+            error.style.display = 'none';
+        } catch (err) {
+            adminToken = '';
+            error.textContent = err.message || 'Gagal memverifikasi akses admin.';
+            error.style.display = 'block';
+            return;
+        }
+    } else {
+        adminToken = '';
+        if (passwordInput) passwordInput.value = '';
+        error.style.display = 'none';
+    }
+
     const addFrameContainer = document.getElementById('add-frame-container');
     if (addFrameContainer) {
-        addFrameContainer.style.display = value.toLowerCase() === 'cekrek' ? 'block' : 'none';
+        addFrameContainer.style.display = isCekrek ? 'block' : 'none';
     }
+
+    const panel = document.getElementById('frame-photo-config');
+    if (panel && !isCekrek) {
+        panel.classList.remove('active');
+    }
+    const userPanel = document.getElementById('frame-user-config-preview');
+    if (userPanel) {
+        userPanel.classList.remove('active');
+    }
+
     nav('frame-screen');
 }
 
@@ -2102,6 +2208,24 @@ function continueFromName() {
 /* =====================================================
    ENTER PADA INPUT NAMA
 ===================================================== */
+
+
+document
+    .getElementById('session-name')
+    .addEventListener('input', function() {
+        const isCekrek = this.value.trim().toLowerCase() === 'cekrek';
+        const field = document.getElementById('admin-auth-field');
+
+        if (field) {
+            field.classList.toggle('active', isCekrek);
+        }
+
+        if (!isCekrek) {
+            adminToken = '';
+            const password = document.getElementById('admin-password');
+            if (password) password.value = '';
+        }
+    });
 
 document
     .getElementById(
@@ -2185,6 +2309,10 @@ function getDateString() {
 
 
 
+function isCekrekAdmin(){
+    return sessionName.trim().toLowerCase()==='cekrek' && !!adminToken;
+}
+
 /* =====================================================
    FRAME PHOTO MAPPING
 ===================================================== */
@@ -2259,33 +2387,186 @@ function resetCaptureStateForCurrentFrame(){
     updatePhotoCounter();
 }
 
-function loadFramePhotoMapping(framePath){
+function renderUserFramePhotoConfig(){
+    const panel=document.getElementById('frame-user-config-preview');
+    const image=document.getElementById('frame-user-config-image');
+    const overlays=document.getElementById('frame-user-config-overlays');
+    const nameEl=document.getElementById('frame-user-config-name');
+    const status=document.getElementById('frame-user-config-status');
+
+    if(!panel||!image||!overlays)return;
+
+    // Admin sudah mempunyai panel edit sendiri. User biasa hanya melihat
+    // konfigurasi yang dikirim server dan tidak mendapatkan kontrol edit.
+    if(isCekrekAdmin()||!selectedFramePath||!frameHoles.length||!finalFrameImageObj){
+        panel.classList.remove('active');
+        return;
+    }
+
+    panel.classList.add('active');
+    image.src=selectedFramePath;
+    overlays.innerHTML='';
+
+    const frameName=selectedFramePath.split('/').pop().split('\\').pop();
+    if(nameEl)nameEl.textContent='Frame: '+frameName;
+
+    normalizeFramePhotoMap();
+
+    frameHoles.forEach((hole,holeIndex)=>{
+        const photoNumber=Number(framePhotoMap[holeIndex]);
+        const color=getColorForPhotoNumber(photoNumber);
+
+        const overlay=document.createElement('div');
+        overlay.className='frame-user-config-overlay';
+        overlay.style.left=`${hole.x/finalFrameImageObj.width*100}%`;
+        overlay.style.top=`${hole.y/finalFrameImageObj.height*100}%`;
+        overlay.style.width=`${hole.w/finalFrameImageObj.width*100}%`;
+        overlay.style.height=`${hole.h/finalFrameImageObj.height*100}%`;
+        overlay.style.borderColor=color;
+        overlay.style.backgroundColor=color+'22';
+        overlay.style.color=color;
+        overlay.textContent=photoNumber;
+        overlay.title=`Lubang ${holeIndex+1} → Foto ${photoNumber}`;
+        overlays.appendChild(overlay);
+    });
+
+    if(status){
+        status.textContent=`${frameHoles.length} lubang • ${requiredPhotos} foto • angka dan warna mengikuti pengaturan admin cekrek.`;
+    }
+}
+
+async function loadFramePhotoMapping(framePath){
     frameConfigLoaded=false;
     framePhotoMap=getDefaultFramePhotoMap();
     framePhotoColors=[];
 
     try{
-        const raw=localStorage.getItem(frameConfigStorageKey(framePath));
-        if(raw){
-            const config=JSON.parse(raw);
-            if(Array.isArray(config.photoMap)&&config.photoMap.length===frameHoles.length){
-                framePhotoMap=config.photoMap.slice();
+        const response=await fetch(
+            `/api/frame-config?framePath=${encodeURIComponent(framePath)}`,
+            {
+                method:'GET',
+                cache:'no-store'
             }
-            if(Array.isArray(config.colors))framePhotoColors=config.colors.slice();
+        );
+
+        const result=await response.json();
+
+        if(!response.ok||!result.success){
+            throw new Error(result.message||`HTTP ${response.status}`);
         }
+
+        let config=result.config;
+        let migratedLegacyConfig=false;
+
+        // Migrasi satu kali dari konfigurasi localStorage lama milik admin.
+        // Setelah berhasil dikirim ke server, data lama di browser dihapus.
+        if(!config && isCekrekAdmin()){
+            try{
+                const legacyRaw=localStorage.getItem(frameConfigStorageKey(framePath));
+
+                if(legacyRaw){
+                    const legacy=JSON.parse(legacyRaw);
+
+                    if(
+                        Array.isArray(legacy.photoMap) &&
+                        legacy.photoMap.length===frameHoles.length
+                    ){
+                        config={
+                            photoMap:legacy.photoMap.slice(),
+                            colors:Array.isArray(legacy.colors)?legacy.colors.slice():[]
+                        };
+                        migratedLegacyConfig=true;
+                    }
+                }
+            }catch(legacyError){
+                console.warn('Konfigurasi lama tidak dapat dimigrasikan:',legacyError);
+            }
+        }
+
+        if(
+            config &&
+            Array.isArray(config.photoMap) &&
+            config.photoMap.length===frameHoles.length
+        ){
+            framePhotoMap=config.photoMap.slice();
+        }
+
+        if(config&&Array.isArray(config.colors)){
+            framePhotoColors=config.colors.slice();
+        }
+
+        normalizeFramePhotoMap();
+        frameConfigLoaded=true;
+        resetCaptureStateForCurrentFrame();
+        renderUserFramePhotoConfig();
+
+        if(isCekrekAdmin()){
+            if(migratedLegacyConfig){
+                try{
+                    const migrateResponse=await fetch('/api/frame-config',{
+                        method:'POST',
+                        headers:{
+                            'Content-Type':'application/json',
+                            'Authorization':`Bearer ${adminToken}`
+                        },
+                        body:JSON.stringify({
+                            framePath,
+                            photoMap:framePhotoMap.slice(),
+                            colors:framePhotoColors.slice()
+                        })
+                    });
+
+                    const migrateResult=await migrateResponse.json();
+
+                    if(!migrateResponse.ok||!migrateResult.success){
+                        throw new Error(migrateResult.message||'Migrasi gagal.');
+                    }
+
+                    localStorage.removeItem(frameConfigStorageKey(framePath));
+                    config=migrateResult.config||config;
+                }catch(migrateError){
+                    console.warn('Migrasi konfigurasi lama ke server gagal:',migrateError);
+                }
+            }
+
+            renderFramePhotoConfig();
+
+            const status=document.getElementById('frame-config-status');
+            if(status){
+                if(migratedLegacyConfig){
+                    status.textContent='Konfigurasi lama berhasil dipindahkan ke server untuk semua perangkat.';
+                }else{
+                    status.textContent=config
+                        ? 'Konfigurasi server berhasil dimuat untuk frame ini.'
+                        : 'Belum ada konfigurasi server untuk frame ini. Default 1:1 digunakan.';
+                }
+            }
+        }
+
+        return config;
     }catch(error){
-        console.warn('Konfigurasi frame tidak dapat dibaca:',error);
+        console.error('Konfigurasi frame server tidak dapat dibaca:',error);
+
+        normalizeFramePhotoMap();
+        frameConfigLoaded=false;
+        resetCaptureStateForCurrentFrame();
+        renderUserFramePhotoConfig();
+
+        if(isCekrekAdmin()){
+            renderFramePhotoConfig();
+
+            const status=document.getElementById('frame-config-status');
+            if(status){
+                status.textContent='Gagal membaca konfigurasi server. Periksa koneksi server sebelum melanjutkan.';
+            }
+        }
+
+        throw error;
     }
-
-    normalizeFramePhotoMap();
-    frameConfigLoaded=true;
-    resetCaptureStateForCurrentFrame();
-
-    if(sessionName.trim().toLowerCase()==='cekrek')renderFramePhotoConfig();
 }
 
-function saveFramePhotoMapping(){
-    if(sessionName.trim().toLowerCase()!=='cekrek')return;
+async function saveFramePhotoMapping(){
+    if(!isCekrekAdmin()||!adminToken)return;
 
     const error=getFramePhotoMapValidationError();
     if(error){alert(error);return;}
@@ -2293,31 +2574,60 @@ function saveFramePhotoMapping(){
     normalizeFramePhotoMap();
 
     try{
-        localStorage.setItem(
-            frameConfigStorageKey(selectedFramePath),
-            JSON.stringify({
-                version:2,
+        const response=await fetch('/api/frame-config',{
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json',
+                'Authorization':`Bearer ${adminToken}`
+            },
+            body:JSON.stringify({
                 framePath:selectedFramePath,
                 photoMap:framePhotoMap.slice(),
-                colors:framePhotoColors.slice(),
-                updatedAt:new Date().toISOString()
+                colors:framePhotoColors.slice()
             })
-        );
+        });
 
+        const result=await response.json();
+
+        if(response.status===403){
+            adminToken='';
+            throw new Error('Sesi admin sudah berakhir. Silakan masuk kembali sebagai cekrek.');
+        }
+
+        if(!response.ok||!result.success){
+            throw new Error(result.message||'Gagal menyimpan konfigurasi frame ke server.');
+        }
+
+        if(result.config){
+            if(Array.isArray(result.config.photoMap)){
+                framePhotoMap=result.config.photoMap.slice();
+            }
+            if(Array.isArray(result.config.colors)){
+                framePhotoColors=result.config.colors.slice();
+            }
+        }
+
+        normalizeFramePhotoMap();
+        frameConfigLoaded=true;
         resetCaptureStateForCurrentFrame();
 
         const status=document.getElementById('frame-config-status');
-        if(status)status.textContent=`Tersimpan. ${frameHoles.length} lubang menggunakan ${requiredPhotos} foto.`;
+        if(status){
+            status.textContent=`Tersimpan di server. ${frameHoles.length} lubang menggunakan ${requiredPhotos} foto.`;
+        }
+
         updatePhotoCounter();
         buildFramePreview();
+        renderFramePhotoConfig();
     }catch(error){
         console.error(error);
-        alert('Gagal menyimpan pengaturan frame di browser.');
+        alert(error.message||'Gagal menyimpan pengaturan frame di server.');
     }
 }
 
+
 function resetFramePhotoMapping(){
-    if(sessionName.trim().toLowerCase()!=='cekrek')return;
+    if(!isCekrekAdmin())return;
     framePhotoMap=getDefaultFramePhotoMap();
     framePhotoColors=[];
     normalizeFramePhotoMap();
@@ -2348,7 +2658,7 @@ function renderFramePhotoConfig(){
 
     if(!panel||!image||!overlays||!list)return;
 
-    if(sessionName.trim().toLowerCase()!=='cekrek'||!selectedFramePath||!frameHoles.length){
+    if(!isCekrekAdmin()||!selectedFramePath||!frameHoles.length){
         panel.classList.remove('active');
         return;
     }
@@ -2764,6 +3074,9 @@ async function selectFrame(
     button.innerText =
         'Memindai Frame...';
 
+    const userConfigPanel = document.getElementById('frame-user-config-preview');
+    if (userConfigPanel && !isCekrekAdmin()) userConfigPanel.classList.remove('active');
+
 
     try {
 
@@ -2773,7 +3086,7 @@ async function selectFrame(
             );
 
 
-        loadFramePhotoMapping(framePath);
+        await loadFramePhotoMapping(framePath);
         normalizeFramePhotoMap();
 
 
@@ -2825,7 +3138,7 @@ async function selectFrame(
    CUSTOM FRAME UPLOAD KE GOOGLE DRIVE
 ===================================================== */
 async function handleCustomFrameUpload(input) {
-    if (!sessionName || sessionName.trim().toLowerCase() !== 'cekrek') {
+    if (!isCekrekAdmin()) {
         input.value = '';
         return;
     }
@@ -2841,8 +3154,14 @@ async function handleCustomFrameUpload(input) {
         try {
             const response = await fetch('/upload-frame', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({adminName: sessionName, frameName: file.name, frameData: e.target.result})
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`
+                },
+                body: JSON.stringify({
+                    frameName: file.name,
+                    frameData: e.target.result
+                })
             });
             const result = await response.json();
             if (!response.ok || !result.success || !result.frame_url) {
@@ -3363,13 +3682,23 @@ function updatePhotoTransform(type,value){if(!photoTransforms[selectedPhotoIndex
 function resetSelectedPhotoTransform(){photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};scheduleEditorDraw()}
 function addSticker(text){stickers.push({type:'text',text,x:finalFrameImageObj?finalFrameImageObj.width/2:0,y:finalFrameImageObj?finalFrameImageObj.height/2:0,size:90,rotation:0});selectedStickerIndex=stickers.length-1;selectedEditorType='sticker';selectedEditorIndex=selectedStickerIndex;renderStickerEditor();scheduleEditorDraw()}
 async function handleCustomStickerUpload(input){
-    if(!sessionName||sessionName.trim().toLowerCase()!=='cekrek'){input.value='';return}
+    if(!isCekrekAdmin()){input.value='';return}
     const file=input.files&&input.files[0];
     if(!file||file.type!=='image/png'){alert('Pilih file PNG transparan.');input.value='';return}
     const reader=new FileReader();
     reader.onload=async e=>{
         try{
-            const response=await fetch('/upload-sticker',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminName:sessionName,stickerName:file.name,stickerData:e.target.result})});
+            const response=await fetch('/upload-sticker',{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json',
+                    'Authorization':`Bearer ${adminToken}`
+                },
+                body:JSON.stringify({
+                    stickerName:file.name,
+                    stickerData:e.target.result
+                })
+            });
             const result=await response.json();
             if(!response.ok||!result.success||!result.sticker_url)throw new Error(result.message||'Gagal menyimpan stiker ke Google Drive.');
             await loadStickersFromGoogleDrive();
