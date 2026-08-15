@@ -1528,6 +1528,27 @@
 #loading-overlay p{display:none !important}
 </style>
 
+
+<style id="frame-photo-mapping-css">
+.frame-photo-config{display:none;width:min(1100px,94vw);margin:10px auto 0;background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 15px 45px rgba(13,71,161,.10)}
+.frame-photo-config.active{display:block}
+.frame-photo-config-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.frame-photo-config-title{font-size:15px;font-weight:700}
+.frame-photo-config-sub{font-size:11px;color:#607d9b;margin-top:3px}
+.frame-config-preview{position:relative;width:min(330px,100%);margin:0 auto 14px;border-radius:12px;overflow:hidden;background:#fff;border:1px solid var(--border)}
+.frame-config-preview img{width:100%;height:auto;display:block}
+.frame-config-hole{position:absolute;border:3px solid;background:rgba(255,255,255,.10);border-radius:4px;display:flex;align-items:center;justify-content:center;color:#111;font-weight:800;font-size:14px;text-shadow:0 1px 2px rgba(255,255,255,.9);cursor:pointer}
+.frame-config-hole:hover{background:rgba(255,255,255,.28)}
+.frame-config-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;max-height:250px;overflow:auto;padding:2px}
+.frame-config-row{display:grid;grid-template-columns:1fr 68px 42px;align-items:center;gap:7px;padding:8px;border:1px solid var(--border);border-radius:10px;background:#f8fbff}
+.frame-config-row label{font-size:11px;font-weight:700}
+.frame-config-number{width:100%;padding:7px 6px;border:1px solid var(--border);border-radius:8px;font-size:12px;text-align:center}
+.frame-config-color{width:38px;height:32px;padding:2px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer}
+.frame-config-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap}
+.frame-config-status{font-size:11px;color:#607d9b;margin-top:8px}
+@media(max-width:600px){.frame-photo-config{padding:12px}.frame-config-list{grid-template-columns:1fr}}
+</style>
+
 </head>
 
 
@@ -1663,6 +1684,26 @@
         </div>
 
         <button class="frame-scroll-btn right" onclick="scrollFrames(300)">›</button>
+    </div>
+
+    <div id="frame-photo-config" class="frame-photo-config">
+        <div class="frame-photo-config-head">
+            <div>
+                <div class="frame-photo-config-title">Pengaturan Nomor Foto</div>
+                <div class="frame-photo-config-sub">Khusus admin "cekrek". Pengaturan tersimpan PER FRAME. Nomor yang sama berarti memakai 1 foto yang sama. Contoh 1,1,2,2,3,3 hanya membutuhkan 3 kali cekrek.</div>
+            </div>
+        </div>
+        <div id="frame-config-frame-name" style="font-size:12px;font-weight:700;margin:4px 0 10px;text-align:center;"></div>
+        <div id="frame-config-preview" class="frame-config-preview">
+            <img id="frame-config-image" src="" alt="Preview frame">
+            <div id="frame-config-overlays"></div>
+        </div>
+        <div id="frame-config-list" class="frame-config-list"></div>
+        <div class="frame-config-actions">
+            <button type="button" class="outline" onclick="resetFramePhotoMapping()">Reset 1:1</button>
+            <button type="button" onclick="saveFramePhotoMapping()">Simpan Pengaturan Frame</button>
+        </div>
+        <div id="frame-config-status" class="frame-config-status"></div>
     </div>
 
     <div class="bottom-actions">
@@ -1965,10 +2006,19 @@
 ===================================================== */
 
 let requiredPhotos = 0;
-
 let selectedFramePath = '';
-
 let frameHoles = [];
+
+/* Mapping lubang -> nomor foto. Contoh 1,1,2,2,3,3 = 3 kali pengambilan. */
+let framePhotoMap = [];
+let framePhotoColors = [];
+let uniquePhotoNumbers = [];
+let frameConfigLoaded = false;
+
+const DEFAULT_PHOTO_COLORS = [
+    '#1976d2','#e53935','#43a047','#fb8c00','#8e44ad',
+    '#00897b','#6d4c41','#3949ab','#c2185b','#00838f'
+];
 
 let stream = null;
 
@@ -2133,6 +2183,239 @@ function getDateString() {
 
 }
 
+
+
+/* =====================================================
+   FRAME PHOTO MAPPING
+===================================================== */
+
+function frameConfigStorageKey(framePath){
+    return 'cekrek-frame-photo-map-v3:' + encodeURIComponent(framePath);
+}
+
+function getDefaultFramePhotoMap(){
+    return frameHoles.map((_,i)=>i+1);
+}
+
+function normalizeFramePhotoMap(){
+    if(!Array.isArray(framePhotoMap) || framePhotoMap.length!==frameHoles.length){
+        framePhotoMap=getDefaultFramePhotoMap();
+    }
+
+    framePhotoMap=framePhotoMap.map((v,i)=>{
+        const n=parseInt(v,10);
+        return Number.isFinite(n)&&n>=1?n:i+1;
+    });
+
+    uniquePhotoNumbers=[...new Set(framePhotoMap)].sort((a,b)=>a-b);
+
+    const oldColors=Array.isArray(framePhotoColors)?framePhotoColors:[];
+    framePhotoColors=uniquePhotoNumbers.map((n,i)=>
+        oldColors[i] || DEFAULT_PHOTO_COLORS[i%DEFAULT_PHOTO_COLORS.length]
+    );
+
+    requiredPhotos=uniquePhotoNumbers.length;
+}
+
+function getColorForPhotoNumber(photoNumber){
+    const i=uniquePhotoNumbers.indexOf(Number(photoNumber));
+    return i>=0?(framePhotoColors[i]||DEFAULT_PHOTO_COLORS[i%DEFAULT_PHOTO_COLORS.length]):DEFAULT_PHOTO_COLORS[0];
+}
+
+function getCapturedIndexForHole(holeIndex){
+    const photoNumber=Number(framePhotoMap[holeIndex]);
+    return uniquePhotoNumbers.indexOf(photoNumber);
+}
+
+function getHolePhotoSource(holeIndex){
+    const i=getCapturedIndexForHole(holeIndex);
+    return i>=0?capturedImages[i]:null;
+}
+
+function getHolePhotoFilter(holeIndex){
+    const i=getCapturedIndexForHole(holeIndex);
+    return i>=0?(capturedImageFilters[i]||'none'):'none';
+}
+
+function getFramePhotoMapValidationError(){
+    normalizeFramePhotoMap();
+    if(!uniquePhotoNumbers.length)return'Belum ada nomor foto.';
+    const max=Math.max(...uniquePhotoNumbers);
+    const missing=[];
+    for(let n=1;n<=max;n++){
+        if(!uniquePhotoNumbers.includes(n))missing.push(n);
+    }
+    return missing.length
+        ?'Nomor foto harus berurutan mulai dari 1. Nomor yang belum dipakai: '+missing.join(', ')+'.'
+        :'';
+}
+
+function resetCaptureStateForCurrentFrame(){
+    normalizeFramePhotoMap();
+    capturedImages=new Array(requiredPhotos);
+    capturedImageFilters=new Array(requiredPhotos).fill('none');
+    photoTransforms=frameHoles.map(()=>({scale:1,x:0,y:0}));
+    selectedPhotoIndex=0;
+    updatePhotoCounter();
+}
+
+function loadFramePhotoMapping(framePath){
+    frameConfigLoaded=false;
+    framePhotoMap=getDefaultFramePhotoMap();
+    framePhotoColors=[];
+
+    try{
+        const raw=localStorage.getItem(frameConfigStorageKey(framePath));
+        if(raw){
+            const config=JSON.parse(raw);
+            if(Array.isArray(config.photoMap)&&config.photoMap.length===frameHoles.length){
+                framePhotoMap=config.photoMap.slice();
+            }
+            if(Array.isArray(config.colors))framePhotoColors=config.colors.slice();
+        }
+    }catch(error){
+        console.warn('Konfigurasi frame tidak dapat dibaca:',error);
+    }
+
+    normalizeFramePhotoMap();
+    frameConfigLoaded=true;
+    resetCaptureStateForCurrentFrame();
+
+    if(sessionName.trim().toLowerCase()==='cekrek')renderFramePhotoConfig();
+}
+
+function saveFramePhotoMapping(){
+    if(sessionName.trim().toLowerCase()!=='cekrek')return;
+
+    const error=getFramePhotoMapValidationError();
+    if(error){alert(error);return;}
+
+    normalizeFramePhotoMap();
+
+    try{
+        localStorage.setItem(
+            frameConfigStorageKey(selectedFramePath),
+            JSON.stringify({
+                version:2,
+                framePath:selectedFramePath,
+                photoMap:framePhotoMap.slice(),
+                colors:framePhotoColors.slice(),
+                updatedAt:new Date().toISOString()
+            })
+        );
+
+        resetCaptureStateForCurrentFrame();
+
+        const status=document.getElementById('frame-config-status');
+        if(status)status.textContent=`Tersimpan. ${frameHoles.length} lubang menggunakan ${requiredPhotos} foto.`;
+        updatePhotoCounter();
+        buildFramePreview();
+    }catch(error){
+        console.error(error);
+        alert('Gagal menyimpan pengaturan frame di browser.');
+    }
+}
+
+function resetFramePhotoMapping(){
+    if(sessionName.trim().toLowerCase()!=='cekrek')return;
+    framePhotoMap=getDefaultFramePhotoMap();
+    framePhotoColors=[];
+    normalizeFramePhotoMap();
+    renderFramePhotoConfig();
+}
+
+function setFrameHolePhotoNumber(holeIndex,value){
+    const n=parseInt(value,10);
+    if(!Number.isFinite(n)||n<1)return;
+    framePhotoMap[holeIndex]=n;
+    normalizeFramePhotoMap();
+    renderFramePhotoConfig();
+}
+
+function setFramePhotoColor(photoNumber,color){
+    const i=uniquePhotoNumbers.indexOf(Number(photoNumber));
+    if(i<0)return;
+    framePhotoColors[i]=color;
+    renderFramePhotoConfig();
+}
+
+function renderFramePhotoConfig(){
+    const panel=document.getElementById('frame-photo-config');
+    const image=document.getElementById('frame-config-image');
+    const overlays=document.getElementById('frame-config-overlays');
+    const list=document.getElementById('frame-config-list');
+    const status=document.getElementById('frame-config-status');
+
+    if(!panel||!image||!overlays||!list)return;
+
+    if(sessionName.trim().toLowerCase()!=='cekrek'||!selectedFramePath||!frameHoles.length){
+        panel.classList.remove('active');
+        return;
+    }
+
+    panel.classList.add('active');
+    image.src=selectedFramePath;
+
+    const frameName=document.getElementById('frame-config-frame-name');
+    if(frameName){
+        frameName.textContent='Frame aktif: '+selectedFramePath.split('/').pop().split('\\').pop();
+    }
+
+    overlays.innerHTML='';
+    list.innerHTML='';
+
+    normalizeFramePhotoMap();
+
+    frameHoles.forEach((hole,holeIndex)=>{
+        const photoNumber=framePhotoMap[holeIndex];
+        const color=getColorForPhotoNumber(photoNumber);
+
+        const overlay=document.createElement('div');
+        overlay.className='frame-config-hole';
+        overlay.style.left=`${hole.x/finalFrameImageObj.width*100}%`;
+        overlay.style.top=`${hole.y/finalFrameImageObj.height*100}%`;
+        overlay.style.width=`${hole.w/finalFrameImageObj.width*100}%`;
+        overlay.style.height=`${hole.h/finalFrameImageObj.height*100}%`;
+        overlay.style.borderColor=color;
+        overlay.style.backgroundColor=color+'22';
+        overlay.textContent=photoNumber;
+        overlay.title=`Lubang ${holeIndex+1} → Foto ${photoNumber}`;
+        overlay.onclick=()=>{
+            const input=document.querySelector(`.frame-config-number[data-hole-index="${holeIndex}"]`);
+            if(input){input.focus();input.select();}
+        };
+        overlays.appendChild(overlay);
+
+        const row=document.createElement('div');
+        row.className='frame-config-row';
+
+        const label=document.createElement('label');
+        label.textContent=`Lubang ${holeIndex+1}`;
+        row.appendChild(label);
+
+        const numberInput=document.createElement('input');
+        numberInput.type='number';
+        numberInput.min='1';
+        numberInput.max=String(frameHoles.length);
+        numberInput.value=photoNumber;
+        numberInput.className='frame-config-number';
+        numberInput.dataset.holeIndex=holeIndex;
+        numberInput.onchange=()=>setFrameHolePhotoNumber(holeIndex,numberInput.value);
+        row.appendChild(numberInput);
+
+        const colorInput=document.createElement('input');
+        colorInput.type='color';
+        colorInput.className='frame-config-color';
+        colorInput.value=color;
+        colorInput.title=`Warna Foto ${photoNumber}`;
+        colorInput.oninput=()=>setFramePhotoColor(photoNumber,colorInput.value);
+        row.appendChild(colorInput);
+
+        list.appendChild(row);
+    });
+
+    if(status)status.textContent=`Frame ini: ${frameHoles.length} lubang → ${requiredPhotos} kali pengambilan foto. Konfigurasi disimpan khusus untuk frame ini.`;
+}
 
 /* =====================================================
    DETECT FRAME HOLES
@@ -2490,8 +2773,8 @@ async function selectFrame(
             );
 
 
-        requiredPhotos =
-            frameHoles.length;
+        loadFramePhotoMapping(framePath);
+        normalizeFramePhotoMap();
 
 
         if (
@@ -2631,9 +2914,17 @@ window.addEventListener('DOMContentLoaded', () => {
 function getNextCameraHoleIndex(preferredIndex = 0) {
     if (!Array.isArray(frameHoles) || !frameHoles.length) return -1;
     const start = Math.max(0, Math.min(preferredIndex, frameHoles.length - 1));
-    for (let i = start; i < frameHoles.length; i++) {
-        if (!capturedImages[i]) return i;
+
+    for (let pass = 0; pass < 2; pass++) {
+        const from = pass === 0 ? start : 0;
+        const to = pass === 0 ? frameHoles.length : start;
+
+        for (let i = from; i < to; i++) {
+            const photoIndex = getCapturedIndexForHole(i);
+            if (photoIndex >= 0 && !capturedImages[photoIndex]) return i;
+        }
     }
+
     return start;
 }
 
@@ -2889,8 +3180,9 @@ async function initCamera(fromRetry = false, preferredDeviceId = '') {
 
         hideStatus();
 
+        normalizeFramePhotoMap();
         capturedImages = new Array(requiredPhotos);
-    capturedImageFilters = new Array(requiredPhotos).fill('none');
+        capturedImageFilters = new Array(requiredPhotos).fill('none');
 
         if (nextButton) nextButton.disabled = true;
 
@@ -2955,286 +3247,107 @@ async function initCamera(fromRetry = false, preferredDeviceId = '') {
    BUILD FRAME PREVIEW
 ===================================================== */
 
-function buildFramePreview() {
+function buildFramePreview(){
+    if(!finalFrameImageObj)return;
 
-    if (
-        !finalFrameImageObj
-    ) {
+    normalizeFramePhotoMap();
 
-        return;
+    const slots=document.getElementById('photo-slots');
+    if(!slots)return;
 
-    }
-
-
-    const slots =
-        document.getElementById(
-            'photo-slots'
-        );
-
-
-    slots.innerHTML = '';
-    photoTransforms = frameHoles.map((_,i) => photoTransforms[i] || {scale:1,x:0,y:0});
-    selectedPhotoIndex = Math.min(selectedPhotoIndex, Math.max(0, frameHoles.length-1));
+    slots.innerHTML='';
+    photoTransforms=frameHoles.map((_,i)=>photoTransforms[i]||{scale:1,x:0,y:0});
+    selectedPhotoIndex=Math.min(selectedPhotoIndex,Math.max(0,frameHoles.length-1));
     renderPhotoEditorControls();
 
-    frameHoles.forEach(
-        (
-            hole,
-            index
-        ) => {
+    frameHoles.forEach((hole,index)=>{
+        const slot=document.createElement('div');
+        slot.className='photo-slot';
 
-            const slot =
-                document.createElement(
-                    'div'
-                );
+        const targetWidth=140;
+        const targetHeight=Math.round(targetWidth*(hole.h/hole.w));
+        slot.style.width=targetWidth+'px';
+        slot.style.height=targetHeight+'px';
+        slot.style.flex=`0 0 ${targetWidth}px`;
+        slot.dataset.index=index;
 
+        const canvas=document.createElement('canvas');
+        canvas.width=hole.w;
+        canvas.height=hole.h;
+        slot.appendChild(canvas);
 
-            slot.className =
-                'photo-slot';
+        const photoNumber=framePhotoMap[index]||index+1;
+        const color=getColorForPhotoNumber(photoNumber);
 
+        const empty=document.createElement('div');
+        empty.className='slot-empty';
+        empty.innerText=`Foto ${photoNumber}`;
+        empty.style.color=color;
+        empty.style.background='#ffffff';
+        empty.style.border=`2px solid ${color}`;
+        empty.style.borderRadius='8px';
+        slot.appendChild(empty);
 
-            const targetWidth = 140;
-            const targetHeight = Math.round(targetWidth * (hole.h / hole.w));
+        const retake=document.createElement('div');
+        retake.className='retake-label';
+        retake.innerText=`Ambil Ulang Foto ${photoNumber}`;
+        slot.appendChild(retake);
 
-            slot.style.width = targetWidth + 'px';
-            slot.style.height = targetHeight + 'px';
-            slot.style.flex = `0 0 ${targetHeight}px`;
+        slot.addEventListener('click',()=>{
+            const photoIndex=getCapturedIndexForHole(index);
+            if(photoIndex>=0&&capturedImages[photoIndex])retakePhoto(index);
+        });
 
-
-            slot.dataset.index =
-                index;
-
-
-            const canvas =
-                document.createElement(
-                    'canvas'
-                );
-
-
-            canvas.width =
-                hole.w;
-
-
-            canvas.height =
-                hole.h;
-
-
-            slot.appendChild(
-                canvas
-            );
-
-
-            const empty =
-                document.createElement(
-                    'div'
-                );
-
-
-            empty.className =
-                'slot-empty';
-
-
-            empty.innerText =
-                `${index + 1}`;
-
-
-            slot.appendChild(
-                empty
-            );
-
-
-            const retake =
-                document.createElement(
-                    'div'
-                );
-
-
-            retake.className =
-                'retake-label';
-
-
-            retake.innerText =
-                'Ambil Ulang';
-
-
-            slot.appendChild(
-                retake
-            );
-
-
-            slot.addEventListener(
-                'click',
-                () => {
-
-                    if (
-                        capturedImages[index]
-                    ) {
-
-                        retakePhoto(
-                            index
-                        );
-
-                    }
-
-                }
-            );
-
-
-            slots.appendChild(
-                slot
-            );
-
-
-            renderSlot(
-                index
-            );
-
-        }
-    );
+        slots.appendChild(slot);
+        renderSlot(index);
+    });
 
     updatePhotoCounter();
-
 }
 
-
-/* =====================================================
-   UPDATE PHOTO COUNTER
-===================================================== */
-
-function updatePhotoCounter() {
-    const count = capturedImages.filter(img => img !== undefined && img !== null).length;
-    const counterText = document.getElementById('photo-counter-text');
-    if (counterText) {
-        counterText.innerText = `${count}/${requiredPhotos}`;
-    }
+function updatePhotoCounter(){
+    const count=capturedImages.filter(img=>img!==undefined&&img!==null).length;
+    const counterText=document.getElementById('photo-counter-text');
+    if(counterText)counterText.innerText=`${count}/${requiredPhotos}`;
 }
 
+function renderSlot(index){
+    const slots=document.querySelectorAll('.photo-slot');
+    const slot=slots[index];
+    if(!slot)return;
 
-/* =====================================================
-   RENDER SLOT
-===================================================== */
+    const canvas=slot.querySelector('canvas');
+    if(!canvas)return;
 
-function renderSlot(index) {
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    const slots =
-        document.querySelectorAll(
-            '.photo-slot'
-        );
+    const empty=slot.querySelector('.slot-empty');
+    const photoIndex=getCapturedIndexForHole(index);
+    const source=photoIndex>=0?capturedImages[photoIndex]:null;
 
-
-    const slot =
-        slots[index];
-
-
-    if (!slot) {
-
-        return;
-
-    }
-
-
-    const canvas =
-        slot.querySelector(
-            'canvas'
-        );
-
-
-    const ctx =
-        canvas.getContext(
-            '2d'
-        );
-
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    const empty =
-        slot.querySelector(
-            '.slot-empty'
-        );
-
-
-    if (
-        !capturedImages[index]
-    ) {
-
-        ctx.fillStyle =
-            '#ffffff';
-
-
-        ctx.fillRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-
-
-        if (empty) {
-
-            empty.style.display =
-                'flex';
-
-        }
-
+    if(!source){
+        ctx.fillStyle='#ffffff';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        if(empty)empty.style.display='flex';
         updatePhotoCounter();
         return;
-
     }
 
+    if(empty)empty.style.display='none';
 
-    if (empty) {
-
-        empty.style.display =
-            'none';
-
-    }
-
-
-    const image =
-        new Image();
-
-
-    image.onload =
-        () => {
-
-            drawImageIntoHole(
-
-                ctx,
-
-                image,
-
-                {
-
-                    x: 0,
-
-                    y: 0,
-
-                    w:
-                        canvas.width,
-
-                    h:
-                        canvas.height
-
-                }
-
-            );
-
-        };
-
-
-    image.src =
-        capturedImages[index];
-
+    const image=new Image();
+    image.onload=()=>{
+        drawImageIntoHole(
+            ctx,
+            image,
+            {x:0,y:0,w:canvas.width,h:canvas.height},
+            photoTransforms[index]||{scale:1,x:0,y:0}
+        );
+    };
+    image.src=source;
     updatePhotoCounter();
-
 }
-
 
 /* =====================================================
    DRAW IMAGE INTO HOLE
@@ -3243,7 +3356,7 @@ function renderSlot(index) {
 const editorImageCache={};let editorDrawRAF=0;let editorPointers=new Map();let editorPinchStart=null;
 function getEditorImage(source){if(editorImageCache[source])return Promise.resolve(editorImageCache[source]);return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{editorImageCache[source]=img;resolve(img)};img.onerror=reject;img.src=source})}
 function drawImageIntoHole(ctx,image,target,transform={scale:1,x:0,y:0}){const imageRatio=image.width/image.height,targetRatio=target.w/target.h;let baseW=image.width,baseH=image.height,sourceX=0,sourceY=0;if(imageRatio>targetRatio){baseW=image.height*targetRatio;sourceX=(image.width-baseW)/2}else{baseH=image.width/targetRatio;sourceY=(image.height-baseH)/2}const scale=Math.max(.35,Math.min(4,transform.scale||1)),cropW=baseW/scale,cropH=baseH/scale,maxX=Math.max(0,(baseW-cropW)/2),maxY=Math.max(0,(baseH-cropH)/2),panX=Math.max(-1,Math.min(1,(transform.x||0)/100))*maxX,panY=Math.max(-1,Math.min(1,(transform.y||0)/100))*maxY,sx=sourceX+(baseW-cropW)/2+panX,sy=sourceY+(baseH-cropH)/2+panY;ctx.save();ctx.beginPath();ctx.rect(target.x,target.y,target.w,target.h);ctx.clip();ctx.drawImage(image,sx,sy,cropW,cropH,target.x,target.y,target.w,target.h);ctx.restore()}
-function renderPhotoEditorControls(){const box=document.getElementById('photo-editor-selector');if(!box)return;box.innerHTML='';frameHoles.forEach((_,i)=>{const b=document.createElement('button');b.className='photo-select-btn'+(i===selectedPhotoIndex?' active':'');b.textContent=`Foto ${i+1}`;b.onclick=()=>selectPhotoForEdit(i);box.appendChild(b)});updatePhotoEditorInputs()}
+function renderPhotoEditorControls(){const box=document.getElementById('photo-editor-selector');if(!box)return;box.innerHTML='';frameHoles.forEach((_,i)=>{const b=document.createElement('button');b.className='photo-select-btn'+(i===selectedPhotoIndex?' active':'');const n=framePhotoMap[i]||i+1;b.textContent=`Slot ${i+1} · Foto ${n}`;b.onclick=()=>selectPhotoForEdit(i);box.appendChild(b)});updatePhotoEditorInputs()}
 function selectPhotoForEdit(i){selectedPhotoIndex=i;renderPhotoEditorControls();scheduleEditorDraw()}
 function updatePhotoEditorInputs(){}
 function updatePhotoTransform(type,value){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};const v=Number(value);if(type==='zoom')photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,v/100));else photoTransforms[selectedPhotoIndex][type]=v;scheduleEditorDraw()}
@@ -3322,7 +3435,7 @@ function stickerBounds(st){if(st.type==='image'&&st.img){const w=st.size,h=st.si
 function pointInSticker(st,p){const b=stickerBounds(st);return p.x>=b.x-15&&p.x<=b.x+b.w+15&&p.y>=b.y-15&&p.y<=b.y+b.h+15}
 function scheduleEditorDraw(){if(editorDrawRAF)return;editorDrawRAF=requestAnimationFrame(()=>{editorDrawRAF=0;drawCanvas(true,'result-canvas')})}
 function editorPoint(c,e){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)}}
-function initPreviewEditorDrag(){const c=document.getElementById('result-canvas');if(!c||c.dataset.editorReady)return;c.dataset.editorReady='1';c.style.touchAction='none';c.addEventListener('pointerdown',e=>{const p=editorPoint(c,e);editorPointers.set(e.pointerId,p);if(editorPointers.size===2){editorDrag=null;const a=[...editorPointers.values()];editorPinchStart={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),scale:photoTransforms[selectedPhotoIndex]?.scale||1};return}if(selectedStickerIndex>=0&&stickers[selectedStickerIndex]&&pointInSticker(stickers[selectedStickerIndex],p)){const st=stickers[selectedStickerIndex];editorDrag={type:'sticker',sx:p.x,sy:p.y,ox:st.x,oy:st.y,os:st.size};c.setPointerCapture(e.pointerId);c.classList.add('dragging');return}if(frameHoles[selectedPhotoIndex]&&capturedImages[selectedPhotoIndex]){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};editorDrag={type:'photo',sx:p.x,sy:p.y,ox:photoTransforms[selectedPhotoIndex].x,oy:photoTransforms[selectedPhotoIndex].y};c.setPointerCapture(e.pointerId);c.classList.add('dragging')}});c.addEventListener('pointermove',e=>{const p=editorPoint(c,e);if(editorPointers.has(e.pointerId))editorPointers.set(e.pointerId,p);if(editorPointers.size===2){const a=[...editorPointers.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(editorPinchStart){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,editorPinchStart.scale*(d/editorPinchStart.distance)));scheduleEditorDraw()}return}if(!editorDrag)return;const dx=p.x-editorDrag.sx,dy=p.y-editorDrag.sy;if(editorDrag.type==='sticker'){const st=stickers[selectedStickerIndex];st.x=Math.max(0,Math.min(c.width,editorDrag.ox+dx));st.y=Math.max(0,Math.min(c.height,editorDrag.oy+dy));}else{const t=photoTransforms[selectedPhotoIndex];t.x=Math.max(-100,Math.min(100,editorDrag.ox+dx*100/c.width));t.y=Math.max(-100,Math.min(100,editorDrag.oy+dy*100/c.height));}scheduleEditorDraw()});const end=e=>{editorPointers.delete(e.pointerId);if(editorPointers.size<2)editorPinchStart=null;editorDrag=null;c.classList.remove('dragging')};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('wheel',e=>{if(!frameHoles[selectedPhotoIndex]||!capturedImages[selectedPhotoIndex])return;e.preventDefault();if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,photoTransforms[selectedPhotoIndex].scale*(e.deltaY<0?1.08:.925)));scheduleEditorDraw()},{passive:false})}
+function initPreviewEditorDrag(){const c=document.getElementById('result-canvas');if(!c||c.dataset.editorReady)return;c.dataset.editorReady='1';c.style.touchAction='none';c.addEventListener('pointerdown',e=>{const p=editorPoint(c,e);editorPointers.set(e.pointerId,p);if(editorPointers.size===2){editorDrag=null;const a=[...editorPointers.values()];editorPinchStart={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),scale:photoTransforms[selectedPhotoIndex]?.scale||1};return}if(selectedStickerIndex>=0&&stickers[selectedStickerIndex]&&pointInSticker(stickers[selectedStickerIndex],p)){const st=stickers[selectedStickerIndex];editorDrag={type:'sticker',sx:p.x,sy:p.y,ox:st.x,oy:st.y,os:st.size};c.setPointerCapture(e.pointerId);c.classList.add('dragging');return}if(frameHoles[selectedPhotoIndex]&&getHolePhotoSource(selectedPhotoIndex)){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};editorDrag={type:'photo',sx:p.x,sy:p.y,ox:photoTransforms[selectedPhotoIndex].x,oy:photoTransforms[selectedPhotoIndex].y};c.setPointerCapture(e.pointerId);c.classList.add('dragging')}});c.addEventListener('pointermove',e=>{const p=editorPoint(c,e);if(editorPointers.has(e.pointerId))editorPointers.set(e.pointerId,p);if(editorPointers.size===2){const a=[...editorPointers.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(editorPinchStart){if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,editorPinchStart.scale*(d/editorPinchStart.distance)));scheduleEditorDraw()}return}if(!editorDrag)return;const dx=p.x-editorDrag.sx,dy=p.y-editorDrag.sy;if(editorDrag.type==='sticker'){const st=stickers[selectedStickerIndex];st.x=Math.max(0,Math.min(c.width,editorDrag.ox+dx));st.y=Math.max(0,Math.min(c.height,editorDrag.oy+dy));}else{const t=photoTransforms[selectedPhotoIndex];t.x=Math.max(-100,Math.min(100,editorDrag.ox+dx*100/c.width));t.y=Math.max(-100,Math.min(100,editorDrag.oy+dy*100/c.height));}scheduleEditorDraw()});const end=e=>{editorPointers.delete(e.pointerId);if(editorPointers.size<2)editorPinchStart=null;editorDrag=null;c.classList.remove('dragging')};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('wheel',e=>{if(!frameHoles[selectedPhotoIndex]||!getHolePhotoSource(selectedPhotoIndex))return;e.preventDefault();if(!photoTransforms[selectedPhotoIndex])photoTransforms[selectedPhotoIndex]={scale:1,x:0,y:0};photoTransforms[selectedPhotoIndex].scale=Math.max(.35,Math.min(4,photoTransforms[selectedPhotoIndex].scale*(e.deltaY<0?1.08:.925)));scheduleEditorDraw()},{passive:false})}
 
 /* =====================================================
    MIRROR
@@ -3363,306 +3476,108 @@ function setDelay(seconds) {
    TAKE PHOTOS
 ===================================================== */
 
-async function takePhotos() {
+async function takePhotos(){
+    if(isTakingPhoto)return;
 
-    if (
-        isTakingPhoto
-    ) {
-
+    normalizeFramePhotoMap();
+    if(!requiredPhotos){
+        alert('Frame belum memiliki konfigurasi nomor foto.');
         return;
-
     }
 
+    isTakingPhoto=true;
+    const btnTake=document.getElementById('btn-take');
+    if(btnTake)btnTake.style.pointerEvents='none';
 
-    isTakingPhoto =
-        true;
-
-
-    const btnTake = document.getElementById('btn-take');
-    if(btnTake) btnTake.style.pointerEvents = 'none';
-
-
-    for (
-        let i = 0;
-        i < requiredPhotos;
-        i++
-    ) {
-
+    for(let photoIndex=0;photoIndex<requiredPhotos;photoIndex++){
         await runCountdown();
-
-
-        captureFrame(
-            i
-        );
-
+        captureFrame(photoIndex);
     }
 
+    isTakingPhoto=false;
+    if(btnTake)btnTake.style.pointerEvents='auto';
 
-    isTakingPhoto =
-        false;
-
-
-    if(btnTake) btnTake.style.pointerEvents = 'auto';
-
-
-    document
-        .getElementById(
-            'btn-next-preview'
-        )
-        .disabled = false;
-
+    const nextButton=document.getElementById('btn-next-preview');
+    if(nextButton)nextButton.disabled=false;
 }
 
+async function retakePhoto(holeIndex){
+    if(isTakingPhoto||!stream)return;
 
-/* =====================================================
-   RETAKE
-===================================================== */
+    const photoIndex=getCapturedIndexForHole(holeIndex);
+    if(photoIndex<0)return;
 
-async function retakePhoto(
-    index
-) {
+    isTakingPhoto=true;
 
-    if (
-        isTakingPhoto ||
-        !stream
-    ) {
-
-        return;
-
-    }
-
-
-    isTakingPhoto =
-        true;
-
-
-    const slots =
-        document.querySelectorAll(
-            '.photo-slot'
-        );
-
-
-    slots.forEach(
-        slot => {
-
-            slot.style.pointerEvents =
-                'none';
-
-        }
-    );
-
+    const slots=document.querySelectorAll('.photo-slot');
+    slots.forEach(slot=>slot.style.pointerEvents='none');
 
     await runCountdown();
+    captureFrame(photoIndex);
 
+    requestAnimationFrame(()=>syncCameraPreviewToHole(holeIndex));
 
-    captureFrame(
-        index
-    );
+    slots.forEach(slot=>slot.style.pointerEvents='auto');
+    isTakingPhoto=false;
 
-    requestAnimationFrame(() => syncCameraPreviewToHole(index));
-
-
-    slots.forEach(
-        slot => {
-
-            slot.style.pointerEvents =
-                'auto';
-
-        }
-    );
-
-
-    isTakingPhoto =
-        false;
-
-
-    document
-        .getElementById(
-            'btn-next-preview'
-        )
-        .disabled = false;
-
+    const nextButton=document.getElementById('btn-next-preview');
+    if(nextButton)nextButton.disabled=false;
 }
 
+function runCountdown(){
+    return new Promise(resolve=>{
+        let count=3;
+        const countdown=document.getElementById('countdown');
+        countdown.innerText=count;
 
-/* =====================================================
-   COUNTDOWN
-===================================================== */
+        const interval=setInterval(()=>{
+            count--;
+            if(count>0){
+                countdown.innerText=count;
+            }else{
+                clearInterval(interval);
+                countdown.innerText='';
 
-function runCountdown() {
+                const flash=document.getElementById('flash');
+                flash.classList.add('active');
+                setTimeout(()=>flash.classList.remove('active'),120);
 
-    return new Promise(
-        resolve => {
-
-            let count = 3;
-
-
-            const countdown =
-                document.getElementById(
-                    'countdown'
-                );
-
-
-            countdown.innerText =
-                count;
-
-
-            const interval =
-                setInterval(
-                    () => {
-
-                        count--;
-
-
-                        if (
-                            count > 0
-                        ) {
-
-                            countdown.innerText =
-                                count;
-
-                        } else {
-
-                            clearInterval(
-                                interval
-                            );
-
-
-                            countdown.innerText =
-                                '';
-
-
-                            const flash =
-                                document.getElementById(
-                                    'flash'
-                                );
-
-
-                            flash.classList.add(
-                                'active'
-                            );
-
-
-                            setTimeout(
-                                () => {
-
-                                    flash.classList.remove(
-                                        'active'
-                                    );
-
-                                },
-                                120
-                            );
-
-
-                            resolve();
-
-                        }
-
-                    },
-                    700
-                );
-
-        }
-    );
-
+                resolve();
+            }
+        },700);
+    });
 }
 
+function captureFrame(photoIndex){
+    const video=document.getElementById('camera-feed');
+    if(!video.videoWidth||!video.videoHeight)return;
+    if(photoIndex<0||photoIndex>=requiredPhotos)return;
 
-/* =====================================================
-   CAPTURE FRAME
-===================================================== */
+    const canvas=document.createElement('canvas');
+    canvas.width=video.videoWidth;
+    canvas.height=video.videoHeight;
 
-function captureFrame(
-    index
-) {
+    const ctx=canvas.getContext('2d');
 
-    const video =
-        document.getElementById(
-            'camera-feed'
-        );
-
-
-    if (
-        !video.videoWidth ||
-        !video.videoHeight
-    ) {
-
-        return;
-
+    if(isMirrored){
+        ctx.translate(canvas.width,0);
+        ctx.scale(-1,1);
     }
 
+    ctx.filter=currentCanvasFilter||'none';
+    ctx.drawImage(video,0,0);
+    ctx.filter='none';
 
-    const canvas =
-        document.createElement(
-            'canvas'
-        );
+    capturedImages[photoIndex]=canvas.toDataURL('image/jpeg',0.92);
+    capturedImageFilters[photoIndex]=currentCanvasFilter||'none';
 
+    frameHoles.forEach((_,holeIndex)=>{
+        if(getCapturedIndexForHole(holeIndex)===photoIndex)renderSlot(holeIndex);
+    });
 
-    canvas.width =
-        video.videoWidth;
-
-
-    canvas.height =
-        video.videoHeight;
-
-
-    const ctx =
-        canvas.getContext(
-            '2d'
-        );
-
-
-    if (
-        isMirrored
-    ) {
-
-        ctx.translate(
-            canvas.width,
-            0
-        );
-
-        ctx.scale(
-            -1,
-            1
-        );
-
-    }
-
-    /*
-     * BURN THE ACTIVE CAMERA FILTER INTO THE PHOTO.
-     * CSS filter on <video> only affects the preview; it does not
-     * automatically become part of the canvas image.
-     */
-    ctx.filter = currentCanvasFilter || 'none';
-
-    ctx.drawImage(
-        video,
-        0,
-        0
-    );
-
-    ctx.filter = 'none';
-
-    capturedImages[index] =
-        canvas.toDataURL(
-            'image/jpeg',
-            0.92
-        );
-
-    capturedImageFilters[index] =
-        currentCanvasFilter || 'none';
-
-
-    renderSlot(
-        index
-    );
-
-    // Bila slot berikutnya memiliki rasio berbeda, preview ikut berubah otomatis.
-    requestAnimationFrame(() => syncCameraPreviewToHole(index + 1));
-
+    updatePhotoCounter();
+    requestAnimationFrame(()=>syncCameraPreviewToHole(0));
 }
-
 
 /* =====================================================
    LOAD PREVIEW
@@ -3735,113 +3650,52 @@ function applyFilter(
    DRAW CANVAS
 ===================================================== */
 
-async function drawCanvas(
-    withFrame = true,
-    canvasId = 'result-canvas'
-) {
+async function drawCanvas(withFrame=true,canvasId='result-canvas'){
+    if(!finalFrameImageObj)return;
 
-    if (
-        !finalFrameImageObj
-    ) {
+    const canvas=document.getElementById(canvasId);
+    if(!canvas)return;
 
-        return;
+    const ctx=canvas.getContext('2d');
+    canvas.width=finalFrameImageObj.width;
+    canvas.height=finalFrameImageObj.height;
 
-    }
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.filter='none';
 
+    /* Render berdasarkan lubang. Nomor yang sama memakai source foto yang sama. */
+    const photoPromises=frameHoles.map((hole,holeIndex)=>{
+        const source=getHolePhotoSource(holeIndex);
 
-    const canvas =
-        document.getElementById(
-            canvasId
-        );
+        return new Promise(resolve=>{
+            if(!source||!hole){resolve();return;}
 
-    if(!canvas) return;
-
-
-    const ctx =
-        canvas.getContext(
-            '2d'
-        );
-
-
-    canvas.width =
-        finalFrameImageObj.width;
-
-
-    canvas.height =
-        finalFrameImageObj.height;
-
-
-    ctx.fillStyle =
-        '#ffffff';
-
-
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    ctx.filter = 'none';
-
-
-    const photoPromises =
-        capturedImages.map(
-            (
-                source,
-                index
-            ) => {
-
-                return new Promise(
-                    resolve => {
-
-                        if (!source) {
-
-                            resolve();
-
-                            return;
-
-                        }
-
-
-                        getEditorImage(source).then(image=>{
-                            const hole=frameHoles[index];
-                            if(hole){
-                                ctx.save();
-                                ctx.filter = capturedImageFilters[index] || 'none';
-                                drawImageIntoHole(ctx,image,hole,photoTransforms[index]||{scale:1,x:0,y:0});
-                                ctx.restore();
-                            }
-                            resolve();
-                        }).catch(()=>resolve());
-
-                    }
+            getEditorImage(source).then(image=>{
+                ctx.save();
+                ctx.filter=getHolePhotoFilter(holeIndex);
+                drawImageIntoHole(
+                    ctx,
+                    image,
+                    hole,
+                    photoTransforms[holeIndex]||{scale:1,x:0,y:0}
                 );
+                ctx.restore();
+                resolve();
+            }).catch(()=>resolve());
+        });
+    });
 
-            }
-        );
+    await Promise.all(photoPromises);
 
-
-    await Promise.all(
-        photoPromises
-    );
-
-
-    if (
-        withFrame
-    ) {
-
-        ctx.filter =
-            'none';
-
-
+    if(withFrame){
+        ctx.filter='none';
         ctx.drawImage(finalFrameImageObj,0,0,canvas.width,canvas.height);
     }
-    drawStickers(ctx,canvasId==='result-canvas');
-    if(canvasId==='result-canvas') initPreviewEditorDrag();
-}
 
+    drawStickers(ctx,canvasId==='result-canvas');
+    if(canvasId==='result-canvas')initPreviewEditorDrag();
+}
 
 /* =====================================================
    DOWNLOAD FRAME
@@ -4055,7 +3909,10 @@ async function processAndUploadSession() {
                 date: getDateString(),
                 frameImage: frameImageData,
                 individualImages: capturedImages,
-                gifImage: gifData
+                gifImage: gifData,
+                framePhotoMap: framePhotoMap,
+                framePhotoColors: framePhotoColors,
+                requiredPhotos: requiredPhotos
             })
         });
 
