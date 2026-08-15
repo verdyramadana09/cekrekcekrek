@@ -464,19 +464,22 @@
         }
 
         .frame-item {
-            flex: 0 0 auto;
-            width: min(380px, 32vw);
-            height: min(560px, 60vh);
-            background-color: #ddd;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: cover;
-            border-radius: 18px;
-            cursor: pointer;
-            border: 3px solid transparent;
-            position: relative;
-            transition: transform .2s ease, border-color .2s ease;
-        }
+        flex: 0 0 auto;
+        height: min(72vh, 700px);
+        width: auto;
+        background-color: #ddd;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center;
+        border-radius: 18px;
+        cursor: pointer;
+        border: 3px solid transparent;
+        position: relative;
+        box-sizing: border-box;
+        transition:
+            transform .2s ease,
+            border-color .2s ease;
+    }
 
         .frame-item:hover {
             transform: scale(1.025);
@@ -3399,7 +3402,7 @@ async function loadFramesFromGoogleDrive() {
             frameItem.className = 'frame-item google-drive-frame';
             frameItem.dataset.framePath = frame.url;
             frameItem.style.backgroundImage = `url("${frame.url}")`;
-            frameItem.style.backgroundSize = 'cover';
+            frameItem.style.backgroundSize = 'contain';
             frameItem.style.backgroundPosition = 'center';
             setupFrameThumbnailForeground(frameItem, frame.url);
             frameItem.title = frame.name || 'Frame';
