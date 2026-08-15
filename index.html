@@ -1534,6 +1534,7 @@
    Tidak ada lagi panel preview konfigurasi besar. */
 .user-frame-photo-overlay-container{position:absolute;inset:0;z-index:12;pointer-events:none;overflow:hidden;border-radius:15px}
 .user-frame-photo-overlay{position:absolute;display:flex;align-items:center;justify-content:center;border:3px solid;font-weight:900;font-size:clamp(12px,2vw,20px);line-height:1;text-shadow:0 1px 2px rgba(255,255,255,.95),0 0 3px rgba(255,255,255,.8);background:rgba(255,255,255,.12);border-radius:5px;pointer-events:none;box-sizing:border-box}
+.user-frame-photo-overlay-container{display:block}.user-frame-photo-overlay{min-width:18px;min-height:18px;}
 .frame-photo-config{display:none;width:min(1100px,94vw);margin:10px auto 0;background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 15px 45px rgba(13,71,161,.10)}
 .frame-photo-config.active{display:block}
 .frame-photo-config-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
@@ -2711,7 +2712,8 @@ function renderFramePhotoConfig(){
 ===================================================== */
 
 async function detectFrameHoles(
-    imgSrc
+    imgSrc,
+    returnMeta = false
 ) {
 
     return new Promise(
@@ -2723,8 +2725,10 @@ async function detectFrameHoles(
 
             img.onload = () => {
 
-                finalFrameImageObj =
-                    img;
+                if (!returnMeta) {
+                    finalFrameImageObj =
+                        img;
+                }
 
 
                 const canvas =
@@ -2983,7 +2987,13 @@ async function detectFrameHoles(
 
 
                 resolve(
-                    holes
+                    returnMeta
+                        ? {
+                            holes,
+                            width,
+                            height
+                        }
+                        : holes
                 );
 
             };
@@ -3158,6 +3168,127 @@ async function handleCustomFrameUpload(input) {
 }
 
 /* =====================================================
+   PRELOAD NOMOR + WARNA PADA SEMUA THUMBNAIL FRAME USER
+   Tidak perlu klik frame terlebih dahulu.
+===================================================== */
+async function renderFrameThumbnailConfig(frameItem, framePath) {
+    if (!frameItem || !framePath || isCekrekAdmin()) return;
+
+    try {
+        const meta = await detectFrameHoles(framePath, true);
+        const holes = Array.isArray(meta?.holes) ? meta.holes : [];
+        const width = Number(meta?.width) || 1;
+        const height = Number(meta?.height) || 1;
+
+        if (!holes.length) return;
+
+        // Tampilkan dulu nomor default (1,2,3,...) agar langsung terlihat.
+        // Setelah API selesai dibaca, overlay akan diperbarui mengikuti setting admin.
+        const renderOverlay = (map, colors) => {
+            const uniqueNumbers = [...new Set(map)].sort((a, b) => a - b);
+            const getLocalColor = (photoNumber) => {
+                const index = uniqueNumbers.indexOf(Number(photoNumber));
+                return index >= 0
+                    ? (colors[index] || DEFAULT_PHOTO_COLORS[index % DEFAULT_PHOTO_COLORS.length])
+                    : DEFAULT_PHOTO_COLORS[0];
+            };
+
+            let overlayContainer =
+                frameItem.querySelector('.user-frame-photo-overlay-container');
+
+            if (!overlayContainer) {
+                overlayContainer = document.createElement('div');
+                overlayContainer.className = 'user-frame-photo-overlay-container';
+                frameItem.appendChild(overlayContainer);
+            }
+
+            overlayContainer.innerHTML = '';
+
+            holes.forEach((hole, holeIndex) => {
+                const photoNumber = Number(map[holeIndex]);
+                const color = getLocalColor(photoNumber);
+
+                const overlay = document.createElement('div');
+                overlay.className = 'user-frame-photo-overlay';
+                overlay.style.left = `${hole.x / width * 100}%`;
+                overlay.style.top = `${hole.y / height * 100}%`;
+                overlay.style.width = `${hole.w / width * 100}%`;
+                overlay.style.height = `${hole.h / height * 100}%`;
+                overlay.style.borderColor = color;
+                overlay.style.backgroundColor = color + '22';
+                overlay.style.color = color;
+                overlay.textContent = photoNumber;
+                overlay.title = `Lubang ${holeIndex + 1} → Foto ${photoNumber}`;
+                overlayContainer.appendChild(overlay);
+            });
+        };
+
+        const defaultMap = holes.map((_, i) => i + 1);
+        const defaultUnique = [...new Set(defaultMap)].sort((a, b) => a - b);
+        const defaultColors = defaultUnique.map((_, i) =>
+            DEFAULT_PHOTO_COLORS[i % DEFAULT_PHOTO_COLORS.length]
+        );
+        renderOverlay(defaultMap, defaultColors);
+
+        const response = await fetch(
+            `/api/frame-config?framePath=${encodeURIComponent(framePath)}`,
+            {
+                method: 'GET',
+                cache: 'no-store'
+            }
+        );
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || `HTTP ${response.status}`);
+        }
+
+        const config = result.config || {};
+
+        let map = Array.isArray(config.photoMap) &&
+            config.photoMap.length === holes.length
+            ? config.photoMap.slice()
+            : holes.map((_, i) => i + 1);
+
+        map = map.map((value, index) => {
+            const n = parseInt(value, 10);
+            return Number.isFinite(n) && n >= 1 ? n : index + 1;
+        });
+
+        const uniqueNumbers = [...new Set(map)].sort((a, b) => a - b);
+        const oldColors = Array.isArray(config.colors) ? config.colors : [];
+        const colors = uniqueNumbers.map((number, index) =>
+            oldColors[index] ||
+            DEFAULT_PHOTO_COLORS[index % DEFAULT_PHOTO_COLORS.length]
+        );
+
+        renderOverlay(map, colors);
+    } catch (error) {
+        console.warn(
+            'Nomor/warna frame belum dapat ditampilkan pada thumbnail:',
+            framePath,
+            error
+        );
+    }
+}
+
+async function preloadAllFrameThumbnailConfigs() {
+    if (isCekrekAdmin()) return;
+
+    const frameItems = [
+        ...document.querySelectorAll('.frame-item[data-frame-path]')
+    ];
+
+    // Proses satu per satu supaya tidak membebani browser/server
+    // dan supaya deteksi frame tidak saling bertabrakan.
+    for (const frameItem of frameItems) {
+        const framePath = frameItem.dataset.framePath;
+        if (!framePath) continue;
+        await renderFrameThumbnailConfig(frameItem, framePath);
+    }
+}
+
+/* =====================================================
    LOAD FRAME DARI GOOGLE DRIVE
 ===================================================== */
 async function loadFramesFromGoogleDrive() {
@@ -3185,6 +3316,10 @@ async function loadFramesFromGoogleDrive() {
             };
             frameList.appendChild(frameItem);
         });
+
+        // Untuk user biasa, angka dan warna langsung muncul
+        // pada semua thumbnail tanpa perlu memilih frame dulu.
+        await preloadAllFrameThumbnailConfigs();
     } catch (error) {
         console.error('Gagal memuat frame dari Google Drive:', error);
     }
@@ -5020,3 +5155,4 @@ window.addEventListener('resize', () => {
 
 </script>
 </body>
+</html>
