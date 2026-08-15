@@ -1530,14 +1530,10 @@
 
 
 <style id="frame-photo-mapping-css">
-.frame-user-config-preview{display:none;width:min(760px,94vw);margin:10px auto 0;background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:18px;padding:14px;box-shadow:0 10px 30px rgba(13,71,161,.08)}
-.frame-user-config-preview.active{display:block}
-.frame-user-config-title{text-align:center;font-size:14px;font-weight:700;color:var(--blue-dark)}
-.frame-user-config-name{text-align:center;font-size:11px;color:#607d9b;margin:3px 0 10px}
-.frame-user-config-canvas{position:relative;width:min(360px,100%);margin:0 auto;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff}
-.frame-user-config-canvas img{width:100%;height:auto;display:block}
-.frame-user-config-overlay{position:absolute;display:flex;align-items:center;justify-content:center;border:3px solid;font-weight:900;font-size:clamp(12px,2vw,20px);text-shadow:0 1px 2px rgba(255,255,255,.95),0 0 3px rgba(255,255,255,.8);background:rgba(255,255,255,.12);border-radius:5px;pointer-events:none;box-sizing:border-box}
-.frame-user-config-status{text-align:center;font-size:11px;color:#607d9b;margin-top:8px}
+/* User biasa melihat nomor + warna langsung pada thumbnail frame.
+   Tidak ada lagi panel preview konfigurasi besar. */
+.user-frame-photo-overlay-container{position:absolute;inset:0;z-index:12;pointer-events:none;overflow:hidden;border-radius:15px}
+.user-frame-photo-overlay{position:absolute;display:flex;align-items:center;justify-content:center;border:3px solid;font-weight:900;font-size:clamp(12px,2vw,20px);line-height:1;text-shadow:0 1px 2px rgba(255,255,255,.95),0 0 3px rgba(255,255,255,.8);background:rgba(255,255,255,.12);border-radius:5px;pointer-events:none;box-sizing:border-box}
 .frame-photo-config{display:none;width:min(1100px,94vw);margin:10px auto 0;background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 15px 45px rgba(13,71,161,.10)}
 .frame-photo-config.active{display:block}
 .frame-photo-config-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
@@ -1696,6 +1692,7 @@
         >
             <div
                 class="frame-item"
+                data-frame-path="frame/default.png"
                 style="
                     background-image:
                     url('frame/default.png');
@@ -1712,17 +1709,6 @@
         </div>
 
         <button class="frame-scroll-btn right" onclick="scrollFrames(300)">›</button>
-    </div>
-
-    <!-- PREVIEW KONFIGURASI FRAME UNTUK USER BIASA (READ-ONLY) -->
-    <div id="frame-user-config-preview" class="frame-user-config-preview" aria-live="polite">
-        <div class="frame-user-config-title">Konfigurasi Frame Aktif</div>
-        <div id="frame-user-config-name" class="frame-user-config-name"></div>
-        <div id="frame-user-config-canvas" class="frame-user-config-canvas">
-            <img id="frame-user-config-image" src="" alt="Preview konfigurasi frame">
-            <div id="frame-user-config-overlays"></div>
-        </div>
-        <div id="frame-user-config-status" class="frame-user-config-status"></div>
     </div>
 
     <div id="frame-photo-config" class="frame-photo-config">
@@ -2196,10 +2182,6 @@ async function continueFromName() {
     if (panel && !isCekrek) {
         panel.classList.remove('active');
     }
-    const userPanel = document.getElementById('frame-user-config-preview');
-    if (userPanel) {
-        userPanel.classList.remove('active');
-    }
 
     nav('frame-screen');
 }
@@ -2388,28 +2370,29 @@ function resetCaptureStateForCurrentFrame(){
 }
 
 function renderUserFramePhotoConfig(){
-    const panel=document.getElementById('frame-user-config-preview');
-    const image=document.getElementById('frame-user-config-image');
-    const overlays=document.getElementById('frame-user-config-overlays');
-    const nameEl=document.getElementById('frame-user-config-name');
-    const status=document.getElementById('frame-user-config-status');
+    // User biasa tidak lagi melihat panel preview besar.
+    // Nomor + warna ditampilkan langsung di thumbnail frame yang dipilih.
+    const oldPanel=document.getElementById('frame-user-config-preview');
+    if(oldPanel)oldPanel.remove();
 
-    if(!panel||!image||!overlays)return;
-
-    // Admin sudah mempunyai panel edit sendiri. User biasa hanya melihat
-    // konfigurasi yang dikirim server dan tidak mendapatkan kontrol edit.
     if(isCekrekAdmin()||!selectedFramePath||!frameHoles.length||!finalFrameImageObj){
-        panel.classList.remove('active');
         return;
     }
 
-    panel.classList.add('active');
-    image.src=selectedFramePath;
-    overlays.innerHTML='';
+    const frameItem=[...document.querySelectorAll('.frame-item')].find(
+        item=>item.dataset.framePath===selectedFramePath
+    );
 
-    const frameName=selectedFramePath.split('/').pop().split('\\').pop();
-    if(nameEl)nameEl.textContent='Frame: '+frameName;
+    if(!frameItem)return;
 
+    let overlayContainer=frameItem.querySelector('.user-frame-photo-overlay-container');
+    if(!overlayContainer){
+        overlayContainer=document.createElement('div');
+        overlayContainer.className='user-frame-photo-overlay-container';
+        frameItem.appendChild(overlayContainer);
+    }
+
+    overlayContainer.innerHTML='';
     normalizeFramePhotoMap();
 
     frameHoles.forEach((hole,holeIndex)=>{
@@ -2417,7 +2400,7 @@ function renderUserFramePhotoConfig(){
         const color=getColorForPhotoNumber(photoNumber);
 
         const overlay=document.createElement('div');
-        overlay.className='frame-user-config-overlay';
+        overlay.className='user-frame-photo-overlay';
         overlay.style.left=`${hole.x/finalFrameImageObj.width*100}%`;
         overlay.style.top=`${hole.y/finalFrameImageObj.height*100}%`;
         overlay.style.width=`${hole.w/finalFrameImageObj.width*100}%`;
@@ -2427,12 +2410,8 @@ function renderUserFramePhotoConfig(){
         overlay.style.color=color;
         overlay.textContent=photoNumber;
         overlay.title=`Lubang ${holeIndex+1} → Foto ${photoNumber}`;
-        overlays.appendChild(overlay);
+        overlayContainer.appendChild(overlay);
     });
-
-    if(status){
-        status.textContent=`${frameHoles.length} lubang • ${requiredPhotos} foto • angka dan warna mengikuti pengaturan admin cekrek.`;
-    }
 }
 
 async function loadFramePhotoMapping(framePath){
@@ -3060,6 +3039,9 @@ async function selectFrame(
     selectedFramePath =
         framePath;
 
+    // Hapus indikator konfigurasi dari frame sebelumnya.
+    document.querySelectorAll('.user-frame-photo-overlay-container').forEach(el => el.remove());
+
 
     const button =
         document.getElementById(
@@ -3073,9 +3055,6 @@ async function selectFrame(
 
     button.innerText =
         'Memindai Frame...';
-
-    const userConfigPanel = document.getElementById('frame-user-config-preview');
-    if (userConfigPanel && !isCekrekAdmin()) userConfigPanel.classList.remove('active');
 
 
     try {
@@ -3196,6 +3175,7 @@ async function loadFramesFromGoogleDrive() {
             if (!frame.url) return;
             const frameItem = document.createElement('div');
             frameItem.className = 'frame-item google-drive-frame';
+            frameItem.dataset.framePath = frame.url;
             frameItem.style.backgroundImage = `url("${frame.url}")`;
             frameItem.style.backgroundSize = 'cover';
             frameItem.style.backgroundPosition = 'center';
@@ -5040,4 +5020,3 @@ window.addEventListener('resize', () => {
 
 </script>
 </body>
-</html>
