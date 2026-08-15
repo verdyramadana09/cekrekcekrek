@@ -7,7 +7,171 @@ const stream = require('stream');
 const crypto = require('crypto');
 
 const app = express();
+
 const PORT = process.env.PORT || 3000;
+
+
+// =====================================================
+// ADMIN
+// =====================================================
+
+const ADMIN_USERNAME = 'cekrek';
+
+const ADMIN_PASSWORD =
+    process.env.ADMIN_PASSWORD || '';
+
+const ADMIN_TOKEN_TTL_MS =
+    12 * 60 * 60 * 1000;
+
+const adminTokens = new Map();
+
+
+// =====================================================
+// FRAME CONFIG CACHE
+// =====================================================
+
+let frameConfigCache = null;
+let frameConfigCacheLoadedAt = 0;
+
+const FRAME_CONFIG_CACHE_TTL_MS = 5000;
+
+
+// =====================================================
+// GOOGLE DRIVE CONFIG
+// =====================================================
+
+const CLIENT_ID =
+    process.env.CLIENT_ID;
+
+const CLIENT_SECRET =
+    process.env.CLIENT_SECRET;
+
+const REFRESH_TOKEN =
+    process.env.REFRESH_TOKEN;
+
+const GOOGLE_DRIVE_FOLDER_ID =
+    process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+
+// =====================================================
+// ADMIN HELPER
+// =====================================================
+
+function isAdminName(value) {
+    return (
+        String(value || '')
+            .trim()
+            .toLowerCase() ===
+        ADMIN_USERNAME
+    );
+}
+
+
+function cleanupAdminTokens() {
+
+    const now = Date.now();
+
+    for (
+        const [token, data]
+        of adminTokens.entries()
+    ) {
+
+        if (
+            !data ||
+            data.expiresAt <= now
+        ) {
+
+            adminTokens.delete(token);
+
+        }
+
+    }
+
+}
+
+
+function createAdminToken() {
+
+    cleanupAdminTokens();
+
+    const token =
+        crypto
+            .randomBytes(32)
+            .toString('hex');
+
+    adminTokens.set(token, {
+
+        username:
+            ADMIN_USERNAME,
+
+        expiresAt:
+            Date.now() +
+            ADMIN_TOKEN_TTL_MS
+
+    });
+
+    return token;
+
+}
+
+
+function requireAdmin(
+    req,
+    res,
+    next
+) {
+
+    cleanupAdminTokens();
+
+    const auth =
+        String(
+            req.get('authorization') || ''
+        );
+
+    const token =
+        auth.startsWith('Bearer ')
+            ? auth
+                .slice(7)
+                .trim()
+            : '';
+
+    const session =
+        token
+            ? adminTokens.get(token)
+            : null;
+
+
+    if (
+        !session ||
+        session.username !==
+            ADMIN_USERNAME ||
+        session.expiresAt <=
+            Date.now()
+    ) {
+
+        return res
+            .status(403)
+            .json({
+
+                success: false,
+
+                message:
+                    'Akses admin diperlukan.'
+
+            });
+
+    }
+
+
+    req.adminName =
+        ADMIN_USERNAME;
+
+    req.adminToken =
+        token;
+
+    next();
+
+}
 
 
 // =====================================================
@@ -22,48 +186,9 @@ app.use(
     })
 );
 
-app.use(express.static(__dirname));
-
-
-// =====================================================
-// GOOGLE DRIVE CONFIG
-// =====================================================
-
-const CLIENT_ID = process.env.CLIENT_ID;
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
-const GOOGLE_DRIVE_FOLDER_ID =
-    process.env.GOOGLE_DRIVE_FOLDER_ID;
-
-
-// =====================================================
-// ADMIN CONFIG
-// =====================================================
-
-const ADMIN_USERNAME = 'cekrek';
-
-const ADMIN_PASSWORD =
-    process.env.ADMIN_PASSWORD || '';
-
-const ADMIN_SESSION_SECRET =
-    process.env.ADMIN_SESSION_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    'CHANGE_THIS_SECRET';
-
-
-// =====================================================
-// FRAME CONFIG FILE
-// =====================================================
-
-const FRAME_CONFIG_FILE_NAME =
-    'frame-config.json';
-
-let frameConfigFileId = null;
-
-let frameConfigCache = {
-    version: 1,
-    frames: {}
-};
+app.use(
+    express.static(__dirname)
+);
 
 
 // =====================================================
@@ -71,33 +196,43 @@ let frameConfigCache = {
 // =====================================================
 
 if (!CLIENT_ID) {
+
     console.error(
-        '❌ CLIENT_ID belum diatur di .env'
+        '❌ CLIENT_ID belum diatur.'
     );
+
 }
 
 if (!CLIENT_SECRET) {
+
     console.error(
-        '❌ CLIENT_SECRET belum diatur di .env'
+        '❌ CLIENT_SECRET belum diatur.'
     );
+
 }
 
 if (!REFRESH_TOKEN) {
+
     console.error(
-        '❌ REFRESH_TOKEN belum diatur di .env'
+        '❌ REFRESH_TOKEN belum diatur.'
     );
+
 }
 
 if (!GOOGLE_DRIVE_FOLDER_ID) {
+
     console.error(
-        '❌ GOOGLE_DRIVE_FOLDER_ID belum diatur di .env'
+        '❌ GOOGLE_DRIVE_FOLDER_ID belum diatur.'
     );
+
 }
 
 if (!ADMIN_PASSWORD) {
-    console.error(
-        '❌ ADMIN_PASSWORD belum diatur di .env'
+
+    console.warn(
+        '⚠️ ADMIN_PASSWORD belum diatur. Login cekrek tidak dapat digunakan.'
     );
+
 }
 
 
@@ -107,24 +242,37 @@ if (!ADMIN_PASSWORD) {
 
 const oauth2Client =
     new google.auth.OAuth2(
+
         CLIENT_ID,
+
         CLIENT_SECRET,
+
         'https://developers.google.com/oauthplayground'
+
     );
 
+
 oauth2Client.setCredentials({
-    refresh_token: REFRESH_TOKEN
+
+    refresh_token:
+        REFRESH_TOKEN
+
 });
 
 
 // =====================================================
-// GOOGLE DRIVE
+// GOOGLE DRIVE API
 // =====================================================
 
-const drive = google.drive({
-    version: 'v3',
-    auth: oauth2Client
-});
+const drive =
+    google.drive({
+
+        version: 'v3',
+
+        auth:
+            oauth2Client
+
+    });
 
 
 // =====================================================
@@ -132,10 +280,15 @@ const drive = google.drive({
 // =====================================================
 
 async function uploadBufferToDrive(
+
     buffer,
+
     fileName,
+
     mimeType,
+
     parentFolderId
+
 ) {
 
     const bufferStream =
@@ -143,51 +296,67 @@ async function uploadBufferToDrive(
 
     bufferStream.end(buffer);
 
+
     const uploaded =
         await drive.files.create({
 
             resource: {
-                name: fileName,
-                parents: [parentFolderId]
+
+                name:
+                    fileName,
+
+                parents: [
+                    parentFolderId
+                ]
+
             },
 
             media: {
-                mimeType: mimeType,
-                body: bufferStream
+
+                mimeType:
+                    mimeType,
+
+                body:
+                    bufferStream
+
             },
 
             fields:
                 'id,name,mimeType,webViewLink,webContentLink',
 
-            supportsAllDrives: true
+            supportsAllDrives:
+                true
 
         });
 
-
-    // -------------------------------------------------
-    // FILE BISA DIBACA
-    // -------------------------------------------------
 
     try {
 
         await drive.permissions.create({
 
-            fileId: uploaded.data.id,
+            fileId:
+                uploaded.data.id,
 
             requestBody: {
-                role: 'reader',
-                type: 'anyone'
+
+                role:
+                    'reader',
+
+                type:
+                    'anyone'
+
             },
 
-            supportsAllDrives: true
+            supportsAllDrives:
+                true
 
         });
 
-    } catch (error) {
+    } catch (permissionError) {
 
         console.error(
-            '⚠️ Permission Drive:',
-            error.message
+            '⚠️ Permission Google Drive:',
+            permissionError.message
         );
 
     }
@@ -195,17 +364,22 @@ async function uploadBufferToDrive(
 
     return {
 
-        id: uploaded.data.id,
+        id:
+            uploaded.data.id,
 
-        name: uploaded.data.name,
+        name:
+            uploaded.data.name,
 
-        mimeType: uploaded.data.mimeType,
+        mimeType:
+            uploaded.data.mimeType,
 
         webViewLink:
-            uploaded.data.webViewLink || null,
+            uploaded.data.webViewLink ||
+            null,
 
         webContentLink:
-            uploaded.data.webContentLink || null
+            uploaded.data.webContentLink ||
+            null
 
     };
 
@@ -213,7 +387,7 @@ async function uploadBufferToDrive(
 
 
 // =====================================================
-// CARI / BUAT FOLDER FRAME
+// FOLDER FRAME
 // =====================================================
 
 async function getOrCreateFrameFolder() {
@@ -230,9 +404,11 @@ async function getOrCreateFrameFolder() {
             fields:
                 'files(id,name)',
 
-            supportsAllDrives: true,
+            supportsAllDrives:
+                true,
 
-            includeItemsFromAllDrives: true
+            includeItemsFromAllDrives:
+                true
 
         });
 
@@ -252,7 +428,8 @@ async function getOrCreateFrameFolder() {
 
             resource: {
 
-                name: 'frame',
+                name:
+                    'frame',
 
                 mimeType:
                     'application/vnd.google-apps.folder',
@@ -263,9 +440,11 @@ async function getOrCreateFrameFolder() {
 
             },
 
-            fields: 'id,name',
+            fields:
+                'id,name',
 
-            supportsAllDrives: true
+            supportsAllDrives:
+                true
 
         });
 
@@ -276,7 +455,7 @@ async function getOrCreateFrameFolder() {
 
 
 // =====================================================
-// CARI / BUAT FOLDER STICKER
+// FOLDER STICKER
 // =====================================================
 
 async function getOrCreateStickerFolder() {
@@ -293,9 +472,11 @@ async function getOrCreateStickerFolder() {
             fields:
                 'files(id,name)',
 
-            supportsAllDrives: true,
+            supportsAllDrives:
+                true,
 
-            includeItemsFromAllDrives: true
+            includeItemsFromAllDrives:
+                true
 
         });
 
@@ -315,7 +496,8 @@ async function getOrCreateStickerFolder() {
 
             resource: {
 
-                name: 'sticker',
+                name:
+                    'sticker',
 
                 mimeType:
                     'application/vnd.google-apps.folder',
@@ -326,9 +508,11 @@ async function getOrCreateStickerFolder() {
 
             },
 
-            fields: 'id,name',
+            fields:
+                'id,name',
 
-            supportsAllDrives: true
+            supportsAllDrives:
+                true
 
         });
 
@@ -336,6 +520,738 @@ async function getOrCreateStickerFolder() {
     return folder.data.id;
 
 }
+
+
+// =====================================================
+// FRAME CONFIG FILE
+// =====================================================
+
+async function getOrCreateFrameConfigFile(
+    frameFolderId
+) {
+
+    const response =
+        await drive.files.list({
+
+            q:
+                `name = 'frame-config.json' ` +
+                `and '${frameFolderId}' in parents ` +
+                `and mimeType = 'application/json' ` +
+                `and trashed = false`,
+
+            fields:
+                'files(id,name,mimeType,modifiedTime)',
+
+            orderBy:
+                'modifiedTime desc',
+
+            pageSize:
+                10,
+
+            supportsAllDrives:
+                true,
+
+            includeItemsFromAllDrives:
+                true
+
+        });
+
+
+    if (
+        response.data.files &&
+        response.data.files.length
+    ) {
+
+        return response.data.files[0];
+
+    }
+
+
+    const initialData = {
+
+        version:
+            1,
+
+        frames:
+            {},
+
+        updatedAt:
+            null
+
+    };
+
+
+    const created =
+        await drive.files.create({
+
+            resource: {
+
+                name:
+                    'frame-config.json',
+
+                mimeType:
+                    'application/json',
+
+                parents: [
+                    frameFolderId
+                ]
+
+            },
+
+            media: {
+
+                mimeType:
+                    'application/json',
+
+                body:
+                    stream.Readable.from([
+
+                        JSON.stringify(
+                            initialData,
+                            null,
+                            2
+                        )
+
+                    ])
+
+            },
+
+            fields:
+                'id,name,mimeType,modifiedTime',
+
+            supportsAllDrives:
+                true
+
+        });
+
+
+    return created.data;
+
+}
+
+
+// =====================================================
+// BACA FRAME CONFIG
+// =====================================================
+
+async function readFrameConfigStore() {
+
+    const now =
+        Date.now();
+
+
+    if (
+
+        frameConfigCache &&
+
+        now -
+        frameConfigCacheLoadedAt <
+        FRAME_CONFIG_CACHE_TTL_MS
+
+    ) {
+
+        return frameConfigCache;
+
+    }
+
+
+    const frameFolderId =
+        await getOrCreateFrameFolder();
+
+
+    const configFile =
+        await getOrCreateFrameConfigFile(
+            frameFolderId
+        );
+
+
+    try {
+
+        const response =
+            await drive.files.get({
+
+                fileId:
+                    configFile.id,
+
+                alt:
+                    'media',
+
+                supportsAllDrives:
+                    true
+
+            });
+
+
+        const data =
+            response.data &&
+            typeof response.data ===
+                'object'
+
+                ? response.data
+
+                : {};
+
+
+        frameConfigCache = {
+
+            version:
+                Number(data.version) ||
+                1,
+
+            frames:
+                data.frames &&
+                typeof data.frames ===
+                    'object'
+
+                    ? data.frames
+
+                    : {},
+
+            updatedAt:
+                data.updatedAt ||
+                null
+
+        };
+
+    } catch (error) {
+
+        console.warn(
+
+            '⚠️ frame-config.json belum dapat dibaca:',
+
+            error.message
+
+        );
+
+
+        frameConfigCache = {
+
+            version:
+                1,
+
+            frames:
+                {},
+
+            updatedAt:
+                null
+
+        };
+
+    }
+
+
+    frameConfigCacheLoadedAt =
+        now;
+
+
+    return frameConfigCache;
+
+}
+
+
+// =====================================================
+// SIMPAN FRAME CONFIG
+// =====================================================
+
+async function writeFrameConfigStore(
+    store
+) {
+
+    const frameFolderId =
+        await getOrCreateFrameFolder();
+
+
+    const configFile =
+        await getOrCreateFrameConfigFile(
+            frameFolderId
+        );
+
+
+    const payload = {
+
+        version:
+            1,
+
+        frames:
+            store.frames &&
+            typeof store.frames ===
+                'object'
+
+                ? store.frames
+
+                : {},
+
+        updatedAt:
+            new Date().toISOString()
+
+    };
+
+
+    await drive.files.update({
+
+        fileId:
+            configFile.id,
+
+        media: {
+
+            mimeType:
+                'application/json',
+
+            body:
+                stream.Readable.from([
+
+                    JSON.stringify(
+                        payload,
+                        null,
+                        2
+                    )
+
+                ])
+
+        },
+
+        fields:
+            'id,name,modifiedTime',
+
+        supportsAllDrives:
+            true
+
+    });
+
+
+    frameConfigCache =
+        payload;
+
+    frameConfigCacheLoadedAt =
+        Date.now();
+
+
+    return payload;
+
+}
+
+
+// =====================================================
+// NORMALISASI CONFIG FRAME
+// =====================================================
+
+function normalizeFrameConfigPayload(
+    body
+) {
+
+    const framePath =
+        String(
+            body?.framePath || ''
+        ).trim();
+
+
+    if (
+        !framePath ||
+        framePath.length > 2000
+    ) {
+
+        throw new Error(
+            'framePath tidak valid.'
+        );
+
+    }
+
+
+    if (
+        !Array.isArray(
+            body?.photoMap
+        ) ||
+        !body.photoMap.length
+    ) {
+
+        throw new Error(
+            'photoMap tidak valid.'
+        );
+
+    }
+
+
+    const photoMap =
+        body.photoMap.map(
+            (value, index) => {
+
+                const number =
+                    Number.parseInt(
+                        value,
+                        10
+                    );
+
+
+                if (
+                    !Number.isFinite(
+                        number
+                    ) ||
+                    number < 1
+                ) {
+
+                    throw new Error(
+
+                        `Nomor foto pada lubang ${index + 1} tidak valid.`
+
+                    );
+
+                }
+
+
+                return number;
+
+            }
+        );
+
+
+    const colors =
+        Array.isArray(
+            body.colors
+        )
+
+            ? body.colors.map(
+                value => {
+
+                    const color =
+                        String(
+                            value || ''
+                        ).trim();
+
+
+                    return /^#[0-9a-fA-F]{6}$/
+                        .test(color)
+
+                        ? color
+
+                        : '#1976d2';
+
+                }
+            )
+
+            : [];
+
+
+    return {
+
+        framePath,
+
+        photoMap,
+
+        colors,
+
+        updatedAt:
+            new Date().toISOString()
+
+    };
+
+}
+
+
+// =====================================================
+// ADMIN LOGIN
+// =====================================================
+//
+// INI ENDPOINT YANG DIPANGGIL HTML:
+// POST /api/admin/frame-login
+//
+// =====================================================
+
+app.post(
+    '/api/admin/frame-login',
+    (req, res) => {
+
+        const {
+            username,
+            password
+        } = req.body || {};
+
+
+        if (!ADMIN_PASSWORD) {
+
+            return res
+                .status(503)
+                .json({
+
+                    success:
+                        false,
+
+                    message:
+                        'ADMIN_PASSWORD belum diatur di environment server.'
+
+                });
+
+        }
+
+
+        if (
+            !isAdminName(username) ||
+            String(password || '') !==
+                String(ADMIN_PASSWORD)
+        ) {
+
+            return res
+                .status(403)
+                .json({
+
+                    success:
+                        false,
+
+                    message:
+                        'Username atau password admin salah.'
+
+                });
+
+        }
+
+
+        const token =
+            createAdminToken();
+
+
+        return res.json({
+
+            success:
+                true,
+
+            username:
+                ADMIN_USERNAME,
+
+            token,
+
+            expiresIn:
+                ADMIN_TOKEN_TTL_MS
+
+        });
+
+    }
+);
+
+
+// =====================================================
+// ADMIN LOGOUT
+// =====================================================
+
+app.post(
+    '/api/admin/frame-logout',
+    requireAdmin,
+    (req, res) => {
+
+        adminTokens.delete(
+            req.adminToken
+        );
+
+
+        res.json({
+
+            success:
+                true
+
+        });
+
+    }
+);
+
+
+// =====================================================
+// GET FRAME CONFIG
+// =====================================================
+//
+// USER BIASA BOLEH MEMBACA.
+//
+// HTML MEMANG MEMANGGIL:
+//
+// /api/frame-config?framePath=...
+//
+// Saya juga izinkan GET tanpa framePath
+// agar endpoint bisa mengembalikan semua konfigurasi.
+//
+// =====================================================
+
+app.get(
+    '/api/frame-config',
+    async (req, res) => {
+
+        try {
+
+            const framePath =
+                String(
+                    req.query.framePath ||
+                    ''
+                ).trim();
+
+
+            const store =
+                await readFrameConfigStore();
+
+
+            // -------------------------------------------------
+            // JIKA framePath DIKIRIM
+            // -------------------------------------------------
+
+            if (framePath) {
+
+                const config =
+                    store.frames[
+                        framePath
+                    ] || null;
+
+
+                return res.json({
+
+                    success:
+                        true,
+
+                    config
+
+                });
+
+            }
+
+
+            // -------------------------------------------------
+            // JIKA TIDAK ADA framePath
+            // -------------------------------------------------
+
+            return res.json({
+
+                success:
+                    true,
+
+                version:
+                    store.version || 1,
+
+                frames:
+                    store.frames || {}
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                '❌ Error membaca konfigurasi frame:',
+                error
+            );
+
+
+            return res
+                .status(500)
+                .json({
+
+                    success:
+                        false,
+
+                    message:
+                        'Gagal membaca konfigurasi frame.',
+
+                    error:
+                        error.message
+
+                });
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// SAVE FRAME CONFIG
+// =====================================================
+//
+// HANYA CEKREK.
+//
+// HTML MEMANG MENGIRIM:
+//
+// POST /api/frame-config
+//
+// Authorization: Bearer TOKEN
+//
+// =====================================================
+
+app.post(
+    '/api/frame-config',
+    requireAdmin,
+    async (req, res) => {
+
+        try {
+
+            const config =
+                normalizeFrameConfigPayload(
+                    req.body || {}
+                );
+
+
+            const store =
+                await readFrameConfigStore();
+
+
+            store.frames[
+                config.framePath
+            ] = {
+
+                photoMap:
+                    config.photoMap,
+
+                colors:
+                    config.colors,
+
+                updatedAt:
+                    config.updatedAt,
+
+                updatedBy:
+                    ADMIN_USERNAME
+
+            };
+
+
+            const saved =
+                await writeFrameConfigStore(
+                    store
+                );
+
+
+            res.json({
+
+                success:
+                    true,
+
+                config:
+                    saved.frames[
+                        config.framePath
+                    ]
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                '❌ Error menyimpan konfigurasi frame:',
+                error
+            );
+
+
+            res
+                .status(500)
+                .json({
+
+                    success:
+                        false,
+
+                    message:
+                        error.message ||
+                        'Gagal menyimpan konfigurasi frame.',
+
+                    error:
+                        error.message
+
+                });
+
+        }
+
+    }
+);
 
 
 // =====================================================
@@ -351,6 +1267,7 @@ app.get(
             const fileId =
                 req.params.fileId;
 
+
             if (!fileId) {
 
                 return res
@@ -365,12 +1282,13 @@ app.get(
             const metadata =
                 await drive.files.get({
 
-                    fileId: fileId,
+                    fileId,
 
                     fields:
                         'id,name,mimeType,size',
 
-                    supportsAllDrives: true
+                    supportsAllDrives:
+                        true
 
                 });
 
@@ -381,13 +1299,15 @@ app.get(
 
             if (
                 !mimeType ||
-                !mimeType.startsWith('image/')
+                !mimeType.startsWith(
+                    'image/'
+                )
             ) {
 
                 return res
                     .status(400)
                     .send(
-                        'File bukan gambar'
+                        'File yang diminta bukan gambar.'
                     );
 
             }
@@ -397,15 +1317,22 @@ app.get(
                 await drive.files.get(
 
                     {
-                        fileId: fileId,
 
-                        alt: 'media',
+                        fileId,
 
-                        supportsAllDrives: true
+                        alt:
+                            'media',
+
+                        supportsAllDrives:
+                            true
+
                     },
 
                     {
-                        responseType: 'stream'
+
+                        responseType:
+                            'stream'
+
                     }
 
                 );
@@ -416,9 +1343,10 @@ app.get(
                 mimeType
             );
 
+
             res.setHeader(
                 'Cache-Control',
-                'public,max-age=3600'
+                'public, max-age=3600'
             );
 
 
@@ -428,17 +1356,19 @@ app.get(
         } catch (error) {
 
             console.error(
-                '❌ Error frame:',
+                '❌ Error mengambil frame:',
                 error
             );
 
 
-            if (!res.headersSent) {
+            if (
+                !res.headersSent
+            ) {
 
                 res
                     .status(500)
                     .send(
-                        'Gagal mengambil frame'
+                        'Gagal mengambil frame dari Google Drive'
                     );
 
             }
@@ -460,64 +1390,90 @@ app.post(
         try {
 
             const {
-                sessionName: clientSessionName,
+
+                sessionName:
+                    clientSessionName,
+
                 date,
+
                 frameImage,
+
                 individualImages,
+
                 gifImage
+
             } = req.body;
 
 
             const safeSessionName =
                 String(
+
                     clientSessionName ||
                     `Sesi_${Date.now()}`
+
                 )
+
                     .trim()
+
                     .replace(
                         /[<>:"/\\|?*]+/g,
                         ''
                     )
+
                     .replace(
                         /\s+/g,
                         '_'
                     )
+
                     .replace(
                         /_+/g,
                         '_'
                     )
+
                     .replace(
                         /^_+|_+$/g,
                         ''
                     )
-                    .substring(0, 80)
+
+                    .substring(
+                        0,
+                        80
+                    )
+
                     ||
                     `Sesi_${Date.now()}`;
 
 
             const safeDate =
-                String(date || '')
+                String(
+                    date || ''
+                )
+
                     .trim()
+
                     .replace(
                         /[<>:"/\\|?*]+/g,
                         ''
                     )
+
                     .replace(
                         /\s+/g,
                         '_'
                     )
-                    .substring(0, 30);
+
+                    .substring(
+                        0,
+                        30
+                    );
 
 
-            const sessionFolderName =
+            const sessionName =
                 safeDate
+
                     ? `${safeSessionName}_${safeDate}`
+
                     : safeSessionName;
 
-
-            // -------------------------------------------------
-            // BUAT FOLDER SESSION
-            // -------------------------------------------------
 
             const folder =
                 await drive.files.create({
@@ -525,7 +1481,7 @@ app.post(
                     resource: {
 
                         name:
-                            sessionFolderName,
+                            sessionName,
 
                         mimeType:
                             'application/vnd.google-apps.folder',
@@ -539,7 +1495,8 @@ app.post(
                     fields:
                         'id,webViewLink',
 
-                    supportsAllDrives: true
+                    supportsAllDrives:
+                        true
 
                 });
 
@@ -549,12 +1506,12 @@ app.post(
 
 
             // -------------------------------------------------
-            // FRAME HASIL
+            // HASIL FRAME
             // -------------------------------------------------
 
             if (frameImage) {
 
-                const buffer =
+                const frameBuffer =
                     Buffer.from(
 
                         frameImage.replace(
@@ -569,7 +1526,7 @@ app.post(
 
                 await uploadBufferToDrive(
 
-                    buffer,
+                    frameBuffer,
 
                     'Hasil_Frame.png',
 
@@ -594,11 +1551,14 @@ app.post(
 
                 for (
                     let i = 0;
-                    i < individualImages.length;
+
+                    i <
+                    individualImages.length;
+
                     i++
                 ) {
 
-                    const buffer =
+                    const singleBuffer =
                         Buffer.from(
 
                             individualImages[i]
@@ -614,7 +1574,7 @@ app.post(
 
                     await uploadBufferToDrive(
 
-                        buffer,
+                        singleBuffer,
 
                         `Foto_Satuan_${i + 1}.png`,
 
@@ -635,7 +1595,7 @@ app.post(
 
             if (gifImage) {
 
-                const buffer =
+                const gifBuffer =
                     Buffer.from(
 
                         gifImage.replace(
@@ -650,7 +1610,7 @@ app.post(
 
                 await uploadBufferToDrive(
 
-                    buffer,
+                    gifBuffer,
 
                     'Animasi_Live.gif',
 
@@ -665,7 +1625,8 @@ app.post(
 
             res.json({
 
-                success: true,
+                success:
+                    true,
 
                 folder_link:
                     folder.data.webViewLink
@@ -685,7 +1646,8 @@ app.post(
                 .status(500)
                 .json({
 
-                    success: false,
+                    success:
+                        false,
 
                     message:
                         'Gagal membuat folder',
@@ -702,24 +1664,27 @@ app.post(
 
 
 // =====================================================
-// UPLOAD CUSTOM FRAME
+// UPLOAD FRAME
 // =====================================================
 //
-// Untuk keamanan, endpoint ini sekarang juga wajib
-// memakai token admin cekrek.
+// HANYA CEKREK.
+// HTML SUDAH MENGIRIM Bearer adminToken.
 //
 // =====================================================
 
 app.post(
     '/upload-frame',
-    requireFrameAdmin,
+    requireAdmin,
     async (req, res) => {
 
         try {
 
             const {
+
                 frameName,
+
                 frameData
+
             } = req.body;
 
 
@@ -729,7 +1694,8 @@ app.post(
                     .status(400)
                     .json({
 
-                        success: false,
+                        success:
+                            false,
 
                         message:
                             'Data frame tidak ditemukan'
@@ -745,15 +1711,21 @@ app.post(
 
             const base64Clean =
                 frameData.replace(
+
                     /^data:image\/\w+;base64,/,
+
                     ''
+
                 );
 
 
             const frameBuffer =
                 Buffer.from(
+
                     base64Clean,
+
                     'base64'
+
                 );
 
 
@@ -766,7 +1738,8 @@ app.post(
                     .status(400)
                     .json({
 
-                        success: false,
+                        success:
+                            false,
 
                         message:
                             'Data gambar tidak valid'
@@ -822,13 +1795,19 @@ app.post(
             );
 
             console.log(
+                'URL:',
+                frameUrl
+            );
+
+            console.log(
                 '=========================================='
             );
 
 
             res.json({
 
-                success: true,
+                success:
+                    true,
 
                 frame_id:
                     fileId,
@@ -854,10 +1833,11 @@ app.post(
                 .status(500)
                 .json({
 
-                    success: false,
+                    success:
+                        false,
 
                     message:
-                        'Gagal mengunggah frame',
+                        'Gagal mengunggah frame ke Google Drive',
 
                     error:
                         error.message
@@ -897,7 +1877,8 @@ app.get(
                     orderBy:
                         'createdTime',
 
-                    supportsAllDrives: true,
+                    supportsAllDrives:
+                        true,
 
                     includeItemsFromAllDrives:
                         true
@@ -910,10 +1891,13 @@ app.get(
 
                     .filter(
                         file =>
+
                             file.mimeType &&
+
                             file.mimeType.startsWith(
                                 'image/'
                             )
+
                     )
 
                     .map(
@@ -935,9 +1919,15 @@ app.get(
                     );
 
 
+            console.log(
+                `📷 ${frames.length} frame ditemukan di Google Drive`
+            );
+
+
             res.json({
 
-                success: true,
+                success:
+                    true,
 
                 frames
 
@@ -956,7 +1946,8 @@ app.get(
                 .status(500)
                 .json({
 
-                    success: false,
+                    success:
+                        false,
 
                     message:
                         'Gagal memuat daftar frame',
@@ -976,21 +1967,23 @@ app.get(
 // UPLOAD STICKER
 // =====================================================
 //
-// SEKARANG HANYA ADMIN CEKREK
-// YANG BOLEH MENGUPLOAD STICKER.
+// HANYA CEKREK
 //
 // =====================================================
 
 app.post(
     '/upload-sticker',
-    requireFrameAdmin,
+    requireAdmin,
     async (req, res) => {
 
         try {
 
             const {
+
                 stickerName,
+
                 stickerData
+
             } = req.body;
 
 
@@ -1000,7 +1993,8 @@ app.post(
                     .status(400)
                     .json({
 
-                        success: false,
+                        success:
+                            false,
 
                         message:
                             'Data sticker tidak ditemukan'
@@ -1016,15 +2010,21 @@ app.post(
 
             const base64Clean =
                 stickerData.replace(
+
                     /^data:image\/\w+;base64,/,
+
                     ''
+
                 );
 
 
             const stickerBuffer =
                 Buffer.from(
+
                     base64Clean,
+
                     'base64'
+
                 );
 
 
@@ -1037,7 +2037,8 @@ app.post(
                     .status(400)
                     .json({
 
-                        success: false,
+                        success:
+                            false,
 
                         message:
                             'Data sticker tidak valid'
@@ -1077,9 +2078,42 @@ app.post(
                 );
 
 
+            const stickerUrl =
+                `/frame/${uploaded.id}`;
+
+
+            console.log(
+                '=========================================='
+            );
+
+            console.log(
+                '✅ STICKER PNG BERHASIL DIUPLOAD'
+            );
+
+            console.log(
+                'Nama:',
+                uploaded.name
+            );
+
+            console.log(
+                'ID:',
+                uploaded.id
+            );
+
+            console.log(
+                'URL:',
+                stickerUrl
+            );
+
+            console.log(
+                '=========================================='
+            );
+
+
             res.json({
 
-                success: true,
+                success:
+                    true,
 
                 sticker_id:
                     uploaded.id,
@@ -1088,7 +2122,7 @@ app.post(
                     uploaded.name,
 
                 sticker_url:
-                    `/frame/${uploaded.id}`
+                    stickerUrl
 
             });
 
@@ -1105,10 +2139,11 @@ app.post(
                 .status(500)
                 .json({
 
-                    success: false,
+                    success:
+                        false,
 
                     message:
-                        'Gagal mengunggah sticker',
+                        'Gagal mengunggah sticker ke Google Drive',
 
                     error:
                         error.message
@@ -1148,7 +2183,8 @@ app.get(
                     orderBy:
                         'createdTime',
 
-                    supportsAllDrives: true,
+                    supportsAllDrives:
+                        true,
 
                     includeItemsFromAllDrives:
                         true
@@ -1161,10 +2197,13 @@ app.get(
 
                     .filter(
                         file =>
+
                             file.mimeType &&
+
                             file.mimeType.startsWith(
                                 'image/'
                             )
+
                     )
 
                     .map(
@@ -1186,9 +2225,15 @@ app.get(
                     );
 
 
+            console.log(
+                `🎨 ${stickers.length} sticker ditemukan di Google Drive`
+            );
+
+
             res.json({
 
-                success: true,
+                success:
+                    true,
 
                 stickers
 
@@ -1207,7 +2252,8 @@ app.get(
                 .status(500)
                 .json({
 
-                    success: false,
+                    success:
+                        false,
 
                     message:
                         'Gagal memuat daftar sticker',
@@ -1224,680 +2270,23 @@ app.get(
 
 
 // =====================================================
-// FRAME CONFIGURATION API
-// =====================================================
-//
-// FORMAT DATA:
-//
-// {
-//   "photoMap": [1,2,1,3],
-//   "colors": ["#ff0000","#0000ff","#00ff00"]
-// }
-//
-// photoMap = nomor foto untuk setiap lubang.
-// colors  = warna berdasarkan nomor foto.
-//
-// User biasa:
-// GET.
-//
-// Admin cekrek:
-// LOGIN + PUT/DELETE.
-//
-// =====================================================
-
-
-// =====================================================
-// BANDINGKAN STRING SECARA AMAN
-// =====================================================
-
-function safeEqualText(a, b) {
-
-    const aa =
-        Buffer.from(
-            String(a || '')
-        );
-
-    const bb =
-        Buffer.from(
-            String(b || '')
-        );
-
-
-    if (
-        aa.length !== bb.length
-    ) {
-
-        return false;
-
-    }
-
-
-    return crypto.timingSafeEqual(
-        aa,
-        bb
-    );
-
-}
-
-
-// =====================================================
-// BUAT TOKEN ADMIN
-// =====================================================
-
-function createAdminToken() {
-
-    const payload = {
-
-        username:
-            ADMIN_USERNAME,
-
-        expires:
-            Date.now() +
-            (12 * 60 * 60 * 1000)
-
-    };
-
-
-    const body =
-        Buffer
-            .from(
-                JSON.stringify(payload)
-            )
-            .toString(
-                'base64url'
-            );
-
-
-    const signature =
-        crypto
-            .createHmac(
-                'sha256',
-                ADMIN_SESSION_SECRET
-            )
-            .update(body)
-            .digest(
-                'base64url'
-            );
-
-
-    return `${body}.${signature}`;
-
-}
-
-
-// =====================================================
-// VALIDASI TOKEN ADMIN
-// =====================================================
-
-function verifyAdminToken(token) {
-
-    try {
-
-        if (
-            !token ||
-            typeof token !== 'string'
-        ) {
-
-            return false;
-
-        }
-
-
-        const parts =
-            token.split('.');
-
-
-        if (
-            parts.length !== 2
-        ) {
-
-            return false;
-
-        }
-
-
-        const body =
-            parts[0];
-
-        const signature =
-            parts[1];
-
-
-        const expected =
-            crypto
-                .createHmac(
-                    'sha256',
-                    ADMIN_SESSION_SECRET
-                )
-                .update(body)
-                .digest(
-                    'base64url'
-                );
-
-
-        if (
-            !safeEqualText(
-                signature,
-                expected
-            )
-        ) {
-
-            return false;
-
-        }
-
-
-        const payload =
-            JSON.parse(
-
-                Buffer
-                    .from(
-                        body,
-                        'base64url'
-                    )
-                    .toString(
-                        'utf8'
-                    )
-
-            );
-
-
-        return (
-            payload &&
-            payload.username ===
-                ADMIN_USERNAME &&
-            Number(payload.expires) >
-                Date.now()
-        );
-
-
-    } catch (error) {
-
-        return false;
-
-    }
-
-}
-
-
-// =====================================================
-// MIDDLEWARE ADMIN
-// =====================================================
-
-function requireFrameAdmin(
-    req,
-    res,
-    next
-) {
-
-    const authorization =
-        req.headers.authorization || '';
-
-
-    const token =
-        authorization.startsWith(
-            'Bearer '
-        )
-            ? authorization
-                .slice(7)
-                .trim()
-            : '';
-
-
-    if (
-        !verifyAdminToken(token)
-    ) {
-
-        return res
-            .status(401)
-            .json({
-
-                success: false,
-
-                message:
-                    'Akses admin diperlukan.'
-
-            });
-
-    }
-
-
-    next();
-
-}
-
-
-// =====================================================
-// NORMALISASI KEY FRAME
-// =====================================================
-
-function normalizeFrameKey(value) {
-
-    return String(value || '')
-        .trim()
-        .replace(
-            /\\/g,
-            '/'
-        )
-        .replace(
-            /^\/+|\/+$/g,
-            ''
-        );
-
-}
-
-
-// =====================================================
-// NORMALISASI CONFIG FRAME
-// =====================================================
-
-function normalizeFrameConfig(frame) {
-
-    const source =
-        frame &&
-        typeof frame === 'object'
-            ? frame
-            : {};
-
-
-    const photoMap =
-        Array.isArray(
-            source.photoMap
-        )
-
-            ? source.photoMap.map(
-                (value, index) => {
-
-                    const number =
-                        parseInt(
-                            value,
-                            10
-                        );
-
-
-                    return (
-                        Number.isFinite(
-                            number
-                        ) &&
-                        number >= 1
-                    )
-                        ? number
-                        : index + 1;
-
-                }
-            )
-
-            : [];
-
-
-    const colors =
-        Array.isArray(
-            source.colors
-        )
-
-            ? source.colors.map(
-                value =>
-                    String(
-                        value || ''
-                    ).trim()
-            )
-
-            : [];
-
-
-    return {
-
-        photoMap,
-
-        colors,
-
-        updatedAt:
-            source.updatedAt ||
-            new Date().toISOString()
-
-    };
-
-}
-
-
-// =====================================================
-// CARI FILE KONFIGURASI FRAME
-// =====================================================
-
-async function findFrameConfigFile() {
-
-    if (
-        frameConfigFileId
-    ) {
-
-        return frameConfigFileId;
-
-    }
-
-
-    const response =
-        await drive.files.list({
-
-            q:
-                `'${GOOGLE_DRIVE_FOLDER_ID}' in parents ` +
-                `and name = '${FRAME_CONFIG_FILE_NAME}' ` +
-                `and trashed = false`,
-
-            fields:
-                'files(id,name,mimeType)',
-
-            pageSize: 10,
-
-            supportsAllDrives: true,
-
-            includeItemsFromAllDrives:
-                true
-
-        });
-
-
-    const file =
-        response.data.files &&
-        response.data.files[0];
-
-
-    if (
-        file &&
-        file.id
-    ) {
-
-        frameConfigFileId =
-            file.id;
-
-        return file.id;
-
-    }
-
-
-    return null;
-
-}
-
-
-// =====================================================
-// BACA CONFIG DARI GOOGLE DRIVE
-// =====================================================
-
-async function readFrameConfigFromDrive() {
-
-    const fileId =
-        await findFrameConfigFile();
-
-
-    if (!fileId) {
-
-        frameConfigCache = {
-
-            version: 1,
-
-            frames: {}
-
-        };
-
-
-        return frameConfigCache;
-
-    }
-
-
-    const response =
-        await drive.files.get({
-
-            fileId,
-
-            alt: 'media',
-
-            supportsAllDrives: true
-
-        });
-
-
-    const data =
-        response.data &&
-        typeof response.data === 'object'
-            ? response.data
-            : {};
-
-
-    frameConfigCache = {
-
-        version: 1,
-
-        frames:
-            data.frames &&
-            typeof data.frames === 'object'
-                ? data.frames
-                : {}
-
-    };
-
-
-    return frameConfigCache;
-
-}
-
-
-// =====================================================
-// SIMPAN CONFIG KE GOOGLE DRIVE
-// =====================================================
-
-async function saveFrameConfigToDrive(
-    config
-) {
-
-    const body =
-        JSON.stringify(
-            config,
-            null,
-            2
-        );
-
-
-    const bodyStream =
-        new stream.PassThrough();
-
-
-    bodyStream.end(
-        Buffer.from(
-            body,
-            'utf8'
-        )
-    );
-
-
-    const fileId =
-        await findFrameConfigFile();
-
-
-    if (fileId) {
-
-        await drive.files.update({
-
-            fileId,
-
-            media: {
-
-                mimeType:
-                    'application/json',
-
-                body:
-                    bodyStream
-
-            },
-
-            fields:
-                'id,name,modifiedTime',
-
-            supportsAllDrives:
-                true
-
-        });
-
-
-    } else {
-
-        const created =
-            await drive.files.create({
-
-                resource: {
-
-                    name:
-                        FRAME_CONFIG_FILE_NAME,
-
-                    parents: [
-                        GOOGLE_DRIVE_FOLDER_ID
-                    ],
-
-                    mimeType:
-                        'application/json'
-
-                },
-
-                media: {
-
-                    mimeType:
-                        'application/json',
-
-                    body:
-                        bodyStream
-
-                },
-
-                fields:
-                    'id,name,modifiedTime',
-
-                supportsAllDrives:
-                    true
-
-            });
-
-
-        frameConfigFileId =
-            created.data.id;
-
-    }
-
-
-    frameConfigCache =
-        config;
-
-
-    return config;
-
-}
-
-
-// =====================================================
-// LOGIN ADMIN CEKREK
-// =====================================================
-
-app.post(
-    '/api/frame-config/login',
-    async (req, res) => {
-
-        try {
-
-            const username =
-                String(
-                    req.body &&
-                    req.body.username ||
-                    ''
-                )
-                    .trim();
-
-
-            const password =
-                String(
-                    req.body &&
-                    req.body.password ||
-                    ''
-                );
-
-
-            if (
-                username.toLowerCase() !==
-                    ADMIN_USERNAME ||
-
-                !ADMIN_PASSWORD ||
-
-                !safeEqualText(
-                    password,
-                    ADMIN_PASSWORD
-                )
-            ) {
-
-                return res
-                    .status(401)
-                    .json({
-
-                        success: false,
-
-                        message:
-                            'Username atau password admin salah.'
-
-                    });
-
-            }
-
-
-            return res.json({
-
-                success: true,
-
-                username:
-                    ADMIN_USERNAME,
-
-                token:
-                    createAdminToken(),
-
-                expiresIn:
-                    12 * 60 * 60
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                '❌ Login admin:',
-                error
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success: false,
-
-                    message:
-                        'Gagal melakukan login admin.'
-
-                });
-
-        }
-
-    }
-);
-
-
-// =====================================================
-// CEK ADMIN
+// HEALTH CHECK
 // =====================================================
 
 app.get(
-    '/api/frame-config/admin-check',
-    requireFrameAdmin,
+    '/health',
     (req, res) => {
 
         res.json({
 
-            success: true,
+            success:
+                true,
+
+            server:
+                'online',
+
+            frameConfigAPI:
+                'active',
 
             admin:
                 ADMIN_USERNAME
@@ -1909,413 +2298,7 @@ app.get(
 
 
 // =====================================================
-// USER + ADMIN:
-// BACA SEMUA CONFIG
-// =====================================================
-
-app.get(
-    '/api/frame-config',
-    async (req, res) => {
-
-        try {
-
-            const config =
-                await readFrameConfigFromDrive();
-
-
-            return res.json({
-
-                success: true,
-
-                version:
-                    config.version || 1,
-
-                frames:
-                    config.frames || {}
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                '❌ Gagal membaca config:',
-                error
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success: false,
-
-                    message:
-                        'Gagal membaca konfigurasi frame.'
-
-                });
-
-        }
-
-    }
-);
-
-
-// =====================================================
-// USER + ADMIN:
-// BACA SATU FRAME
-// =====================================================
-
-app.get(
-    '/api/frame-config/:frameKey',
-    async (req, res) => {
-
-        try {
-
-            const frameKey =
-                normalizeFrameKey(
-                    req.params.frameKey
-                );
-
-
-            const config =
-                await readFrameConfigFromDrive();
-
-
-            return res.json({
-
-                success: true,
-
-                frameKey,
-
-                config:
-                    config.frames[
-                        frameKey
-                    ] || null
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                '❌ Gagal membaca config frame:',
-                error
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success: false,
-
-                    message:
-                        'Gagal membaca konfigurasi frame.'
-
-                });
-
-        }
-
-    }
-);
-
-
-// =====================================================
-// ADMIN SAJA:
-// SIMPAN SATU CONFIG FRAME
-// =====================================================
-
-app.put(
-    '/api/frame-config/:frameKey',
-    requireFrameAdmin,
-    async (req, res) => {
-
-        try {
-
-            const frameKey =
-                normalizeFrameKey(
-                    req.params.frameKey
-                );
-
-
-            if (!frameKey) {
-
-                return res
-                    .status(400)
-                    .json({
-
-                        success: false,
-
-                        message:
-                            'frameKey tidak boleh kosong.'
-
-                    });
-
-            }
-
-
-            const config =
-                await readFrameConfigFromDrive();
-
-
-            const frameConfig =
-                normalizeFrameConfig(
-                    req.body
-                );
-
-
-            config.frames[
-                frameKey
-            ] = frameConfig;
-
-
-            config.version = 1;
-
-            config.updatedAt =
-                new Date().toISOString();
-
-
-            await saveFrameConfigToDrive(
-                config
-            );
-
-
-            return res.json({
-
-                success: true,
-
-                frameKey,
-
-                config:
-                    frameConfig
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                '❌ Gagal menyimpan config:',
-                error
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success: false,
-
-                    message:
-                        'Gagal menyimpan konfigurasi frame.',
-
-                    error:
-                        error.message
-
-                });
-
-        }
-
-    }
-);
-
-
-// =====================================================
-// ADMIN SAJA:
-// SIMPAN SEMUA CONFIG
-// =====================================================
-
-app.put(
-    '/api/frame-config',
-    requireFrameAdmin,
-    async (req, res) => {
-
-        try {
-
-            const incoming =
-                req.body &&
-                req.body.frames;
-
-
-            if (
-                !incoming ||
-                typeof incoming !== 'object' ||
-                Array.isArray(incoming)
-            ) {
-
-                return res
-                    .status(400)
-                    .json({
-
-                        success: false,
-
-                        message:
-                            'Data frames tidak valid.'
-
-                    });
-
-            }
-
-
-            const frames = {};
-
-
-            Object.keys(
-                incoming
-            ).forEach(
-                key => {
-
-                    const normalizedKey =
-                        normalizeFrameKey(
-                            key
-                        );
-
-
-                    if (
-                        normalizedKey
-                    ) {
-
-                        frames[
-                            normalizedKey
-                        ] =
-                            normalizeFrameConfig(
-                                incoming[key]
-                            );
-
-                    }
-
-                }
-            );
-
-
-            const config = {
-
-                version: 1,
-
-                frames,
-
-                updatedAt:
-                    new Date().toISOString()
-
-            };
-
-
-            await saveFrameConfigToDrive(
-                config
-            );
-
-
-            return res.json({
-
-                success: true,
-
-                frames:
-                    config.frames
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                '❌ Gagal menyimpan semua config:',
-                error
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success: false,
-
-                    message:
-                        'Gagal menyimpan semua konfigurasi frame.',
-
-                    error:
-                        error.message
-
-                });
-
-        }
-
-    }
-);
-
-
-// =====================================================
-// ADMIN SAJA:
-// HAPUS CONFIG FRAME
-// =====================================================
-
-app.delete(
-    '/api/frame-config/:frameKey',
-    requireFrameAdmin,
-    async (req, res) => {
-
-        try {
-
-            const frameKey =
-                normalizeFrameKey(
-                    req.params.frameKey
-                );
-
-
-            const config =
-                await readFrameConfigFromDrive();
-
-
-            delete config.frames[
-                frameKey
-            ];
-
-
-            config.updatedAt =
-                new Date().toISOString();
-
-
-            await saveFrameConfigToDrive(
-                config
-            );
-
-
-            return res.json({
-
-                success: true,
-
-                frameKey
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                '❌ Gagal menghapus config:',
-                error
-            );
-
-
-            return res
-                .status(500)
-                .json({
-
-                    success: false,
-
-                    message:
-                        'Gagal menghapus konfigurasi frame.'
-
-                });
-
-        }
-
-    }
-);
-
-
-// =====================================================
-// HEALTH CHECK
+// ROOT
 // =====================================================
 
 app.get(
@@ -2356,7 +2339,8 @@ app.use(
             .status(500)
             .json({
 
-                success: false,
+                success:
+                    false,
 
                 message:
                     'Terjadi kesalahan pada server',
@@ -2395,6 +2379,14 @@ app.listen(
         );
 
         console.log(
+            '🔐 Admin Frame: cekrek'
+        );
+
+        console.log(
+            '⚙️ Frame Configuration API: AKTIF'
+        );
+
+        console.log(
             '☁️ Google Drive Frame System: AKTIF'
         );
 
@@ -2404,14 +2396,6 @@ app.listen(
 
         console.log(
             '🎨 Google Drive Sticker System: AKTIF'
-        );
-
-        console.log(
-            '⚙️ Frame Configuration API: AKTIF'
-        );
-
-        console.log(
-            '🔐 Admin Frame: cekrek'
         );
 
         console.log(
