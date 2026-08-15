@@ -1361,6 +1361,82 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* =====================================================
+   FRAME CAROUSEL - TIDAK TERPOTONG
+   ===================================================== */
+
+.frame-carousel-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 1;
+    position: relative;
+
+    width: 100%;
+
+    /*
+       Ruang tambahan untuk transform scale
+    */
+    padding: 45px 60px;
+
+    box-sizing: border-box;
+
+    overflow: visible;
+}
+
+.frame-grid {
+    display: flex;
+    align-items: center;
+
+    gap: 35px;
+
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+
+    /*
+       Tambahan ruang atas/bawah
+    */
+    padding: 25px 15px;
+
+    box-sizing: border-box;
+
+    /*
+       Tetap horizontal.
+       Tidak menggunakan overflow-y:hidden yang terlalu ketat.
+    */
+    overflow-x: auto;
+
+    scrollbar-width: none;
+
+    scroll-behavior: smooth;
+}
+
+.frame-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.frame-item {
+    flex: 0 0 auto;
+
+    width: min(380px, 32vw);
+    height: min(560px, 60vh);
+
+    position: relative;
+
+    box-sizing: border-box;
+
+    transform-origin: center center;
+}
+
+.frame-item:hover {
+    transform: scale(1.025);
+}
+
+.frame-item.selected {
+    transform: scale(1.045);
+}
 
     
 .preview-custom-left{overflow:hidden}
