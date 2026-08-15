@@ -2416,9 +2416,9 @@ function renderUserFramePhotoConfig(){
         overlay.style.top=`${hole.y/finalFrameImageObj.height*100}%`;
         overlay.style.width=`${hole.w/finalFrameImageObj.width*100}%`;
         overlay.style.height=`${hole.h/finalFrameImageObj.height*100}%`;
-        overlay.style.borderColor=color;
-        overlay.style.backgroundColor=color+'22';
-        overlay.style.color=color;
+        overlay.style.borderColor = 'transparent';
+        overlay.style.backgroundColor = color;
+        overlay.style.color = '#FFFFFF';
         overlay.textContent=photoNumber;
         overlay.title=`Lubang ${holeIndex+1} → Foto ${photoNumber}`;
         overlayContainer.appendChild(overlay);
@@ -3058,10 +3058,6 @@ async function selectFrame(
 
     selectedFramePath =
         framePath;
-
-    // Hapus indikator konfigurasi dari frame sebelumnya.
-    document.querySelectorAll('.user-frame-photo-overlay-container').forEach(el => el.remove());
-
 
     const button =
         document.getElementById(
