@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- PWA -->
     <link rel="manifest" href="./manifest.json">
@@ -1683,6 +1683,423 @@
 
 @media(max-width:600px){.frame-photo-config{padding:12px}.frame-config-list{grid-template-columns:1fr}}
 </style>
+
+
+
+    <!-- =====================================================
+         IPAD / TABLET ONE-SCREEN LAYOUT OVERRIDE
+         Tidak mengubah fungsi JavaScript yang sudah ada.
+    ====================================================== -->
+    <style id="ipad-one-screen-layout">
+        /* Hanya berlaku untuk tablet/iPad 768px ke atas.
+           Layout HP <= 767px tetap memakai CSS asli. */
+        @media (min-width: 768px) and (max-width: 1366px) {
+
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                min-height: 100%;
+                overflow: hidden !important;
+            }
+
+            body {
+                height: 100dvh;
+                min-height: 100dvh;
+            }
+
+            .screen {
+                width: 100%;
+                height: 100dvh !important;
+                min-height: 100dvh !important;
+                max-height: 100dvh !important;
+                padding: clamp(10px, 1.5vh, 18px) clamp(12px, 2vw, 24px);
+                overflow: hidden !important;
+            }
+
+            /* =========================
+               FRAME SCREEN
+            ========================= */
+            #frame-screen.active {
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
+            }
+
+            #frame-screen .frame-screen-header {
+                flex: 0 0 auto;
+                margin: 0 0 4px 0;
+                text-align: center;
+            }
+
+            #frame-screen .frame-screen-header h2 {
+                margin: 0 0 3px 0;
+                font-size: clamp(20px, 2.7vw, 28px);
+                line-height: 1.15;
+            }
+
+            #frame-screen .frame-screen-header p {
+                margin: 0;
+                font-size: clamp(11px, 1.3vw, 14px);
+                line-height: 1.25;
+            }
+
+            #frame-screen .frame-carousel-wrapper {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                width: 100%;
+                padding: 8px 52px !important;
+                overflow: hidden !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #frame-screen .frame-grid {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+                min-height: 0 !important;
+                height: 100%;
+                width: 100%;
+                padding: 10px 12px !important;
+                gap: clamp(16px, 2.5vw, 30px);
+                display: flex;
+                align-items: center;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #frame-screen .frame-grid::-webkit-scrollbar {
+                display: none;
+            }
+
+            #frame-screen .frame-item {
+                flex: 0 0 auto !important;
+                height: min(64dvh, 560px) !important;
+                width: min(30vw, 300px) !important;
+                max-height: 64dvh !important;
+                max-width: 300px !important;
+                aspect-ratio: 3 / 4;
+                transform-origin: center center;
+            }
+
+            #frame-screen .frame-scroll-btn {
+                position: absolute;
+                z-index: 20;
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
+                max-width: 44px !important;
+                max-height: 44px !important;
+                padding: 0 !important;
+                flex: 0 0 44px !important;
+            }
+
+            #frame-screen .frame-scroll-btn.left {
+                left: 5px;
+            }
+
+            #frame-screen .frame-scroll-btn.right {
+                right: 5px;
+            }
+
+            #frame-screen > .bottom-actions {
+                flex: 0 0 auto !important;
+                min-height: 48px;
+                width: 100%;
+                margin: 0 !important;
+                padding: 7px 0 2px !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                flex-wrap: nowrap !important;
+            }
+
+            #frame-screen > .bottom-actions button {
+                min-width: 120px;
+                padding: 9px 18px;
+            }
+
+            /* Panel admin tetap bisa dipakai tanpa membuat halaman utama
+               ikut scroll. Jika panel aktif, hanya isi panel yang scroll. */
+            #frame-screen #frame-photo-config {
+                flex: 0 0 auto;
+                max-height: 46dvh;
+                overflow-y: auto;
+            }
+
+            /* =========================
+               CAMERA SCREEN
+            ========================= */
+            #camera-screen.active {
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
+            }
+
+            #camera-screen .camera-screen-layout {
+                display: grid !important;
+                grid-template-columns: clamp(155px, 18vw, 220px) minmax(0, 1fr) clamp(175px, 22vw, 270px) !important;
+                gap: clamp(8px, 1.2vw, 14px) !important;
+                width: 100% !important;
+                height: 100% !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                flex: 1 1 auto !important;
+                overflow: hidden !important;
+                padding: 0 !important;
+            }
+
+            #camera-screen .camera-settings-panel {
+                width: 100% !important;
+                height: 100% !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                padding: clamp(9px, 1.2vw, 14px) !important;
+                gap: clamp(7px, 1vh, 12px) !important;
+                overflow: hidden !important;
+            }
+
+            #camera-screen .camera-settings-panel > div:first-child {
+                font-size: clamp(13px, 1.4vw, 15px) !important;
+            }
+
+            #camera-screen .setting-group {
+                gap: 5px;
+            }
+
+            #camera-screen .setting-label {
+                font-size: clamp(10px, 1.1vw, 13px);
+            }
+
+            #camera-screen .setting-buttons {
+                gap: 3px;
+            }
+
+            #camera-screen .setting-buttons button {
+                padding: 6px 0;
+                font-size: clamp(10px, 1.05vw, 12px);
+            }
+
+            #camera-screen #camera-select {
+                padding: 7px 7px !important;
+                font-size: clamp(10px, 1.05vw, 12px) !important;
+            }
+
+            #camera-screen #camera-switch-btn {
+                padding: 7px 7px !important;
+                font-size: clamp(10px, 1.05vw, 12px) !important;
+                margin-top: 5px !important;
+            }
+
+            #camera-screen .setting-toggle-row {
+                padding: 7px 8px;
+            }
+
+            #camera-screen .camera-settings-panel > button.outline {
+                padding: 8px 8px !important;
+                font-size: clamp(10px, 1.05vw, 12px) !important;
+            }
+
+            #camera-screen .camera-center-area {
+                width: 100% !important;
+                height: 100% !important;
+                min-width: 0 !important;
+                min-height: 0 !important;
+                flex: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: clamp(5px, 0.8vh, 9px) !important;
+                overflow: hidden !important;
+            }
+
+            #camera-screen .video-wrapper {
+                width: 100% !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-width: 100% !important;
+                max-height: calc(100% - 50px) !important;
+                aspect-ratio: 4 / 3 !important;
+                flex: 0 1 auto !important;
+                border-radius: clamp(12px, 1.4vw, 18px);
+                overflow: hidden !important;
+            }
+
+            #camera-screen #camera-feed {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+            }
+
+            #camera-screen .filters-carousel {
+                flex: 0 0 auto !important;
+                width: 100% !important;
+                min-height: 40px;
+                max-height: 48px;
+                padding: 3px 5px !important;
+                gap: 6px;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
+                flex-wrap: nowrap !important;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #camera-screen .filters-carousel::-webkit-scrollbar {
+                display: none;
+            }
+
+            #camera-screen .filter-thumb-item {
+                flex: 0 0 auto;
+            }
+
+            #camera-screen .filter-thumb-placeholder {
+                width: 28px;
+                height: 28px;
+                min-width: 28px;
+                min-height: 28px;
+            }
+
+            #camera-screen .shutter-btn-absolute {
+                width: clamp(48px, 5vw, 58px);
+                height: clamp(48px, 5vw, 58px);
+            }
+
+            #camera-screen .camera-right-panel {
+                width: 100% !important;
+                height: 100% !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                padding: clamp(9px, 1.2vw, 14px) !important;
+                gap: clamp(7px, 1vh, 11px) !important;
+                overflow: hidden !important;
+            }
+
+            #camera-screen .right-panel-header {
+                flex: 0 0 auto;
+                font-size: clamp(11px, 1.15vw, 14px);
+            }
+
+            #camera-screen .slots-grid-container {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                width: 100%;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                padding: 3px;
+                gap: 7px;
+                align-items: center;
+                scrollbar-width: thin;
+            }
+
+            #camera-screen .photo-slot {
+                flex: 0 0 auto;
+                max-width: 100%;
+            }
+
+            #camera-screen #btn-next-preview {
+                flex: 0 0 auto;
+                margin-top: 0 !important;
+                min-height: 40px;
+                padding: 9px 10px;
+                font-size: clamp(11px, 1.15vw, 13px);
+            }
+
+            /* =========================
+               IPAD PORTRAIT 768-900
+            ========================= */
+            @media (min-width: 768px) and (max-width: 900px) {
+                #camera-screen .camera-screen-layout {
+                    grid-template-columns: 150px minmax(0, 1fr) 170px !important;
+                    gap: 7px !important;
+                }
+
+                #camera-screen .camera-settings-panel,
+                #camera-screen .camera-right-panel {
+                    padding: 8px !important;
+                    border-radius: 14px;
+                }
+
+                #camera-screen .camera-center-area {
+                    gap: 5px !important;
+                }
+
+                #camera-screen .video-wrapper {
+                    max-height: calc(100% - 45px) !important;
+                    border-radius: 14px;
+                }
+
+                #camera-screen .setting-toggle-row {
+                    padding: 6px 7px;
+                }
+
+                #camera-screen .setting-buttons button {
+                    padding: 5px 0;
+                    font-size: 10px;
+                }
+
+                #camera-screen .camera-settings-panel > button.outline {
+                    padding: 7px 6px !important;
+                    font-size: 10px !important;
+                }
+
+                #camera-screen #camera-select,
+                #camera-screen #camera-switch-btn {
+                    font-size: 10px !important;
+                }
+
+                #frame-screen .frame-carousel-wrapper {
+                    padding-left: 46px !important;
+                    padding-right: 46px !important;
+                }
+
+                #frame-screen .frame-item {
+                    width: 190px !important;
+                    height: min(62dvh, 500px) !important;
+                }
+            }
+
+            /* =========================
+               IPAD LANDSCAPE 901-1366
+            ========================= */
+            @media (min-width: 901px) and (max-width: 1366px) {
+                #camera-screen .camera-screen-layout {
+                    grid-template-columns: 180px minmax(0, 1fr) 210px !important;
+                }
+
+                #camera-screen .video-wrapper {
+                    max-height: calc(100% - 52px) !important;
+                }
+
+                #frame-screen .frame-item {
+                    width: min(25vw, 300px) !important;
+                    height: min(64dvh, 540px) !important;
+                }
+            }
+
+            /* Touch device: tombol tidak bergeser karena efek hover. */
+            button {
+                touch-action: manipulation;
+            }
+
+            /* Safe area untuk iPad tanpa mengubah fungsi. */
+            @supports (padding: env(safe-area-inset-top)) {
+                #frame-screen,
+                #camera-screen {
+                    padding-top: max(8px, env(safe-area-inset-top));
+                    padding-bottom: max(8px, env(safe-area-inset-bottom));
+                    padding-left: max(10px, env(safe-area-inset-left));
+                    padding-right: max(10px, env(safe-area-inset-right));
+                }
+            }
+        }
+    </style>
 
 </head>
 
@@ -5344,5 +5761,24 @@ window.addEventListener('resize', () => {
 });
 
 </script>
+
+
+<!-- =====================================================
+     PWA SERVICE WORKER
+====================================================== -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(registration => {
+                    console.log('CekrekCekrek PWA aktif:', registration.scope);
+                })
+                .catch(error => {
+                    console.error('Service Worker gagal:', error);
+                });
+        });
+    }
+</script>
+
 </body>
 </html>
