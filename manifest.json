@@ -1,23 +1,23 @@
 {
-  "name": "CekrekCekrek",
-  "short_name": "CekrekPhotoBooth",
-  "description": "Photobooth Digital",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "./frame/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./frame/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+    "name": "CekrekCekrek Photobooth",
+    "short_name": "CekrekCekrek",
+    "description": "Digital Photobooth CekrekCekrek",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#1976d2",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "./icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "./icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
 }
