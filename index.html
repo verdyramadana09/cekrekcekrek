@@ -2101,6 +2101,37 @@
         }
     </style>
 
+<style id="final-ipad-layout-fix">
+html,body{width:100%;height:100%;margin:0;overflow:hidden!important}body{min-height:100dvh}.screen{height:100dvh!important;min-height:100dvh!important;overflow:hidden!important}
+@media (min-width:768px) and (max-width:1366px){
+/* FRAME: one viewport, controls always visible */
+#frame-screen{display:none;flex-direction:column;height:100dvh!important;min-height:0!important;overflow:hidden!important;padding:12px 20px!important}
+#frame-screen.active{display:flex!important}.frame-screen-header{flex:0 0 auto;margin:0!important}.frame-screen-header h2{font-size:clamp(22px,3vw,30px)!important;margin-bottom:4px!important}.frame-screen-header p{margin:0!important;font-size:12px!important}
+.frame-carousel-wrapper{flex:1 1 auto!important;min-height:0!important;padding:10px 58px!important;overflow:hidden!important}.frame-grid{min-height:0!important;height:100%!important;align-items:center!important;padding:12px!important;overflow-x:auto!important;overflow-y:hidden!important;gap:24px!important}.frame-item{height:min(68dvh,560px)!important;width:auto!important;max-height:68dvh!important;flex:0 0 auto!important}.frame-scroll-btn{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important}.frame-scroll-btn.left{left:8px!important}.frame-scroll-btn.right{right:8px!important}.frame-screen-header+.frame-carousel-wrapper{min-height:0}.bottom-actions{flex:0 0 auto!important;padding:8px 0 2px!important;flex-wrap:nowrap!important}.bottom-actions button{min-height:42px!important;padding:10px 22px!important}
+/* CAMERA: settings on top, camera large left, photos fixed right */
+#camera-screen{height:100dvh!important;min-height:0!important;overflow:hidden!important;padding:10px 16px!important}
+#camera-screen .camera-screen-layout{display:grid!important;grid-template-columns:minmax(0,1fr) clamp(190px,24vw,290px)!important;grid-template-rows:auto minmax(0,1fr)!important;grid-template-areas:"settings photos" "camera photos";gap:10px!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+#camera-screen .camera-settings-panel{grid-area:settings!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;display:flex!important;flex-direction:row!important;align-items:center!important;gap:10px!important;padding:8px 12px!important;border-radius:14px!important;overflow:hidden!important}
+#camera-screen .camera-settings-panel>div:first-child{display:none!important}.setting-group{gap:4px!important;min-width:0}.setting-label{font-size:10px!important;white-space:nowrap}.setting-buttons{gap:3px!important}.setting-buttons button{padding:5px 8px!important;font-size:10px!important;min-width:32px!important}.setting-toggle-row{padding:5px 8px!important;min-height:34px!important;white-space:nowrap}.camera-settings-panel select,.camera-settings-panel button.outline{padding:6px 8px!important;font-size:10px!important;white-space:nowrap}
+#camera-screen .camera-center-area{grid-area:camera!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;display:flex!important;flex-direction:column!important;justify-content:center!important;overflow:hidden!important;gap:6px!important}
+#camera-screen .video-wrapper{width:100%!important;height:auto!important;max-width:100%!important;max-height:calc(100% - 48px)!important;aspect-ratio:4/3!important;min-height:0!important;flex:1 1 auto!important}
+#camera-screen .filters-carousel{flex:0 0 42px!important;min-height:42px!important;max-height:42px!important;overflow-x:auto!important;overflow-y:hidden!important;padding:4px 8px!important;justify-content:flex-start!important}.filter-thumb-item{min-width:52px!important}.filter-thumb-placeholder{width:28px!important;height:28px!important}
+#camera-screen .camera-right-panel{grid-area:photos!important;width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;overflow:hidden!important;padding:10px!important}.right-panel-header{flex:0 0 auto!important}.slots-grid-container{min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;padding:3px!important}.photo-slot{max-width:100%!important}
+#camera-screen .shutter-btn-absolute{bottom:8px!important;width:52px!important;height:52px!important}.shutter-inner{width:38px!important;height:38px!important}
+}
+/* EDIT PHOTO / PREVIEW: left canvas, right stickers, no page scroll */
+@media (min-width:768px) and (max-width:1366px){
+#preview-screen{height:100dvh!important;min-height:0!important;overflow:hidden!important;padding:10px 18px!important}
+#preview-screen .preview-custom-wrapper{display:grid!important;grid-template-columns:minmax(0,1fr) clamp(240px,30vw,360px)!important;gap:14px!important;width:100%!important;height:100%!important;min-height:0!important;max-width:none!important;align-items:stretch!important;overflow:hidden!important}
+#preview-screen .preview-custom-left{grid-column:1!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;max-width:none!important;padding:8px!important;overflow:hidden!important;display:flex!important;align-items:center!important;justify-content:center!important}
+#preview-screen #result-canvas{width:auto!important;height:auto!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important}
+#preview-screen .preview-custom-right{grid-column:2!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;max-width:none!important;overflow:hidden!important;padding:12px!important;gap:8px!important}
+#preview-screen .sticker-grid,#preview-screen .sticker-list,#preview-screen #google-drive-stickers,#preview-screen #sticker-selector{max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;min-height:0!important}.sticker-grid{grid-template-columns:repeat(3,1fr)!important;gap:7px!important}.sticker-item-btn{padding:8px!important;font-size:20px!important}
+#preview-screen .bottom-actions{position:absolute!important;left:18px!important;bottom:8px!important;width:calc(100% - 36px)!important;z-index:20!important;padding:0!important}
+}
+/* iPad portrait: keep usable proportions */
+@media (min-width:768px) and (max-width:900px){#camera-screen .camera-screen-layout{grid-template-columns:minmax(0,1fr) 180px!important}#camera-screen .camera-settings-panel{gap:6px!important;padding:6px 8px!important}.setting-buttons button{padding:5px 5px!important}.camera-settings-panel select,.camera-settings-panel button.outline{max-width:115px!important}.frame-item{height:min(64dvh,520px)!important}#preview-screen .preview-custom-wrapper{grid-template-columns:minmax(0,1fr) 210px!important}}
+</style>
 </head>
 
 
