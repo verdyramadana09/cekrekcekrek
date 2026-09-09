@@ -637,9 +637,9 @@
         }
     </style>
 
-    <!-- CSS FIX BARU -->
+<!-- CSS FIX BARU -->
     <style id="layout-fixes-final">
-        /* 1. KUNCI SCROLL HALAMAN UTAMA (TIDAK BISA DIGESER NAIK/TURUN) */
+        /* 1. KUNCI SCROLL HALAMAN UTAMA */
         html, body {
             position: fixed;
             width: 100%;
@@ -647,6 +647,7 @@
             height: 100dvh;
             overflow: hidden !important; 
             overscroll-behavior: none;
+            touch-action: none; /* Matikan semua gesture default di background */
         }
 
         .screen {
@@ -664,18 +665,43 @@
             display: flex !important;
         }
 
-        /* Izinkan scroll HANYA di dalam box/elemen tertentu saja */
+        /* 2. IZINKAN SCROLL HANYA DI ELEMEN YANG TEPAT */
         .preview-custom-wrapper,
         .custom-result-wrapper,
         .camera-right-panel,
-        .slots-grid-container,
-        .frame-grid,
-        .name-screen-content {
+        .slots-grid-container {
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: none; 
+            touch-action: pan-y;
         }
 
-        /* 2. MASUKKAN TOMBOL MENGAMBANG KE DALAM BOX */
+        /* Khusus carousel frame agar bisa digeser kiri-kanan */
+        .frame-grid {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
+        }
+
+        /* 3. KUNCI BOX NAMA DI IPAD, IZINKAN SCROLL DI HP */
+        .name-screen-content {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: none;
+        }
+        @media (max-width: 767px) {
+            .name-screen-content {
+                overflow-y: auto !important;
+                touch-action: pan-y;
+            }
+        }
+        @media (min-width: 768px) {
+            .name-screen-content {
+                overflow: hidden !important;
+                touch-action: none; /* Kunci box putih agar tidak bisa ditarik di iPad */
+            }
+        }
+
+        /* 4. POSISI TOMBOL BAWAH */
         #frame-screen > .bottom-actions, 
         #preview-screen > .bottom-actions {
             background: white;
@@ -691,7 +717,7 @@
             right: 0 !important;
         }
 
-        /* 3. PERBAIKI BENTUK FRAME AGAR TIDAK GEPENG DI IPAD */
+        /* 5. PERBAIKI BENTUK FRAME IPAD */
         @media (min-width: 768px) {
             #frame-screen .frame-item {
                 width: auto !important;
