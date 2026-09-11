@@ -464,39 +464,9 @@
 
     <style id="ipad-one-screen-layout">
         @media (min-width: 768px) and (max-width: 1366px) {
-            /* 1. KUNCI SCROLL HALAMAN UTAMA SECARA ABSOLUT */
-                html, body {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    width: 100%;
-                    height: 100%;
-                    height: 100dvh;
-                    margin: 0;
-                    padding: 0;
-                    overflow: hidden !important; 
-                    overscroll-behavior: none;
-                    touch-action: none; /* Matikan semua gesture default di background */
-                    background-color: #f4f9ff; /* Warna cadangan agar tidak biru pekat jika terjadi glitch render */
-                }
-                
-                /* Pastikan screen juga terkunci ke batas layar */
-                .screen {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    height: 100% !important;
-                    height: 100dvh !important;
-                    max-height: 100dvh !important;
-                    overflow: hidden !important; 
-                    display: none;
-                    flex-direction: column;
-                    padding: clamp(10px, 2vh, 20px) !important;
-                }
+            html, body { width: 100%; height: 100%; min-height: 100%; overflow: hidden !important; }
+            body { height: 100dvh; min-height: 100dvh; }
+            .screen { width: 100%; height: 100dvh !important; min-height: 100dvh !important; max-height: 100dvh !important; padding: clamp(10px, 1.5vh, 18px) clamp(12px, 2vw, 24px); overflow: hidden !important; }
             #frame-screen.active { display: flex !important; flex-direction: column !important; overflow: hidden !important; }
             #frame-screen .frame-screen-header { flex: 0 0 auto; margin: 0 0 4px 0; text-align: center; }
             #frame-screen .frame-screen-header h2 { margin: 0 0 3px 0; font-size: clamp(20px, 2.7vw, 28px); line-height: 1.15; }
@@ -2478,29 +2448,6 @@ window.addEventListener('resize', () => {
                 .catch(error => { console.error('Service Worker gagal:', error); });
         });
     }
-</script>
-    <script>
-/* =====================================================
-   PATCH: IOS/IPADOS KEYBOARD SCROLL BUG
-===================================================== */
-document.addEventListener('focusout', function(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        // Beri jeda sangat singkat agar animasi keyboard iOS selesai, lalu paksa layar turun
-        setTimeout(function() {
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-        }, 50);
-    }
-});
-
-// Tambahan pencegahan khusus untuk input nama saat ditekan "Enter" (Return)
-document.getElementById('session-name').addEventListener('keyup', function(e) {
-    if (e.key === 'Enter') {
-        this.blur(); // Tutup keyboard secara paksa
-        window.scrollTo(0, 0);
-    }
-});
 </script>
 </body>
 </html>
